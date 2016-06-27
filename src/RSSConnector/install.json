@@ -1,0 +1,36 @@
+{
+  "name":"RSSConnector",
+  "description":"RSS connector for WhiteRabbit suite",
+  "icon":"fa-rss",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"RSS",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"Url",
+          "permitted_operations":"R",
+          "connection_string":"RSSUrlConnector",
+          "type": "social"
+        }
+      ],
+      "settings":[
+        {
+          "name":"uri",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"langcode",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        }
+      ]
+    }
+  ]
+}

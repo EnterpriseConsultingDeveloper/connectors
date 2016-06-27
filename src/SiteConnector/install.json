@@ -1,0 +1,42 @@
+{
+  "name":"SiteConnector",
+  "description":"Site connector for WhiteRabbit suite",
+  "icon":"http:\/\/www.clipartbest.com\/cliparts\/9cR\/gqj\/9cRgqjbGi.png",
+  "install":"external",
+  "channels":[
+    {
+      "name":"Site",
+      "default_channel":1,
+      "streams":[
+        {
+          "name":"FB Page Photo",
+          "permitted_operations":"RP",
+          "connection_string":"FacebookPagePhotoConnector"
+        }
+      ],
+      "settings":[
+        {
+          "name":"token",
+          "type":"string",
+          "is_editable":0,
+          "is_mandatory":1,
+          "access_level":"user"
+        },
+        {
+          "name":"longlivetoken",
+          "type":"string",
+          "is_editable":0,
+          "is_mandatory":1,
+          "access_level":"user"
+        },
+        {
+          "name":"pageid",
+          "type":"string",
+          "is_editable":0,
+          "is_mandatory":1,
+          "access_level":"user"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+    "name": "whiterabbit/connectors",
+    "description": "Connectors plugin for CakePHP",
+    "type": "cakephp-plugin",
+    "require": {
+        "php": ">=5.4.16",
+        "cakephp/cakephp": "~3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "WR\\Connector\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WR\\Connector\\Test\\": "tests",
+            "Cake\\Test\\": "./vendor/cakephp/cakephp/tests"
+        }
+    }
+}
