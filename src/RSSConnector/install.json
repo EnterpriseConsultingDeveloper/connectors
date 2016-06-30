@@ -12,7 +12,7 @@
           "name":"Url",
           "permitted_operations":"R",
           "connection_string":"RSSUrlConnector",
-          "type": "social"
+          "type": ""
         }
       ],
       "settings":[
