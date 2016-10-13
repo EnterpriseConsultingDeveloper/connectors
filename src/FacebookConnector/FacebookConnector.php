@@ -24,18 +24,20 @@ class FacebookConnector extends Connector implements IConnector
     function __construct($params)
     {
 
-      switch ($_SERVER['SERVER_ADDR']) {
-        //case 'DEVELOPEMENT OVH':
-        case '172.18.22.140':
-          $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
-          break;
+//      switch ($_SERVER['SERVER_ADDR']) {
+//        //case 'DEVELOPEMENT OVH':
+//        case '172.18.22.140':
+//          $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
+//          break;
+//
+//        //case 'PRODUCTION':
+//        case '172.31.26.124':
+//          $config = json_decode(file_get_contents('appdata.cfg', true), true);
+//          break;
+//
+//      }
 
-        //case 'PRODUCTION':
-        case '172.31.26.124':
-          $config = json_decode(file_get_contents('appdata.cfg', true), true);
-          break;
-
-      }
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
 
 
         $this->fb = new Facebook([
