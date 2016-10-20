@@ -23,22 +23,7 @@ class FacebookConnector extends Connector implements IConnector
 
     function __construct($params)
     {
-
-//      switch ($_SERVER['SERVER_ADDR']) {
-//        //case 'DEVELOPEMENT OVH':
-//        case '172.18.22.140':
-//          $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
-//          break;
-//
-//        //case 'PRODUCTION':
-//        case '172.31.26.124':
-//          $config = json_decode(file_get_contents('appdata.cfg', true), true);
-//          break;
-//
-//      }
-
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
-
 
         $this->fb = new Facebook([
             'app_id' => $config['app_id'], //'1561093387542751',
@@ -152,8 +137,8 @@ class FacebookConnector extends Connector implements IConnector
             $statRequest = '/' . $objectId . '/likes';
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-            $stats['likes'] = count($response->getDecodedBody()['data']);
-
+            $stats['likes_number'] = count($response->getDecodedBody()['data']);
+            $stats['likes'] = $response->getDecodedBody()['data'];
         } catch(FacebookResponseException $e) {
             $stats['likes'] = 0;
         } catch(FacebookSDKException $e) {
