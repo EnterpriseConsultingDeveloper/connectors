@@ -26,7 +26,7 @@ class WordpressCMSConnector extends WordpressConnector
     {
         if($this->_wptoken != null) {
             $publishPath = $this->_wpapipath . 'publish';
-			debug($publishPath); die;
+//          debug($publishPath); die;
             $response = $this->_http->post($publishPath, [
                 'type' => 'post',
                 'content' => $content,
