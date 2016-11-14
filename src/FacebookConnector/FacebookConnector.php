@@ -13,6 +13,8 @@ use Facebook\Facebook;
 use Facebook\FacebookRequest;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
+use Facebook\Exceptions\FacebookSDKException;
+use Facebook\Exceptions\FacebookResponseException;
 
 class FacebookConnector extends Connector implements IConnector
 {
@@ -140,7 +142,8 @@ class FacebookConnector extends Connector implements IConnector
             $stats['likes_number'] = count($response->getDecodedBody()['data']);
             $stats['likes'] = $response->getDecodedBody()['data'];
         } catch(FacebookResponseException $e) {
-            $stats['likes'] = 0;
+            $stats['likes'] = [];
+            $stats['likes_number'] = 0;
         } catch(FacebookSDKException $e) {
             // When validation fails or other local issues
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
@@ -191,7 +194,7 @@ class FacebookConnector extends Connector implements IConnector
             $stats['insights'] = $myInsights;
 
         } catch(FacebookResponseException $e) {
-            $stats['sharedposts'] = 0;
+            $stats['insights'] = [];
         } catch(FacebookSDKException $e) {
             // When validation fails or other local issues
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
