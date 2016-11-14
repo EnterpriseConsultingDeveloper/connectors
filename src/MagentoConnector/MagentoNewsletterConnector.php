@@ -8,8 +8,7 @@
 
 namespace WR\Connector\MagentoConnector;
 
-
-use Cake\Network\Http\Client;
+use App\Lib\WhiteRabbit\WRClient;
 use Cake\ORM\TableRegistry;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
@@ -151,7 +150,7 @@ class MagentoNewsletterConnector extends MagentoConnector
             'orderaverage' => '0'
         );
 
-        $httpClient = new Client();
+        $httpClient = new WRClient();
         $response = $httpClient->post($service_url, $data);
 
         return $response;

@@ -12,7 +12,7 @@ namespace WR\Connector\MagentoConnector;
 use Cake\ORM\TableRegistry;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
-use Cake\Network\Http\Client;
+use App\Lib\WhiteRabbit\WRClient;
 
 class MagentoConnector extends Connector implements IConnector
 {
@@ -28,7 +28,7 @@ class MagentoConnector extends Connector implements IConnector
     function __construct($params)
     {
         // Call Magento app
-        $this->_http = new Client();
+        $this->_http = new WRClient();
         $this->_mageapipath = $params['mage_apipath'];
         $this->_mageuser = $params['username'];
         $this->_magepass = $params['password'];
