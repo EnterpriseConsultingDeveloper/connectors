@@ -21,6 +21,7 @@ class FacebookConnector extends Connector implements IConnector
     protected $fb;
     protected $longLivedAccessToken;
 
+    private $feedLimit;
     private $objectId;
 
     function __construct($params)
@@ -30,7 +31,7 @@ class FacebookConnector extends Connector implements IConnector
         $this->fb = new Facebook([
             'app_id' => $config['app_id'], //'1561093387542751',
             'app_secret' =>  $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
-            'default_graph_version' =>  $config['default_graph_version'] //'v2.3',
+            'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
         ]);
 
         if ($params != null) {
@@ -38,6 +39,12 @@ class FacebookConnector extends Connector implements IConnector
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
 
             $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+
+            if (isset($params['feedLimit']) && $params['feedLimit'] != null) {
+                $this->feedLimit = $params['feedLimit'];
+            } else {
+                $this->feedLimit = 10;
+            }
         }
 
     }
@@ -49,14 +56,15 @@ class FacebookConnector extends Connector implements IConnector
 
     public function read($objectId = null)
     {
+        // Read complete page feed
         if ($this->objectId == null) {
             return [];
         }
         $objectId = $this->objectId;
-
-        $streamToRead = '/' . $objectId . '/feed';
+        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture},created_time,message},from{name,picture}&limit=' . $this->feedLimit;
         $response = $this->fb->sendRequest('GET', $streamToRead);
-        return($response->getDecodedBody()['data']);
+        $data = $response->getDecodedBody()['data'];
+        return($data);
     }
 
     /**
