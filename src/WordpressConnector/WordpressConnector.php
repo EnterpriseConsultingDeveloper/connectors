@@ -12,7 +12,7 @@ namespace WR\Connector\WordpressConnector;
 use Cake\ORM\TableRegistry;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
-use Cake\Network\Http\Client;
+use App\Lib\WhiteRabbit\WRClient;
 
 class WordpressConnector extends Connector implements IConnector
 {
@@ -28,7 +28,7 @@ class WordpressConnector extends Connector implements IConnector
     function __construct($params)
     {
         // Call Wordpress app
-        $this->_http = new Client();
+        $this->_http = new WRClient();
         $this->_wpapipath = $params['apipath'];
         $this->_wpuser = $params['username'];
         $this->_wppass = $params['password'];

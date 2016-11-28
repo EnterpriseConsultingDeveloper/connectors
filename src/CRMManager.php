@@ -7,7 +7,7 @@
  */
 
 namespace WR\Connector;
-use Cake\Network\Http\Client;
+use App\Lib\WhiteRabbit\WRClient;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 
@@ -18,7 +18,7 @@ class CRMManager
 
     public function __construct()
     {
-        $this->client = new Client();
+        $this->client = new WRClient();
         $this->serviceUrl = 'http://socialcrm.whiterabbitsuite.com/rest/';
     }
 

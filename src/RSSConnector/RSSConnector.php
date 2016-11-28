@@ -12,7 +12,7 @@ namespace WR\Connector\RSSConnector;
 use Cake\ORM\TableRegistry;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
-use Cake\Network\Http\Client;
+use App\Lib\WhiteRabbit\WRClient;
 
 class RSSConnector extends Connector implements IConnector
 {
@@ -23,7 +23,7 @@ class RSSConnector extends Connector implements IConnector
 
     function __construct($params)
     {
-        $this->_http = new Client();
+        $this->_http = new WRClient();
     }
 
     public function connect($config)
