@@ -61,7 +61,7 @@ class FacebookConnector extends Connector implements IConnector
             return [];
         }
         $objectId = $this->objectId;
-        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture},created_time,message},from{name,picture}&limit=' . $this->feedLimit;
+        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
         return($data);
