@@ -69,6 +69,7 @@ class MagentoNewsletterConnector extends MagentoConnector
         return $content;
     }
 
+
     /**
      * @param $content
      * @return bool|\Cake\Datasource\EntityInterface|mixed
@@ -76,84 +77,37 @@ class MagentoNewsletterConnector extends MagentoConnector
     public function add_user($content)
     {
         //It's not correct to implement this here. Trying to find a different solutions
-        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
-        $listId = null;
-        if (isset($content['list_name'])) {
-            $listId = $nlRecipientLists->saveFromConnector(
-                $content['list_name'], $content['customer_id']);
-        }
-
-        $nlRecipients = TableRegistry::get('MarketingTools.MtNewsletterRecipients');
-        $nlRecipient = $nlRecipients->newEntity();
-
-        $nlRecipient->customer_id = $this->notSetToEmptyString($content['customer_id']);
-        $nlRecipient->name = $this->notSetToEmptyString($content['name']);
-        $nlRecipient->surname = $this->notSetToEmptyString($content['surname']);
-        $nlRecipient->email = $this->notSetToEmptyString($content['email']);
-        $nlRecipient->mobile = $this->notSetToEmptyString($content['mobile']);
-        $nlRecipient->newsletter_recipient_list_id = $listId; //Maybe null
+//        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
+//        $listId = null;
+//        if (isset($content['list_name'])) {
+//            $listId = $nlRecipientLists->saveFromConnector(
+//                $content['list_name'], $content['customer_id']);
+//        }
+//
+//        $nlRecipients = TableRegistry::get('MarketingTools.MtNewsletterRecipients');
+//        $nlRecipient = $nlRecipients->newEntity();
+        $data = [];
+        $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['firstname'] = $this->notSetToEmptyString($content['name']);
+        $data['lastname'] = $this->notSetToEmptyString($content['surname']);
+        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
 
         try {
-            $res = $nlRecipients->saveFromConnector($nlRecipient);
+            //nlRecipients->saveFromConnector($nlRecipient);
 
-            if($res) {
-                //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
-                $crmManager = new CRMManager();
-                $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $res);
+            //if($res) {
+            //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
+            $crmManager = new CRMManager();
+            $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
-                //debug($cmrRes); die;
-            }
-            return $res;
+            //debug($cmrRes); die;
+            //}
+            return $cmrRes;
         } catch (\PDOException $e) {
             return false;
         }
-    }
-
-    private function notSetToEmptyString (&$myString) {
-        return (!isset($myString)) ? '' : $myString;
-    }
-
-
-    private function pushToCrm ($customerId, $nlRecipient) {
-        //Viene richiesto l’inserimento del nuovo contatto associandolo all’id cliente suite n.7
-        //http://socialcrm.whiterabbitsuite.com/rest/client/7/
-        //TODO sistemare la url
-        $service_url = 'http://socialcrm.whiterabbitsuite.com/rest/client/' . $customerId . '/';
-        $fName = $nlRecipient->name != null ? $nlRecipient->name : $nlRecipient->email;
-        $lName = $nlRecipient->surname != null ? $nlRecipient->surname : $nlRecipient->email;
-        $data = array(
-            'facebookid' => null,
-            'externalid' => $nlRecipient->id,
-            'source' => 'suite',
-            'companyname' => $customerId,
-            'firstname'=> $fName,
-            'lastname'=> $lName,
-            'vatnumber'=> null,
-            'taxcode' => null,
-            'address' => null,
-            'city' => null,
-            'zone' => null,
-            'postalcode' => null,
-            'province' => null,
-            'nation' => null,
-            'email1' => $nlRecipient->email,
-            'email2' => null,
-            'telephone1' => null,
-            'telephone2' => null,
-            'mobilephone1' => $nlRecipient->mobile,
-            'mobilephone2' => null,
-            'faxnumber' => null,
-            'birthdaydate' => null,
-            'birthplace' => null,
-            'newsletter' => '1',
-            'ordertotal' => '0',
-            'orderaverage' => '0'
-        );
-
-        $httpClient = new WRClient();
-        $response = $httpClient->post($service_url, $data);
-
-        return $response;
     }
 
 }

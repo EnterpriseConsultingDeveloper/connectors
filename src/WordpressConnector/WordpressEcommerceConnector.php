@@ -73,34 +73,34 @@ class WordpressEcommerceConnector extends WordpressConnector
     public function add_user($content)
     {
         //It's not correct to implement this here. Trying to find a different solutions
-        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
-        $listId = null;
-        if (isset($content['list_name'])) {
-            $listId = $nlRecipientLists->saveFromConnector(
-                $content['list_name'], $content['customer_id']);
-        }
-
-        $nlRecipients = TableRegistry::get('MarketingTools.MtNewsletterRecipients');
-        $nlRecipient = $nlRecipients->newEntity();
-
-        $nlRecipient->customer_id = $this->notSetToEmptyString($content['customer_id']);
-        $nlRecipient->name = $this->notSetToEmptyString($content['name']);
-        $nlRecipient->surname = $this->notSetToEmptyString($content['surname']);
-        $nlRecipient->email = $this->notSetToEmptyString($content['email']);
-        $nlRecipient->mobile = $this->notSetToEmptyString($content['mobile']);
-        $nlRecipient->newsletter_recipient_list_id = $listId; //Maybe null
+//        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
+//        $listId = null;
+//        if (isset($content['list_name'])) {
+//            $listId = $nlRecipientLists->saveFromConnector(
+//                $content['list_name'], $content['customer_id']);
+//        }
+//
+//        $nlRecipients = TableRegistry::get('MarketingTools.MtNewsletterRecipients');
+//        $nlRecipient = $nlRecipients->newEntity();
+        $data = [];
+        $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['firstname'] = $this->notSetToEmptyString($content['name']);
+        $data['lastname'] = $this->notSetToEmptyString($content['surname']);
+        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
 
         try {
-            $res = $nlRecipients->saveFromConnector($nlRecipient);
+           //nlRecipients->saveFromConnector($nlRecipient);
 
-            if($res) {
+            //if($res) {
                 //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
                 $crmManager = new CRMManager();
-                $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $res);
+                $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
                 //debug($cmrRes); die;
-            }
-            return $res;
+            //}
+            return $cmrRes;
         } catch (\PDOException $e) {
             return false;
         }
