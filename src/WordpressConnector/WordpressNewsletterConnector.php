@@ -11,8 +11,10 @@ namespace WR\Connector\WordpressConnector;
 
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
+use Cake\ORM\TableRegistry;
+use App\Lib\CRM\CRMManager;
 
-class WordpressNewsletterConnector extends WordpressConnector
+class WordpressEcommerceConnector extends WordpressConnector
 {
 
     public function __construct($params) {
@@ -63,6 +65,52 @@ class WordpressNewsletterConnector extends WordpressConnector
     public function update($content, $objectId)
     {
         return $content;
+    }
+
+
+    /**
+     * @param $content
+     * @return bool|\Cake\Datasource\EntityInterface|mixed
+     */
+    public function add_user($content)
+    {
+        //It's not correct to implement this here. Trying to find a different solutions
+//        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
+//        $listId = null;
+//        if (isset($content['list_name'])) {
+//            $listId = $nlRecipientLists->saveFromConnector(
+//                $content['list_name'], $content['customer_id']);
+//        }
+//
+//        $nlRecipients = TableRegistry::get('MarketingTools.MtNewsletterRecipients');
+//        $nlRecipient = $nlRecipients->newEntity();
+
+        $data = [];
+        $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['firstname'] = $this->notSetToEmptyString($content['name']);
+        $data['lastname'] = $this->notSetToEmptyString($content['surname']);
+        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
+
+        try {
+            //nlRecipients->saveFromConnector($nlRecipient);
+
+            //if($res) {
+            //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
+            $crmManager = new CRMManager();
+            $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
+
+            //debug($cmrRes); die;
+            //}
+            return $cmrRes;
+        } catch (\PDOException $e) {
+            return false;
+        }
+    }
+
+    private function notSetToEmptyString (&$myString) {
+        return (!isset($myString)) ? '' : $myString;
     }
 
 }
