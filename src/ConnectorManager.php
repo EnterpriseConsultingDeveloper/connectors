@@ -10,6 +10,7 @@ namespace WR\Connector;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 
+
 class ConnectorManager
 {
     private $myConnector;
@@ -88,7 +89,7 @@ class ConnectorManager
             $id = $connector->id;
             debug($id);
         } else {
-            debug('Connettore già presente o errore nei dati'); die;
+            debug('Connettore gi? presente o errore nei dati'); die;
         }
     }
 
@@ -212,13 +213,13 @@ class ConnectorManager
             $connectorLog->connector = $this->myConnector . '.' . ucfirst($this->myClass);
             $connectorLog->directory_id = 1;
 
-            $customer_id = $content['customer_id'];
-            if(isset($customer_id))
-                $connectorLog->customer_id = $customer_id;
 
-            $directory_id = $content['directory_id'];
-            if(isset($directory_id))
-                $connectorLog->directory_id = $directory_id;
+            if(isset($content['customer_id']))
+                $connectorLog->customer_id = $content['customer_id'];
+
+
+            if(isset($content['directory_id']))
+                $connectorLog->directory_id = $content['directory_id'];
 
             if(is_array($content))
                 $connectorLog->mydata = implode(",", $content);
