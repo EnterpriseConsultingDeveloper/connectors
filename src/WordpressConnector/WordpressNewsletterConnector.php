@@ -87,7 +87,7 @@ class WordpressEcommerceConnector extends WordpressConnector
 
         $data = [];
         $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
-        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        //$data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
