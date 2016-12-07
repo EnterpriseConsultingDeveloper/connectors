@@ -127,6 +127,18 @@ class ConnectorManager
         return $classInstance->read($objectId);
     }
 
+    /**
+     * @param $params, just 'feedLimit'
+     * @param $objectId
+     * @return mixed
+     */
+    public function get_public_content($params, $objectId)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+        return $classInstance->readPublicPage($objectId);
+    }
+
     /*
      * function update_content
      *

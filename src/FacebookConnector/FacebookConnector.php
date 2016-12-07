@@ -15,11 +15,14 @@ use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Exceptions\FacebookResponseException;
+use Cake\Network\Http\Client;
 
 class FacebookConnector extends Connector implements IConnector
 {
     protected $fb;
     protected $longLivedAccessToken;
+    protected $accessToken;
+    protected $appSecret;
 
     private $feedLimit;
     private $objectId;
@@ -34,17 +37,18 @@ class FacebookConnector extends Connector implements IConnector
             'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
         ]);
 
+        $this->accessToken = $config['app_id'];
+        $this->appSecret = $config['app_secret'];
+
         if ($params != null) {
-            $this->longLivedAccessToken = $params['longlivetoken'];
+            if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
+                $this->longLivedAccessToken = $params['longlivetoken'];
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+            }
+
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
 
-            $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-
-            if (isset($params['feedLimit']) && $params['feedLimit'] != null) {
-                $this->feedLimit = $params['feedLimit'];
-            } else {
-                $this->feedLimit = 10;
-            }
+            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 10;
         }
 
     }
@@ -54,6 +58,10 @@ class FacebookConnector extends Connector implements IConnector
         return "connect";
     }
 
+    /**
+     * @param null $objectId
+     * @return array
+     */
     public function read($objectId = null)
     {
         // Read complete page feed
@@ -68,6 +76,27 @@ class FacebookConnector extends Connector implements IConnector
         $data = $response->getDecodedBody()['data'];
         return($data);
     }
+
+    /**
+     * @param null $objectId
+     * @return array
+     */
+    public function readPublicPage($objectId = null)
+    {
+        // Read complete public page feed
+        if ($objectId == null) $objectId = $this->objectId;
+
+        if ($objectId == null) {
+            return [];
+        }
+
+        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
+        $http = new Client();
+        $response = $http->get($urlToRead);
+        $data = $response->json;
+        return($data);
+    }
+
 
     /**
      * @return array

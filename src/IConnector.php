@@ -9,6 +9,7 @@ namespace WR\Connector;
 interface IConnector
 {
     public function read($objectId);
+    public function readPublicPage($objectId);
     public function write($content);
     public function update($content, $objectId);
     public function delete($objectId);
