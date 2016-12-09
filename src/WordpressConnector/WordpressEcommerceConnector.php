@@ -20,36 +20,42 @@ class WordpressEcommerceConnector extends WordpressConnector
     }
 
     /**
-     *
+     * @param $content
+     * @return bool
      */
     public function write($content)
     {
-        if($this->_wptoken != null) {
-            $publishPath = $this->_wpapipath . 'publish';
-            $response = $this->_http->post($publishPath, [
-                'type' => 'newsletter',
-                'content' => $content,
-                'content_id' => $content['content']['original_table_id'],
-                'token' => $this->_wptoken,
-                'datestart' => null,
-                'dateend' => null
-            ]);
-            $bodyResp = json_decode($response->body(), true);
-            if ($bodyResp['result'] == true && $bodyResp['error'] == false) {
-                $info['id'] = $bodyResp['content_url'];
-                $info['url'] = $bodyResp['content_url'];
-                return $info;
-                //return $bodyResp['content_url']; // Should return the content post reference
-            } else {
-                return false;
-            }
 
-        } else {
+        /*$data = array(
+            'orderIdExt' => '100',
+            'sourceId' => 'magento',
+            'orderNum' => '100',
+            'orderDate' => '2016-11-30',
+            'orderTotal' => '100.10'
+        );*/
+        $data = [];
+        $data['orderIdExt'] = $this->notSetToEmptyString($content['orderIdExt']);
+        $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
+        $data['orderNum'] = $this->notSetToEmptyString($content['orderNum']);
+        $data['orderDate'] = $this->notSetToEmptyString($content['orderDate']);
+        $data['orderTotal'] =  $this->notSetToEmptyString($content['orderTotal']);
+        $data['email'] =  $this->notSetToEmptyString($content['email']);
+
+        try {
+            $crmManager = new CRMManager();
+            $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
+
+
+            return $cmrRes;
+        } catch (\PDOException $e) {
             return false;
         }
-
     }
 
+    /**
+     * @param null $objectId
+     * @return array|null
+     */
     public function read($objectId = null)
     {
         if ($objectId == null) {
@@ -60,6 +66,11 @@ class WordpressEcommerceConnector extends WordpressConnector
     }
 
 
+    /**
+     * @param $content
+     * @param $objectId
+     * @return mixed
+     */
     public function update($content, $objectId)
     {
         return $content;
@@ -82,23 +93,24 @@ class WordpressEcommerceConnector extends WordpressConnector
 //
 //        $nlRecipients = TableRegistry::get('MarketingTools.MtNewsletterRecipients');
 //        $nlRecipient = $nlRecipients->newEntity();
+
         $data = [];
         $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
-        //$data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
 
         try {
-           //nlRecipients->saveFromConnector($nlRecipient);
+            //nlRecipients->saveFromConnector($nlRecipient);
 
             //if($res) {
-                //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
-                $crmManager = new CRMManager();
-                $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
+            //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
+            $crmManager = new CRMManager();
+            $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
-                //debug($cmrRes); die;
+            //debug($cmrRes); die;
             //}
             return $cmrRes;
         } catch (\PDOException $e) {

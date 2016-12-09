@@ -58,6 +58,11 @@ class WordpressConnector extends Connector implements IConnector
 
     }
 
+    public function readPublicPage($objectId = null)
+    {
+
+    }
+
     /**
      * @return array
      */
