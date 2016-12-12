@@ -40,6 +40,8 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['orderDate'] = $this->notSetToEmptyString($content['orderDate']);
         $data['orderTotal'] =  $this->notSetToEmptyString($content['orderTotal']);
         $data['email'] =  $this->notSetToEmptyString($content['email']);
+        $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
+        $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
 
         try {
             $crmManager = new CRMManager();
