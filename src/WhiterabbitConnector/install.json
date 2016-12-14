@@ -1,42 +1,24 @@
 {
-  "name":"WordpressConnector",
-  "description":"Wordpress connector for WhiteRabbit suite",
-  "icon":"fa-wordpress",
+  "name":"WhiterabbitConnector",
+  "description":"Whiterabbit connector for WhiteRabbit suite",
+  "icon":"fa-bag",
   "install":"external",
   "channels":[
     {
-      "name":"Blog",
+      "name":"Ecommerce",
       "default_channel":"1",
       "streams":[
         {
           "name":"CMS",
           "permitted_operations":"RPDU",
-          "connection_string":"WordpressCMSConnector",
+          "connection_string":"WhiterabbitCMSConnector",
           "type": "blogging"
-        },
-        {
-          "name":"Landing",
-          "permitted_operations":"RPDU",
-          "connection_string":"WordpressLandingConnector",
-          "type": "landing"
         },
         {
           "name":"Ecommerce",
           "permitted_operations":"RPDU",
-          "connection_string":"WordpressEcommerceConnector",
+          "connection_string":"WhiterabbitEcommerceConnector",
           "type": "ecommerce"
-        },
-        {
-          "name":"Newsletter",
-          "permitted_operations":"RPDU",
-          "connection_string":"WordpressNewsletterConnector",
-          "type": "newsletter"
-        },
-        {
-          "name":"Survey",
-          "permitted_operations":"RPDU",
-          "connection_string":"WordpressSurveyConnector",
-          "type": "survey"
         }
       ],
       "settings":[
