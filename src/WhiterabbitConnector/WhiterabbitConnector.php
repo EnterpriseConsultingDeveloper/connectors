@@ -17,31 +17,31 @@ use App\Lib\WhiteRabbit\WRClient;
 class WhiterabbitConnector extends Connector implements IConnector
 {
     protected $_http;
-    protected $_wpapipath;
-    protected $_wpuser;
-    protected $_wppass;
-    protected $_wptoken;
+    protected $_wrapipath;
+    protected $_wruser;
+    protected $_wrpass;
+    protected $_wrtoken;
 
     private $objectId;
-    private $wp;
+    private $wr;
 
     function __construct($params)
     {
         // Call Whiterabbit app
         $this->_http = new WRClient();
-        $this->_wpapipath = $params['apipath'];
-        $this->_wpuser = $params['username'];
-        $this->_wppass = $params['password'];
+        $this->_wrapipath = $params['apipath'];
+        $this->_wruser = $params['username'];
+        $this->_wrpass = $params['password'];
 
 
-        $connectPath = $this->_wpapipath . 'connect';
-
-        $response = $this->_http->post($connectPath, [
-            'username' => $this->_wpuser,
-            'password' => $this->_wppass
-        ]);
-
-        $this->_wptoken = json_decode($response->body)->token;
+//        $connectPath = $this->_wrapipath . 'connect';
+//
+//        $response = $this->_http->post($connectPath, [
+//            'username' => $this->_wruser,
+//            'password' => $this->_wrpass
+//        ]);
+//
+//        $this->_wrtoken = json_decode($response->body)->token;
 
     }
 
@@ -68,7 +68,7 @@ class WhiterabbitConnector extends Connector implements IConnector
      */
     public function write($content)
     {
-        $publishPath = $this->_wpapipath . '/publish';
+        $publishPath = $this->_wrapipath . '/publish';
         $response = $this->_http->post($publishPath, [
             'type' => 'newsletter',
             'content' => '',
@@ -85,12 +85,12 @@ class WhiterabbitConnector extends Connector implements IConnector
 
     public function delete($objectId = null)
     {
-        if($this->_wptoken != null) {
-            $deletePath = $this->_wpapipath . 'delete';
+        if($this->_wrtoken != null) {
+            $deletePath = $this->_wrapipath . 'delete';
             $response = $this->_http->post($deletePath, [
                 'type' => 'post',
                 'content_id' => $objectId,
-                'token' => $this->_wptoken
+                'token' => $this->_wrtoken
             ]);
             $bodyResp = json_decode($response->body(), true);
             return $bodyResp['result'];

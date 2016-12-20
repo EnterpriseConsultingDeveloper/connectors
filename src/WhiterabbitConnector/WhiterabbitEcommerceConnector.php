@@ -26,13 +26,13 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
      */
     public function write($content)
     {
-        if($this->_wptoken != null) {
-            $publishPath = $this->_wpapipath . 'publish';
+//        if($this->_wrtoken != null) {
+            $publishPath = $this->_wrapipath . 'publish';
             $response = $this->_http->post($publishPath, [
                 'type' => 'ecommerce',
                 'content' => $content,
                 'content_id' => $content['content']['original_table_id'],
-                'token' => $this->_wptoken,
+                'token' => $this->_wrtoken,
                 'datestart' => null,
                 'dateend' => null
             ]);
@@ -46,9 +46,9 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
                 return false;
             }
 
-        } else {
-            return false;
-        }
+//        } else {
+//            return false;
+//        }
 
     }
 
@@ -87,11 +87,12 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
 
         $data = [];
         $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
-        //$data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
         try {
             //nlRecipients->saveFromConnector($nlRecipient);

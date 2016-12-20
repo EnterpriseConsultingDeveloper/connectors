@@ -103,6 +103,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
