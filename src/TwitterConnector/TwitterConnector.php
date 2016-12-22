@@ -9,12 +9,8 @@
 namespace WR\Connector\TwitterConnector;
 
 
-use Twitter\Twitter;
-use Twitter\TwitterRequest;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
-use Twitter\Exceptions\TwitterSDKException;
-use Twitter\Exceptions\TwitterResponseException;
 use Cake\Network\Http\Client;
 
 class TwitterConnector extends Connector implements IConnector
@@ -29,27 +25,27 @@ class TwitterConnector extends Connector implements IConnector
 
     function __construct($params)
     {
-        $config = json_decode(file_get_contents('appdata.cfg', true), true);
-
-        $this->fb = new Twitter([
-            'app_id' => $config['app_id'], //'1561093387542751',
-            'app_secret' =>  $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
-            'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
-        ]);
-
-        $this->accessToken = $config['app_id'];
-        $this->appSecret = $config['app_secret'];
-
-        if ($params != null) {
-            if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
-                $this->longLivedAccessToken = $params['longlivetoken'];
-                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-            }
-
-            $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
-
-            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 10;
-        }
+//        $config = json_decode(file_get_contents('appdata.cfg', true), true);
+//
+//        $this->fb = new Twitter([
+//            'app_id' => $config['app_id'], //'1561093387542751',
+//            'app_secret' =>  $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
+//            'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
+//        ]);
+//
+//        $this->accessToken = $config['app_id'];
+//        $this->appSecret = $config['app_secret'];
+//
+//        if ($params != null) {
+//            if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
+//                $this->longLivedAccessToken = $params['longlivetoken'];
+//                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+//            }
+//
+//            $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
+//
+//            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 10;
+//        }
 
     }
 
@@ -64,16 +60,18 @@ class TwitterConnector extends Connector implements IConnector
      */
     public function read($objectId = null)
     {
-        // Read complete page feed
+        // Read complete public page feed
         if ($objectId == null) $objectId = $this->objectId;
 
         if ($objectId == null) {
             return [];
         }
 
-        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
-        $response = $this->fb->sendRequest('GET', $streamToRead);
-        $data = $response->getDecodedBody()['data'];
+        $urlToRead = "https://stream.twitter.com/1.1/statuses/sample.json";
+        $http = new Client();
+        $response = $http->get($urlToRead);
+        debug($response); die;
+        $data = $response->json;
         return($data);
     }
 
@@ -90,10 +88,10 @@ class TwitterConnector extends Connector implements IConnector
             return [];
         }
 
-        $urlToRead = "https://graph.twitter.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
+        $urlToRead = "https://stream.twitter.com/1.1/statuses/sample.json";
         $http = new Client();
         $response = $http->get($urlToRead);
-        $data = $response->json;
+        debug($response); die;
         return($data);
     }
 

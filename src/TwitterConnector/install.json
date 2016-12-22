@@ -6,22 +6,10 @@
   "channels":[
     {
       "name":"Profile",
-      "default_channel":"0",
+      "default_channel":"1",
       "streams":[
         {
-          "name":"FB Pr Photo",
-          "permitted_operations":"RP",
-          "connection_string":"TwitterProfilePhotoConnector",
-          "type": "social"
-        },
-        {
-          "name":"FB Pr Video",
-          "permitted_operations":"RP",
-          "connection_string":"TwitterProfileVideoConnector",
-          "type": "social"
-        },
-        {
-          "name":"FB Pr Status",
+          "name":"Profile Status",
           "permitted_operations":"RPDU",
           "connection_string":"TwitterProfileStatusConnector",
           "type": "social"
@@ -41,53 +29,13 @@
           "is_editable":"1",
           "is_mandatory":"1",
           "access_level":"admin"
-        }
-      ]
-    },
-    {
-      "name":"Page",
-      "default_channel":"1",
-      "streams":[
-        {
-          "name":"FB Page Photo (text + image)",
-          "permitted_operations":"RP",
-          "connection_string":"TwitterPagePhotoConnector",
-          "type": "social"
         },
         {
-          "name":"FB Page Video (video is mandatory)",
-          "permitted_operations":"RP",
-          "connection_string":"TwitterPageVideoConnector",
-          "type": "social"
-        },
-        {
-          "name":"FB Page Status (only image)",
-          "permitted_operations":"RPDU",
-          "connection_string":"TwitterPageStatusConnector",
-          "type": "social"
-        }
-      ],
-      "settings":[
-        {
-          "name":"token",
+          "name":"profileid",
           "type":"string",
-          "is_editable":"0",
+          "is_editable":"1",
           "is_mandatory":"1",
-          "access_level":"user"
-        },
-        {
-          "name":"longlivetoken",
-          "type":"string",
-          "is_editable":"0",
-          "is_mandatory":"1",
-          "access_level":"user"
-        },
-        {
-          "name":"pageid",
-          "type":"string",
-          "is_editable":"0",
-          "is_mandatory":"1",
-          "access_level":"user"
+          "access_level":"admin"
         }
       ]
     }
