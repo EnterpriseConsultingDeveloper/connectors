@@ -13,14 +13,6 @@
     <file url="file://$PROJECT_DIR$/src/RSSConnector" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/src/SiteConnector" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/src/TwitterConnector" charset="windows-1252" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/ReadMe.txt" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/config.php" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/inc/OAuth.php" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/inc/twitteroauth.php" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/includes" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/index.php" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/logout.php" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/src/TwitterConnector/ext/process.php" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/WhiterabbitConnector" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/src/WordpressConnector" charset="windows-1252" />
     <file url="file://$PROJECT_DIR$/src/config" charset="windows-1252" />

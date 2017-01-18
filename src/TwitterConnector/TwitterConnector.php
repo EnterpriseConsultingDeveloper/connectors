@@ -8,44 +8,64 @@
 
 namespace WR\Connector\TwitterConnector;
 
-
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\Network\Http\Client;
-
+//require 'Lib/TwitterConnection.php';
+use WR\Connector\TwitterConnection;
 class TwitterConnector extends Connector implements IConnector
 {
-    protected $fb;
+    protected $tw;
     protected $longLivedAccessToken;
     protected $accessToken;
     protected $appSecret;
 
     private $feedLimit;
     private $objectId;
+    private $context;
 
     function __construct($params)
     {
-//        $config = json_decode(file_get_contents('appdata.cfg', true), true);
-//
-//        $this->fb = new Twitter([
-//            'app_id' => $config['app_id'], //'1561093387542751',
-//            'app_secret' =>  $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
-//            'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
-//        ]);
-//
-//        $this->accessToken = $config['app_id'];
-//        $this->appSecret = $config['app_secret'];
-//
-//        if ($params != null) {
-//            if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
-//                $this->longLivedAccessToken = $params['longlivetoken'];
-//                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-//            }
-//
-//            $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
-//
-//            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 10;
-//        }
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
+        $api_base = $config['api_base'];
+
+        //This is all you need to configure.
+        $app_key = $config['api_key'];
+        $app_token = $config['api_secret'];
+
+        $bearer_token_creds = base64_encode($app_key.':'.$app_token);
+        //Get a bearer token.
+        $opts = array(
+            'http'=>array(
+                'method' => 'POST',
+                'header' => 'Authorization: Basic '.$bearer_token_creds."\r\n".
+                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+                'content' => 'grant_type=client_credentials'
+            )
+        );
+
+        $context = stream_context_create($opts);
+        $json = file_get_contents($api_base.'oauth2/token', false, $context);
+        $result = json_decode($json,true);
+
+        if (!is_array($result) || !isset($result['token_type']) || !isset($result['access_token'])) {
+            die("Something went wrong. This isn't a valid array: ".$json);
+        }
+        if ($result['token_type'] !== "bearer") {
+            die("Invalid token type. Twitter says we need to make sure this is a bearer.");
+        }
+        //Set our bearer token. Now issued, this won't ever* change unless it's invalidated by a call to /oauth2/invalidate_token.
+        //*probably - it's not documentated that it'll ever change.
+        $bearer_token = $result['access_token'];
+        //Try a twitter API request now.
+        $opts = array(
+            'http'=>array(
+                'method' => 'GET',
+                'header' => 'Authorization: Bearer '.$bearer_token
+            )
+        );
+        $this->context = stream_context_create($opts);
+        $this->tw = $api_base;
 
     }
 
@@ -66,13 +86,17 @@ class TwitterConnector extends Connector implements IConnector
         if ($objectId == null) {
             return [];
         }
-
-        $urlToRead = "https://stream.twitter.com/1.1/statuses/sample.json";
-        $http = new Client();
-        $response = $http->get($urlToRead);
-        debug($response); die;
-        $data = $response->json;
-        return($data);
+        //debug($objectId); die;
+        $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+//        $tweets = json_decode($json, true);
+//        foreach ($tweets as $tweet) {
+//            debug($tweet['text']."\r\n");
+//        }
+//        die;
+//
+//        debug($response); die;
+//        $data = $response->json;
+        return(json_decode($json, true));
     }
 
     /**
