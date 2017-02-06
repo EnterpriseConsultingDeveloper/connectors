@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Created by Dino Fratelli.
  * User: user
  * Date: 24/02/2016
  * Time: 15:31
@@ -9,10 +9,11 @@
 namespace WR\Connector\TwitterConnector;
 
 use WR\Connector\Connector;
+use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
 use Cake\Network\Http\Client;
-//require 'Lib/TwitterConnection.php';
 use WR\Connector\TwitterConnection;
+use Cake\Collection\Collection;
 class TwitterConnector extends Connector implements IConnector
 {
     protected $tw;
@@ -111,12 +112,9 @@ class TwitterConnector extends Connector implements IConnector
         if ($objectId == null) {
             return [];
         }
-
-        $urlToRead = "https://stream.twitter.com/1.1/statuses/sample.json";
-        $http = new Client();
-        $response = $http->get($urlToRead);
-        debug($response); die;
-        return($data);
+        $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+        $formatted_res = $this->format_result(json_decode($json, true));
+        return($formatted_res);
     }
 
 
@@ -336,5 +334,38 @@ class TwitterConnector extends Connector implements IConnector
     public function update_categories($content)
     {
 
+    }
+
+    /**
+     * Need to standardize data format, like this:
+     *        'posts'   =>   [
+     *            'data'      =>      [
+     *                (int) 0 =>         [
+     *                      'message'            => 'ddddd',
+     *                      'created_time'            => '2017-01-27T19:08:00+0000',
+     *                      id' => '211867678973537_753480801478886'
+     *                  ],
+     *              ],
+     *        ]
+     *
+     * @param $json
+     */
+    private function format_result($posts) {
+        $beans = array();
+        foreach($posts as $key => $value) {
+            $element =  new ConnectorBean();
+            $element->setBody($posts[$key]['text']);
+            $element->setCreationDate($posts[$key]['created_at']);
+            $element->setMessageId($posts[$key]['id_str']);
+            $element->setAuthor($posts[$key]['user']['name']);
+
+            //https://twitter.com/RadioNightwatch/status/827460856128614401
+            $uri = 'https://twitter.com/' . $posts[$key]['user']['name'] . '/status/' . $posts[$key]['id_str'];
+            $element->setUri($uri);
+
+            $beans[] = $element;
+        }
+        //debug($beans); die;
+        return $beans;
     }
 }

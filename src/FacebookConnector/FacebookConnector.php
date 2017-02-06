@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Created by Dino Fratelli.
  * User: user
  * Date: 24/02/2016
  * Time: 15:31
@@ -74,7 +74,7 @@ class FacebookConnector extends Connector implements IConnector
         $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
-        return($data);
+        return($this->format_result($data));
     }
 
     /**
@@ -94,7 +94,7 @@ class FacebookConnector extends Connector implements IConnector
         $http = new Client();
         $response = $http->get($urlToRead);
         $data = $response->json;
-        return($data);
+        return($this->format_result($data));
     }
 
 
@@ -314,5 +314,32 @@ class FacebookConnector extends Connector implements IConnector
     public function update_categories($content)
     {
 
+    }
+
+    private function format_result($posts) {
+        debug($posts); die;
+        foreach($posts as $key => $value) {
+            $posts[$key]['created_time'] = $posts[$key]['created_at'];
+            unset($posts[$key]['created_at']);
+
+            $text = $posts[$key]['text'];
+            $posts[$key]['message'] = $text;
+            unset($posts[$key]['text']);
+
+            // Title
+            $max_len = min(80, strlen($text));
+            $pos = strpos($text, ' ', $max_len);
+            $title = substr($text, 0, $pos);
+            if(strlen($title) < strlen($text))
+                $title .= '...';
+
+            $posts[$key]['title'] = $title;
+
+            $posts[$key]['id'] = $posts[$key]['id_str'];
+        }
+        $res = array();
+        $res['posts']['data'] = $posts;
+
+        return $res;
     }
 }

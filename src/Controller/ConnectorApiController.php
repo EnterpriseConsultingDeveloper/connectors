@@ -1,7 +1,7 @@
 <?php
 namespace WR\Connector\Controller;
 /**
- * Created by PhpStorm.
+ * Created by Dino Fratelli.
  * User: user
  * Date: 29/03/2016
  * Time: 09:39
