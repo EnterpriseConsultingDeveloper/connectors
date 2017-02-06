@@ -21,6 +21,23 @@ class ConnectorBean extends Bean
     private $_iso_language_code = '';
     private $_message_id = '';
     private $_hash = '';
+    private $_raw_post = '';
+
+    /**
+     * @return string
+     */
+    public function getRawPost()
+    {
+        return $this->_raw_post;
+    }
+
+    /**
+     * @param string $raw_post
+     */
+    public function setRawPost($raw_post)
+    {
+        $this->_raw_post = $raw_post;
+    }
 
     /**
      * @return string

@@ -16,6 +16,7 @@ use WR\Connector\IConnector;
 use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Exceptions\FacebookResponseException;
 use Cake\Network\Http\Client;
+use WR\Connector\ConnectorBean;
 
 class FacebookConnector extends Connector implements IConnector
 {
@@ -74,7 +75,7 @@ class FacebookConnector extends Connector implements IConnector
         $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
-        return($this->format_result($data));
+        return($data);
     }
 
     /**
@@ -316,30 +317,35 @@ class FacebookConnector extends Connector implements IConnector
 
     }
 
+
+    /**
+     * @param $posts
+     * @return array
+     */
     private function format_result($posts) {
-        debug($posts); die;
-        foreach($posts as $key => $value) {
-            $posts[$key]['created_time'] = $posts[$key]['created_at'];
-            unset($posts[$key]['created_at']);
+        $beans = array();
+        foreach($posts['posts']['data'] as $post) {
+            $element =  new ConnectorBean();
+            if(!empty($post['message']))
+                $element->setBody($post['message']);
+            else
+                $element->setBody($post['story']);
 
-            $text = $posts[$key]['text'];
-            $posts[$key]['message'] = $text;
-            unset($posts[$key]['text']);
+            if(!empty($post['story']))
+                $element->setTitle($post['story']);
 
-            // Title
-            $max_len = min(80, strlen($text));
-            $pos = strpos($text, ' ', $max_len);
-            $title = substr($text, 0, $pos);
-            if(strlen($title) < strlen($text))
-                $title .= '...';
+            $element->setCreationDate($post['created_time']);
+            $element->setMessageId($post['id']);
+            $element->setAuthor('');
 
-            $posts[$key]['title'] = $title;
+            //https://twitter.com/RadioNightwatch/status/827460856128614401
+            $uri = 'https://www.facebook.com/' . $post['id'];
+            $element->setUri($uri);
 
-            $posts[$key]['id'] = $posts[$key]['id_str'];
+            $element->setRawPost($post);
+
+            $beans[] = $element;
         }
-        $res = array();
-        $res['posts']['data'] = $posts;
-
-        return $res;
+        return $beans;
     }
 }

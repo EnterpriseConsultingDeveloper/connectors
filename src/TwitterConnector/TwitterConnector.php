@@ -89,14 +89,6 @@ class TwitterConnector extends Connector implements IConnector
         }
         //debug($objectId); die;
         $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-//        $tweets = json_decode($json, true);
-//        foreach ($tweets as $tweet) {
-//            debug($tweet['text']."\r\n");
-//        }
-//        die;
-//
-//        debug($response); die;
-//        $data = $response->json;
         return(json_decode($json, true));
     }
 
@@ -362,6 +354,8 @@ class TwitterConnector extends Connector implements IConnector
             //https://twitter.com/RadioNightwatch/status/827460856128614401
             $uri = 'https://twitter.com/' . $posts[$key]['user']['name'] . '/status/' . $posts[$key]['id_str'];
             $element->setUri($uri);
+
+            $element->setRawPost($posts[$key]);
 
             $beans[] = $element;
         }
