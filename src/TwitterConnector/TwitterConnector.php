@@ -89,7 +89,23 @@ class TwitterConnector extends Connector implements IConnector
         }
         //debug($objectId); die;
         $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-        return(json_decode($json, true));
+        $data = json_decode($json, true);
+
+        // Append users that have taken an action on the page
+        $social_users = array();
+//        foreach($data as $d) {
+//            foreach($d['reactions']['data'] as $social_user) {
+//                $ub = new ConnectorUserBean();
+//                $ub->setName($social_user['name']);
+//                $ub->setId($social_user['id']);
+//                $ub->setAction($social_user['type']);
+//
+//                $social_users[] = $ub;
+//            }
+//        }
+        $data['social_users'] = $social_users;
+
+        return($data);
     }
 
     /**

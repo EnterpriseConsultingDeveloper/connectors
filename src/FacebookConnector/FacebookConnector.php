@@ -75,6 +75,21 @@ class FacebookConnector extends Connector implements IConnector
         $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
+
+        // Append users that have taken an action on the page
+        $social_users = array();
+        foreach($data as $d) {
+            foreach($d['reactions']['data'] as $social_user) {
+                $ub = new ConnectorUserBean();
+                $ub->setName($social_user['name']);
+                $ub->setId($social_user['id']);
+                $ub->setAction($social_user['type']);
+
+                $social_users[] = $ub;
+            }
+        }
+        $data['social_users'] = $social_users;
+
         return($data);
     }
 
