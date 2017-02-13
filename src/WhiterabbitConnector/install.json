@@ -9,12 +9,6 @@
       "default_channel":"1",
       "streams":[
         {
-          "name":"CMS",
-          "permitted_operations":"RPDU",
-          "connection_string":"WhiterabbitCMSConnector",
-          "type": "blogging"
-        },
-        {
           "name":"Ecommerce",
           "permitted_operations":"RPDU",
           "connection_string":"WhiterabbitEcommerceConnector",
