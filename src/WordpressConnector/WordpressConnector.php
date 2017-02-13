@@ -33,7 +33,6 @@ class WordpressConnector extends Connector implements IConnector
         $this->_wpuser = $params['username'];
         $this->_wppass = $params['password'];
 
-
         $connectPath = $this->_wpapipath . 'connect';
 
         $response = $this->_http->post($connectPath, [
@@ -45,9 +44,49 @@ class WordpressConnector extends Connector implements IConnector
 
     }
 
-    public function connect($config)
+    public function connect($config = null)
     {
-        return "connect";
+        // In the connect we can eventually return properties of this media, like the category tree
+        $category_tree = array();
+        $wp_category = array();
+        if($this->_wptoken != null) {
+            $readPath = $this->_wpapipath . 'connect';
+
+            $response = $this->_http->get($readPath, [
+                'q' => 'categories',
+                'token' => $this->_wptoken
+            ]);
+            $bodyResp = json_decode($response->body(), true);
+            if(isset($bodyResp['categories']))
+                $wp_category = $bodyResp['categories'];
+        }
+//        Category Array from WP
+//        (int) 0 => [
+//            'term_id' => (int) 15,
+//            'name' => 'Categoria1',
+//            'slug' => 'categoria1',
+//            'term_group' => (int) 0,
+//            'term_taxonomy_id' => (int) 15,
+//            'taxonomy' => 'category',
+//            'description' => '',
+//            'parent' => (int) 0,
+//            'count' => (int) 1,
+//            'filter' => 'raw',
+//            'cat_ID' => (int) 15,
+//            'category_count' => (int) 1,
+//            'category_description' => '',
+//            'cat_name' => 'Categoria1',
+//            'category_nicename' => 'categoria1',
+//            'category_parent' => (int) 0
+//        ],
+//      The category list must attain the standard only with id and text
+        foreach($wp_category as $cat) {
+            $c['id'] = $cat['term_id'];
+            $c['text'] = $cat['name'];
+
+            $category_tree[] = $c;
+        }
+        return $category_tree;
     }
 
     public function read($objectId = null)

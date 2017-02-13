@@ -144,7 +144,7 @@ class ConnectorManager
      *
      * Gateway for update content to social and sons
      */
-    public function update_content ($params, $content, $objetcId)
+    public function update_content($params, $content, $objetcId)
     {
         $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
         $classInstance = new $className($params);
@@ -156,7 +156,7 @@ class ConnectorManager
      *
      * Gateway for sending content to social and sons
      */
-    public function send_content ($params, $content)
+    public function send_content($params, $content)
     {
         $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
         $classInstance = new $className($params);
@@ -261,6 +261,18 @@ class ConnectorManager
         return $classInstance->commentFromDate($objectId);
     }
 
+
+    /**
+     * @param $params
+     * @param $objectId
+     * @return mixed
+     */
+    public function connect($params)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+        return $classInstance->connect();
+    }
 
     /*
      * Test method, useless

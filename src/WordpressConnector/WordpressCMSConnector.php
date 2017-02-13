@@ -31,6 +31,7 @@ class WordpressCMSConnector extends WordpressConnector
                 'type' => 'post',
                 'content' => $content,
                 'content_id' => $content['content']['original_table_id'],
+                'category_id' => $content['content']['category_id'],
                 'token' => $this->_wptoken,
                 'datestart' => null,
                 'dateend' => null
