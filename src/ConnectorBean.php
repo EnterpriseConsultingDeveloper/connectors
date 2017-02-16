@@ -165,15 +165,4 @@ class ConnectorBean extends Bean
         $this->_message_id = $message_id;
     }
 
-    /**
-     * @return string
-     */
-    public function getHash()
-    {
-        if(empty($this->_hash))
-            $this->_hash = md5($this->_body);
-
-        return $this->_hash;
-    }
-
 }

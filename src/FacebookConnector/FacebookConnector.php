@@ -17,6 +17,7 @@ use Facebook\Exceptions\FacebookSDKException;
 use Facebook\Exceptions\FacebookResponseException;
 use Cake\Network\Http\Client;
 use WR\Connector\ConnectorBean;
+use WR\Connector\ConnectorUserBean;
 
 class FacebookConnector extends Connector implements IConnector
 {
@@ -78,18 +79,21 @@ class FacebookConnector extends Connector implements IConnector
 
         // Append users that have taken an action on the page
         $social_users = array();
-        foreach($data as $d) {
-            foreach($d['reactions']['data'] as $social_user) {
-                $ub = new ConnectorUserBean();
-                $ub->setName($social_user['name']);
-                $ub->setId($social_user['id']);
-                $ub->setAction($social_user['type']);
 
-                $social_users[] = $ub;
+        foreach($data as $d) {
+            if(isset($d['reactions'])) {
+                foreach($d['reactions']['data'] as $social_user) {
+                    $ub = new ConnectorUserBean();
+                    $ub->setName($social_user['name']);
+                    $ub->setId($social_user['id']);
+                    $ub->setAction($social_user['type']);
+
+                    $social_users[] = $ub;
+                }
             }
         }
-        $data['social_users'] = $social_users;
 
+        $data['social_users'] = $social_users;
         return($data);
     }
 
