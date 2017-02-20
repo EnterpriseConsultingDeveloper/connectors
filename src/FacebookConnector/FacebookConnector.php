@@ -87,13 +87,45 @@ class FacebookConnector extends Connector implements IConnector
                     $ub->setName($social_user['name']);
                     $ub->setId($social_user['id']);
                     $ub->setAction($social_user['type']);
+                    $ub->setContentId($d['id']);
+                    $ub->setText('');
 
                     $social_users[] = $ub;
+                }
+            }
+
+            if(isset($d['comments'])) {
+                foreach($d['comments']['data'] as $social_user) {
+                    $ub = new ConnectorUserBean();
+                    $ub->setName($social_user['from']['name']);
+                    $ub->setId($social_user['from']['id']);
+                    $ub->setAction('COMMENT');
+                    $ub->setContentId($d['id']);
+                    $ub->setDate($social_user['created_time']);
+                    $ub->setText($social_user['message']);
+
+                    $social_users[] = $ub;
+
+                    if(isset($social_user['comments'])) {
+                        foreach($social_user['comments']['data'] as $sub_comment) {
+                            $ub = new ConnectorUserBean();
+                            $ub->setName($sub_comment['from']['name']);
+                            $ub->setId($sub_comment['from']['id']);
+                            $ub->setAction('COMMENT');
+                            $ub->setContentId($d['id']);
+                            $ub->setDate($sub_comment['created_time']);
+                            $ub->setText($sub_comment['message']);
+
+                            $social_users[] = $ub;
+                        }
+                    }
                 }
             }
         }
 
         $data['social_users'] = $social_users;
+
+        //debug($data); die;
         return($data);
     }
 

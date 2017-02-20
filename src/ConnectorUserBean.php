@@ -16,6 +16,57 @@ class ConnectorUserBean extends Bean
     private $_name = '';
     private $_id = '';
     private $_action = '';
+    private $_content_id = '';
+    private $_text = '';
+    private $_date = '';
+
+    /**
+     * @return string
+     */
+    public function getDate()
+    {
+        return $this->_date;
+    }
+
+    /**
+     * @param string $date
+     */
+    public function setDate($date)
+    {
+        $this->_date = $date;
+    }
+
+    /**
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->_text;
+    }
+
+    /**
+     * @param string $text
+     */
+    public function setText($text)
+    {
+        $this->_text = $text;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContentId()
+    {
+        return $this->_content_id;
+    }
+
+    /**
+     * @param string $content_id
+     */
+    public function setContentId($content_id)
+    {
+        $this->_content_id = $content_id;
+    }
 
     /**
      * @return string
