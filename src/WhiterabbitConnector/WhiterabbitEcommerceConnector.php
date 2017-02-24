@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Dino Fratelli.
+ * Created by PhpStorm.
  * User: user
  * Date: 24/02/2016
  * Time: 15:31
@@ -26,14 +26,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
      */
     public function write($content)
     {
-        /*$data = array(
-                    'orderIdExt' => '100',
-                    'sourceId' => 'magento',
-                    'orderNum' => '100',
-                    'orderDate' => '2016-11-30',
-                    'orderTotal' => '100.10'
-                );*/
-        $data = [];
+//        $data = [];
         $data['orderIdExt'] = $this->notSetToEmptyString($content['orderIdExt']);
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
         $data['orderNum'] = $this->notSetToEmptyString($content['orderNum']);
@@ -42,7 +35,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['email'] =  $this->notSetToEmptyString($content['email']);
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
-
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         try {
             $crmManager = new CRMManager();
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
@@ -94,8 +87,25 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
-        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
+        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+
+        //extra
+
+
+        $data['address'] = $this->notSetToEmptyString($content['address']);
+        $data['city'] = $this->notSetToEmptyString($content['city']);
+        $data['postalcode'] = $this->notSetToEmptyString($content['postalcode']);
+        $data['province'] = $this->notSetToEmptyString($content['province']);
+        $data['birthdaydate'] = $this->notSetToEmptyString($content['birthdaydate']);
+        $data['telephone1'] = $this->notSetToEmptyString($content['telephone1']);
+        $data['taxcode'] = $this->notSetToEmptyString($content['taxcode']);
+        $data['nation'] = $this->notSetToEmptyString($content['nation']);
+        $data['operation'] = $this->notSetToEmptyString($content['operation']);
+        $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
+        $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
+
+
 
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
