@@ -45,11 +45,13 @@ class ConnectorBean extends Bean
     public function getTitle()
     {
         if(empty($this->_title)) {
-            $max_len = min(80, strlen($this->_body));
-            $pos = strpos($this->_body, ' ', $max_len);
-            $title = substr($this->_body, 0, $pos);
-            if(strlen($title) < strlen($this->_body))
-                $title .= '...';
+            $max_len = 80;
+            if(strlen($this->_body) > $max_len) {
+                $pos = strpos($this->_body, ' ', $max_len);
+                $title = substr($this->_body, 0, $pos) .= '...';
+            } else {
+                $title = $this->_body;
+            }
 
             $this->_title = $title;
         }
