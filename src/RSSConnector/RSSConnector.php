@@ -44,6 +44,7 @@ class RSSConnector extends Connector implements IConnector
 
         try {
             $x = new \SimpleXMLElement($content);
+            debug($x);
             $elementArray = $x->channel->item;
 
             foreach($elementArray as $entry) {

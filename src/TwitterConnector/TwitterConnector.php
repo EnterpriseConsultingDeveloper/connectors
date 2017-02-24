@@ -120,8 +120,36 @@ class TwitterConnector extends Connector implements IConnector
         if ($objectId == null) {
             return [];
         }
-        $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-        $formatted_res = $this->format_result(json_decode($json, true));
+
+        $formatted_res = array();
+
+        try {
+            $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+            $res = json_decode($json, true);
+
+            foreach($res as $key => $value) {
+                try {
+                    $element =  new ConnectorBean();
+                    $element->setBody($value['text']);
+                    $element->setCreationDate($value['created_at']);
+                    $element->setMessageId($value['id_str']);
+                    $element->setAuthor($value['user']['name']);
+
+                    //https://twitter.com/RadioNightwatch/status/827460856128614401
+                    $uri = 'https://twitter.com/' . $value['user']['name'] . '/status/' . $value['id_str'];
+                    $element->setUri($uri);
+
+                    $element->setRawPost($value);
+
+                    $formatted_res[] = $element;
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        } catch (\Exception $e) {
+            // Do nothing
+        }
+
         return($formatted_res);
     }
 
@@ -344,38 +372,4 @@ class TwitterConnector extends Connector implements IConnector
 
     }
 
-    /**
-     * Need to standardize data format, like this:
-     *        'posts'   =>   [
-     *            'data'      =>      [
-     *                (int) 0 =>         [
-     *                      'message'            => 'ddddd',
-     *                      'created_time'            => '2017-01-27T19:08:00+0000',
-     *                      id' => '211867678973537_753480801478886'
-     *                  ],
-     *              ],
-     *        ]
-     *
-     * @param $json
-     */
-    private function format_result($posts) {
-        $beans = array();
-        foreach($posts as $key => $value) {
-            $element =  new ConnectorBean();
-            $element->setBody($posts[$key]['text']);
-            $element->setCreationDate($posts[$key]['created_at']);
-            $element->setMessageId($posts[$key]['id_str']);
-            $element->setAuthor($posts[$key]['user']['name']);
-
-            //https://twitter.com/RadioNightwatch/status/827460856128614401
-            $uri = 'https://twitter.com/' . $posts[$key]['user']['name'] . '/status/' . $posts[$key]['id_str'];
-            $element->setUri($uri);
-
-            $element->setRawPost($posts[$key]);
-
-            $beans[] = $element;
-        }
-        //debug($beans); die;
-        return $beans;
-    }
 }
