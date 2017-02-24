@@ -20,6 +20,127 @@ class ConnectorUserBean extends Bean
     private $_text = '';
     private $_date = '';
 
+    private $_firstname = '';
+    private $_lastname = '';
+    private $_gender = '';
+    private $_coverimage = '';
+    private $_locale = '';
+    private $_currency = '';
+    private $_devices = '';
+
+    /**
+     * @return string
+     */
+    public function getFirstname()
+    {
+        return $this->_firstname;
+    }
+
+    /**
+     * @param string $firstname
+     */
+    public function setFirstname($firstname)
+    {
+        $this->_firstname = $firstname;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastname()
+    {
+        return $this->_lastname;
+    }
+
+    /**
+     * @param string $lastname
+     */
+    public function setLastname($lastname)
+    {
+        $this->_lastname = $lastname;
+    }
+
+    /**
+     * @return string
+     */
+    public function getGender()
+    {
+        return $this->_gender;
+    }
+
+    /**
+     * @param string $gender
+     */
+    public function setGender($gender)
+    {
+        $this->_gender = $gender;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCoverimage()
+    {
+        return $this->_coverimage;
+    }
+
+    /**
+     * @param string $coverimage
+     */
+    public function setCoverimage($coverimage)
+    {
+        $this->_coverimage = $coverimage;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLocale()
+    {
+        return $this->_locale;
+    }
+
+    /**
+     * @param string $locale
+     */
+    public function setLocale($locale)
+    {
+        $this->_locale = $locale;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrency()
+    {
+        return $this->_currency;
+    }
+
+    /**
+     * @param string $currency
+     */
+    public function setCurrency($currency)
+    {
+        $this->_currency = $currency;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDevices()
+    {
+        return $this->_devices;
+    }
+
+    /**
+     * @param string $devices
+     */
+    public function setDevices($devices)
+    {
+        $this->_devices = $devices;
+    }
+
+
     /**
      * @return string
      */

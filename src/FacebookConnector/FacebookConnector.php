@@ -89,6 +89,7 @@ class FacebookConnector extends Connector implements IConnector
                     $ub->setAction($social_user['type']);
                     $ub->setContentId($d['id']);
                     $ub->setText('');
+                    $ub = $this->getUserExtraData($social_user['id'], $ub);
 
                     $social_users[] = $ub;
                 }
@@ -103,6 +104,7 @@ class FacebookConnector extends Connector implements IConnector
                     $ub->setContentId($d['id']);
                     $ub->setDate($social_user['created_time']);
                     $ub->setText($social_user['message']);
+                    $ub = $this->getUserExtraData($social_user['id'], $ub);
 
                     $social_users[] = $ub;
 
@@ -115,6 +117,7 @@ class FacebookConnector extends Connector implements IConnector
                             $ub->setContentId($d['id']);
                             $ub->setDate($sub_comment['created_time']);
                             $ub->setText($sub_comment['message']);
+                            $ub = $this->getUserExtraData($social_user['id'], $ub);
 
                             $social_users[] = $ub;
                         }
@@ -220,7 +223,9 @@ class FacebookConnector extends Connector implements IConnector
 
     public function stats($objectId)
     {
-        if ($this->objectId == null) {
+        if ($objectId == null) $objectId = $this->objectId;
+
+        if ($objectId == null) {
             return [];
         }
 
@@ -297,7 +302,9 @@ class FacebookConnector extends Connector implements IConnector
 
     public function comments($objectId)
     {
-        if ($this->objectId == null) {
+        if ($objectId == null) $objectId = $this->objectId;
+
+        if ($objectId == null) {
             return [];
         }
 
@@ -318,7 +325,9 @@ class FacebookConnector extends Connector implements IConnector
     }
 
     public function commentFromDate($objectId, $fromDate) {
-        if ($this->objectId == null) {
+        if ($objectId == null) $objectId = $this->objectId;
+
+        if ($objectId == null) {
             return [];
         }
 
@@ -340,16 +349,21 @@ class FacebookConnector extends Connector implements IConnector
 
     public function user($objectId)
     {
-        if ($this->objectId == null) {
+        if ($objectId == null) $objectId = $this->objectId;
+
+        if ($objectId == null) {
             return [];
         }
-
+        //1165594993
+        //email,about,age_range,birthday,currency,education,favorite_athletes,favorite_teams,hometown,about,birthday,inspirational_people,interested_in,languages,location,meeting_for,political,quotes,relationship_status,religion,significant_other,sports,website,work
+        //id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale,name_format,timezone
         try {
-            $request = $this->fb->request('GET', '/' . $objectId);
+            $request = $this->fb->sendRequest('GET', '/' . $objectId);
             $response = $this->fb->getClient()->sendRequest($request);
-            //debug($response->getGraphObject()); die;
+            //debug($request); die;
             return $response->getDecodedBody();
         } catch(FacebookResponseException $e) {
+            debug($e); die;
             return [];
         } catch(FacebookSDKException $e) {
             // When validation fails or other local issues
@@ -398,5 +412,32 @@ class FacebookConnector extends Connector implements IConnector
             $beans[] = $element;
         }
         return $beans;
+    }
+
+    private function getUserExtraData($userId, ConnectorUserBean $ub) {
+        try {
+            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale');
+            $response = $this->fb->getClient()->sendRequest($request);
+            $extraData = $response->getDecodedBody();
+
+            $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
+            $ub->setLastname($this->blankForEmpty($extraData['last_name']));
+            $ub->setGender($this->blankForEmpty($extraData['gender']));
+            $ub->setCoverimage($this->blankForEmpty($extraData['cover']['source']));
+            $ub->setLocale($this->blankForEmpty($extraData['locale']));
+            $ub->setCurrency($this->blankForEmpty($extraData['currency']));
+            //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
+
+        } catch(FacebookResponseException $e) {
+
+        } catch(FacebookSDKException $e) {
+
+        }
+
+        return $ub;
+    }
+
+    private function blankForEmpty(&$var) {
+        return !empty($var) ? $var : '';
     }
 }
