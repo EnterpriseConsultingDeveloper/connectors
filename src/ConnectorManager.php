@@ -49,7 +49,7 @@ class ConnectorManager
         foreach ($channels as $channel) {
             $connectorChannel = $connectorsTable->ConnectorChannels->newEntity();
             $connectorChannel->name = $channel['name'];
-            $connectorChannel->default_channel = $channel['default'];
+            $connectorChannel->default_channel = $channel['default_channel'];
             $connectorChannels[] = $connectorChannel;
 
             $streams = $channel['streams'];
