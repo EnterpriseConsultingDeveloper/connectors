@@ -87,7 +87,7 @@ class ConnectorManager
 
         if ($connectorsTable->save($connector)) {
             $id = $connector->id;
-            debug($id);
+            //debug($id);
         } else {
             debug('Connettore gi? presente o errore nei dati'); die;
         }

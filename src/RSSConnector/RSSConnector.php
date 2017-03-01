@@ -40,35 +40,36 @@ class RSSConnector extends Connector implements IConnector
     {
         //debug($objectId); die;
         $rssArray = [];
-        $content = file_get_contents($objectId); // Feed url
+        if($objectId != null) {
+            $content = file_get_contents($objectId); // Feed url
 
-        try {
-            $x = new \SimpleXMLElement($content);
-            if(isset($x->channel->item))
-                $elementArray = $x->channel->item;
-            else
-                $elementArray = $x->entry;
+            try {
+                $x = new \SimpleXMLElement($content);
+                if(isset($x->channel->item))
+                    $elementArray = $x->channel->item;
+                else
+                    $elementArray = $x->entry;
 
-            foreach($elementArray as $entry) {
-                try {
-                    $element =  new ConnectorBean();
-                    $element->setTitle((string)$entry->title);
-                    $element->setBody((string)$entry->description);
-                    $element->setCreationDate((string)$entry->pubDate);
-                    $element->setMessageId((string)$entry->guid);
-                    $element->setAuthor('');
-                    $element->setUri((string)$entry->link);
+                foreach($elementArray as $entry) {
+                    try {
+                        $element =  new ConnectorBean();
+                        $element->setTitle((string)htmlspecialchars($entry->title));
+                        $element->setBody((string)htmlspecialchars($entry->description));
+                        $element->setCreationDate((string)$entry->pubDate);
+                        $element->setMessageId((string)$entry->guid);
+                        $element->setAuthor('');
+                        $element->setUri((string)$entry->link);
 
-                    $rssArray[] = $element;
-                } catch (\Exception $e) {
-                    continue;
+                        $rssArray[] = $element;
+                    } catch (\Exception $e) {
+                        continue;
+                    }
                 }
+
+            } catch (\Exception $e) {
+                // Do nothing
             }
-
-        } catch (\Exception $e) {
-           // Do nothing
         }
-
 
         return $rssArray;
     }
