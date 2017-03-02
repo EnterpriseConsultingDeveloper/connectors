@@ -95,10 +95,16 @@ class ConnectorBean extends Bean
      */
     public function setCreationDate($creation_date)
     {
+
+      // se è nulla imposta una data fissa perchè nel db non è possibile salvare campo vuoto
+      if ($creation_date == null) {
+        $time = '1999-12-31 23:59:59';
+      } else {
         $time = new Time($creation_date);
         $time = ($time->i18nFormat('YYYY-MM-dd HH:mm:ss'));
+      }
 
-        $this->_creation_date = $time;
+      $this->_creation_date = $time;
     }
 
     /**
