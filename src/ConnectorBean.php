@@ -20,7 +20,6 @@ class ConnectorBean extends Bean
     private $_uri = '';
     private $_iso_language_code = '';
     private $_message_id = '';
-    private $_hash = '';
     private $_raw_post = '';
 
     /**
@@ -169,6 +168,15 @@ class ConnectorBean extends Bean
     public function setMessageId($message_id)
     {
         $this->_message_id = $message_id;
+    }
+
+    public function hashcode() {
+        if (empty($_hash)) {
+            $arr = $this->toArray();
+            unset($arr['creationDate']);
+            $_hash = md5(json_encode($arr));
+        }
+        return $_hash;
     }
 
 }
