@@ -47,6 +47,7 @@ class ConnectorBean extends Bean
             $max_len = 80;
             if(strlen($this->_body) > $max_len) {
                 $pos = strpos($this->_body, ' ', $max_len);
+                $pos = ($pos == 0) ? $max_len : $pos;
                 $this->_title = substr($this->_body, 0, $pos) . '...';
             } else {
                 $this->_title = $this->_body;
