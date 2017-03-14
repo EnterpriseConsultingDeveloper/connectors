@@ -391,17 +391,15 @@ class FacebookConnector extends Connector implements IConnector
         $beans = array();
         foreach($posts['posts']['data'] as $post) {
             $element =  new ConnectorBean();
-            if(!empty($post['message'])) {
+            if(!empty($post['message']))
                 $element->setBody($post['message']);
-                $element->setIsContentMeaningful(1);
-            } else {
+            else
                 $element->setBody($post['story']);
-                $element->setIsContentMeaningful(0);
-            }
 
             if(!empty($post['story']))
                 $element->setTitle($post['story']);
 
+            $element->setIsContentMeaningful(1);
             $element->setCreationDate($post['created_time']);
             $element->setMessageId($post['id']);
             $element->setAuthor('');
