@@ -86,6 +86,91 @@ class ConnectorManager
         $connector->connector_channels = $connectorChannels;
 
         if ($connectorsTable->save($connector)) {
+
+
+            //TODO: Creare anche il necessario rabbit_source dalle source che devono essere comunque presenti prima
+            /*$rabbit_id = $this->request->session()->read('Config.Rabbit_id');
+        $sourceList = $this->SourceLists->newEntity();
+        if ($this->request->is('post')) {
+            if (isset($this->request->data['url'])) {
+                $sourceList = $this->SourceLists->patchEntity($sourceList, $this->request->data, ['validate' => 'url']);
+            } else {
+                $sourceList = $this->SourceLists->patchEntity($sourceList, $this->request->data, ['validate' => 'name']);
+            }
+            $sources = $this->SourceLists->RabbitSources->find('')
+                ->select(['Sources.id', 'Sources.name'])
+                ->contain(['Sources'])
+                ->where(['RabbitSources.id=' . $this->request->data['rabbit_source_id']])->first();
+            $this->loadModel('RabbitSourceSettings');
+            $settings = $this->RabbitSourceSettings->find()
+                ->contain(['SourceSettings', 'RabbitSources'])
+                ->where(['SourceSettings.source_id' => $sources->Sources->id])
+                ->where(['RabbitSources.rabbit_id' => $rabbit_id]);
+
+            $params = array();
+            foreach ($settings as $id => $setting) {
+                $params[$setting->source_setting->name] = $setting->value;
+            }
+
+            if (isset($this->request->data['url'])) {
+                $params['url'] = $this->request->data['url'];
+            }
+            $socialGateway = new SocialGateway();
+
+            $data = $socialGateway->getPageParameters($sources->Sources->name, $params);
+
+            if ($data['error'] != Null) {
+                $this->Flash->error($data['error']);
+                return $this->redirect(['action' => 'add']);
+            }
+
+            $sourceList = $this->SourceLists->patchEntity($sourceList, $data);
+            if ($this->SourceLists->save($sourceList)) {
+
+                $data = $socialGateway->activateCron($sources->Sources->name, $params);
+
+                if (isset($data['cron'])) {
+                    $this->Flash->success('The source list has been saved. You\'ll see the first ' . $sources->Sources->name . '\'s content from ' . $data['cron']);
+                } else {
+                    $this->Flash->success('The source list has been saved.');
+                }
+
+                return $this->redirect(['action' => 'index']);
+            } else {
+                $this->Flash->error('The source list could not be saved. Please, try again.');
+            }
+        }
+        $rabbitSources = $this->SourceLists->RabbitSources->find()
+            ->select(['id', 'Sources.name'])
+            ->contain(['Sources'])
+            ->where(['rabbit_id' => $rabbit_id]);
+
+        if (empty($rabbitSources) || empty($rabbitSources->toArray())) {
+            $this->Flash->warning('You must add one rabbit source.');
+            return $this->redirect(['controller' => 'RabbitSources', 'action' => 'add']);
+        }
+
+        $data = array();
+        foreach ($rabbitSources as $id => $rabbitSource) {
+            $data[$rabbitSource->id] = $rabbitSource->source->name;
+        }
+
+        $this->loadModel('LanguagesRabbits');
+        $rabbit_id = $this->request->session()->read('Config.Rabbit_id');
+        $languages_list = $this->LanguagesRabbits->find()
+            ->contain(['Languages'])
+            ->select(['Languages.id', 'Languages.name'], true)
+            ->where(['LanguagesRabbits.rabbit_id' => $rabbit_id]);
+
+        $languages = array();
+        foreach ($languages_list as $lang) {
+            $languages[$lang->Languages->id] = $lang->Languages->name;
+        }
+
+        $this->set(compact('sourceList', 'rabbitSources', 'languages', 'data'));
+        $this->set('_serialize', ['sourceList']);
+        $this->set('_serialize', ['data']);*/
+
             $id = $connector->id;
             //debug($id);
         } else {

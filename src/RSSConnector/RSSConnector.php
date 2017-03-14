@@ -59,6 +59,7 @@ class RSSConnector extends Connector implements IConnector
                         $element->setMessageId((string)$entry->guid);
                         $element->setAuthor('');
                         $element->setUri((string)$entry->link);
+                        $element->setIsContentMeaningful(0);
 
                         $rssArray[] = $element;
                     } catch (\Exception $e) {

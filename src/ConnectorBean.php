@@ -21,6 +21,23 @@ class ConnectorBean extends Bean
     private $_iso_language_code = '';
     private $_message_id = '';
     private $_raw_post = '';
+    private $_is_content_meaningful = 1;
+
+    /**
+     * @return int
+     */
+    public function getIsContentMeaningful()
+    {
+        return $this->_is_content_meaningful;
+    }
+
+    /**
+     * @param int $is_content_meaningful
+     */
+    public function setIsContentMeaningful($is_content_meaningful)
+    {
+        $this->_is_content_meaningful = $is_content_meaningful;
+    }
 
     /**
      * @return string

@@ -138,7 +138,7 @@ class TwitterConnector extends Connector implements IConnector
                     //https://twitter.com/RadioNightwatch/status/827460856128614401
                     $uri = 'https://twitter.com/' . $value['user']['name'] . '/status/' . $value['id_str'];
                     $element->setUri($uri);
-
+                    $element->setIsContentMeaningful(0);
                     $element->setRawPost($value);
 
                     $formatted_res[] = $element;
