@@ -172,8 +172,8 @@ class ConnectorBean extends Bean
     }
 
     public function hashcode() {
-        $a = ['title' => $this->getTitle(), 'body' => $this->getBody()];
-        return md5(json_encode($a));
+        $arr = ['title' => $this->getTitle(), 'body' => $this->getBody()];
+        return md5(json_encode($arr));
     }
 
 }
