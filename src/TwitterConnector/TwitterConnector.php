@@ -75,6 +75,8 @@ class TwitterConnector extends Connector implements IConnector
         return "connect";
     }
 
+
+
     /**
      * @param null $objectId
      * @return array
@@ -87,7 +89,8 @@ class TwitterConnector extends Connector implements IConnector
         if ($objectId == null) {
             return [];
         }
-        //debug($objectId); die;
+
+        $objectId = $this->cleanObjectId($objectId);
         $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
         $data = json_decode($json, true);
 
@@ -121,6 +124,7 @@ class TwitterConnector extends Connector implements IConnector
             return [];
         }
 
+        $objectId = $this->cleanObjectId($objectId);
         $formatted_res = array();
 
         try {
@@ -136,7 +140,7 @@ class TwitterConnector extends Connector implements IConnector
                     $element->setAuthor($value['user']['name']);
 
                     //https://twitter.com/RadioNightwatch/status/827460856128614401
-                    $uri = 'https://twitter.com/' . $value['user']['name'] . '/status/' . $value['id_str'];
+                    $uri = 'https://twitter.com/' . $objectId . '/status/' . $value['id_str'];
                     $element->setUri($uri);
                     $element->setIsContentMeaningful(1);
                     $element->setRawPost($value);
@@ -370,6 +374,21 @@ class TwitterConnector extends Connector implements IConnector
     public function update_categories($content)
     {
 
+    }
+
+    /**
+     * Object ID can be only screen_name or url like 'dinofratelli' or 'https://twitter.com/applenws'
+     * @param $objectId
+     * @return mixed
+     */
+    private function cleanObjectId($objectId) {
+        if(substr($objectId, 0, 20) === 'https://twitter.com/')
+            return substr($objectId, 20, strlen($objectId));
+
+        if(substr($objectId, 0, 19) === 'http://twitter.com/')
+            return substr($objectId, 19, strlen($objectId));
+
+        return $objectId;
     }
 
 }
