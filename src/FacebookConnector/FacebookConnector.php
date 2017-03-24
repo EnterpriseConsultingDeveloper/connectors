@@ -53,6 +53,15 @@ class FacebookConnector extends Connector implements IConnector
             $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 10;
         }
 
+        $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
+        $http = new Client();
+        $response = $http->get($debugTokenCommand);
+        if($response->code !== 200) {
+            $error = ['Error' => $response->code, 'Message' => $response->headers['WWW-Authenticate']];
+            //debug($error); die;
+            return $error;
+        }
+
     }
 
     public function connect($config)
