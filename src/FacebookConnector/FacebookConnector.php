@@ -50,7 +50,7 @@ class FacebookConnector extends Connector implements IConnector
 
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
 
-            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 10;
+            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
         }
 
         $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
@@ -158,7 +158,8 @@ class FacebookConnector extends Connector implements IConnector
         $http = new Client();
         $response = $http->get($urlToRead);
         $data = $response->json;
-        return($this->format_result($data));
+        $formattedResult = $this->format_result($data);
+        return($formattedResult);
     }
 
 
