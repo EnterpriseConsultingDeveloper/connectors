@@ -91,7 +91,13 @@ class TwitterConnector extends Connector implements IConnector
         }
 
         $objectId = $this->cleanObjectId($objectId);
-        $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+        if (substr($objectId, 0, 1) === '#') {// hashtag search
+            $objectId = str_replace('#', '%23', $objectId);
+            $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
+        } else {
+            $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+        }
+
         $data = json_decode($json, true);
 
         // Append users that have taken an action on the page
@@ -128,7 +134,12 @@ class TwitterConnector extends Connector implements IConnector
         $formatted_res = array();
 
         try {
-            $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+            $hashtagSearch = true;
+            if($hashtagSearch)
+                $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
+            else
+                $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+
             $res = json_decode($json, true);
 
             foreach($res as $key => $value) {
