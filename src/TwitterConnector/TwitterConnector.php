@@ -134,16 +134,20 @@ class TwitterConnector extends Connector implements IConnector
         $formatted_res = array();
 
         try {
-            $hashtagSearch = true;
-            if($hashtagSearch)
+            if (substr($objectId, 0, 1) === '#') {// hashtag search
+                $objectId = str_replace('#', '%23', $objectId);
                 $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
-            else
+            } else {
                 $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+            }
 
             $res = json_decode($json, true);
-
+            if(isset($res['statuses'])) {
+                $res = $res['statuses'];
+            }
             foreach($res as $key => $value) {
                 try {
+
                     $element =  new ConnectorBean();
                     $element->setBody($value['text']);
                     $element->setCreationDate($value['created_at']);
