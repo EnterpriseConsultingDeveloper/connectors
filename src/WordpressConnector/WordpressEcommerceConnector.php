@@ -11,6 +11,8 @@ namespace WR\Connector\WordpressConnector;
 
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
+use Cake\ORM\TableRegistry;
+use App\Lib\CRM\CRMManager;
 
 class WordpressEcommerceConnector extends WordpressConnector
 {
@@ -42,6 +44,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['email'] =  $this->notSetToEmptyString($content['email']);
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
         try {
             $crmManager = new CRMManager();
