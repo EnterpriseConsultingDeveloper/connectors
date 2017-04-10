@@ -11,6 +11,8 @@ namespace WR\Connector\WordpressConnector;
 
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
+use Cake\ORM\TableRegistry;
+use App\Lib\CRM\CRMManager;
 
 class WordpressEcommerceConnector extends WordpressConnector
 {
@@ -42,6 +44,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['email'] =  $this->notSetToEmptyString($content['email']);
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
         try {
             $crmManager = new CRMManager();
@@ -102,8 +105,24 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
-        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
+        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+
+        //extra
+
+
+        $data['address'] = $this->notSetToEmptyString($content['address']);
+        $data['city'] = $this->notSetToEmptyString($content['city']);
+        $data['postalcode'] = $this->notSetToEmptyString($content['postalcode']);
+        $data['province'] = $this->notSetToEmptyString($content['province']);
+        $data['birthdaydate'] = $this->notSetToEmptyString($content['birthdaydate']);
+        $data['telephone1'] = $this->notSetToEmptyString($content['telephone1']);
+        $data['taxcode'] = $this->notSetToEmptyString($content['taxcode']);
+        $data['nation'] = $this->notSetToEmptyString($content['nation']);
+        $data['operation'] = $this->notSetToEmptyString($content['operation']);
+        $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
+        $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
+
 
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
