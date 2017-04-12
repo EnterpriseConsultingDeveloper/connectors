@@ -50,7 +50,6 @@ class WordpressEcommerceConnector extends WordpressConnector
             $crmManager = new CRMManager();
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
 
-
             return $cmrRes;
         } catch (\PDOException $e) {
             return false;
