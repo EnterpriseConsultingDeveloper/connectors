@@ -118,7 +118,7 @@ class ConnectorBean extends Bean
         $time = '1999-12-31 23:59:59';
       } else {
         $time = new Time($creation_date);
-        $time = $time = $time->toAtomString();
+        $time = $time = $time->toDateTimeString();
       }
 
       $this->_creation_date = $time;
