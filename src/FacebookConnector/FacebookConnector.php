@@ -71,7 +71,7 @@ class FacebookConnector extends Connector implements IConnector
 
     /**
      * Read a Facebook entity
-     * 
+     *
      * @param null $objectId
      * @return array
      */
