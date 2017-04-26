@@ -40,6 +40,8 @@ class WordpressCMSConnector extends WordpressConnector
             if ($bodyResp['result'] == true && $bodyResp['error'] == false) {
                 $info['id'] = $bodyResp['content_url'];
                 $info['url'] = $bodyResp['content_url'];
+                $info['post_status'] = $bodyResp['post_status'];
+                $info['post_date'] = $bodyResp['post_date'];
                 return $info;
                 //return $bodyResp['content_url']; // Should return the content post reference
             } else {
