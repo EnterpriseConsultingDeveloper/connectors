@@ -147,6 +147,9 @@ class TwitterConnector extends Connector implements IConnector
             }
             foreach($res as $key => $value) {
                 try {
+                    // Check if the array returned is not related to content (e.g. stats array)
+                    if(!isset($value['text']) || empty($value['text']))
+                        continue;
 
                     $element =  new ConnectorBean();
                     $element->setBody($value['text']);
