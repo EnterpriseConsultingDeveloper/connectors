@@ -28,6 +28,24 @@ class ConnectorUserBean extends Bean
     private $_currency = '';
     private $_devices = '';
 
+    private $_ancestor_body = '';
+
+    /**
+     * @return string
+     */
+    public function getAncestorBody()
+    {
+        return $this->_ancestor_body;
+    }
+
+    /**
+     * @param string $ancestor_body
+     */
+    public function setAncestorBody($ancestor_body)
+    {
+        $this->_ancestor_body = $ancestor_body;
+    }
+
     /**
      * @return string
      */

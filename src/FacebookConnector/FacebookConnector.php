@@ -87,11 +87,12 @@ class FacebookConnector extends Connector implements IConnector
         $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
-
+debug($data); die;
         // Append users that have taken an action on the page
         $social_users = array();
 
         foreach($data as $d) {
+            $ancestor_body = !empty($d['message']) ? $d['message'] : !empty($d['story']) ? $d['story'] : '';
             if(isset($d['reactions'])) {
                 foreach($d['reactions']['data'] as $social_user) {
                     $ub = new ConnectorUserBean();
@@ -100,6 +101,9 @@ class FacebookConnector extends Connector implements IConnector
                     $ub->setAction($social_user['type']);
                     $ub->setContentId($d['id']);
                     $ub->setText('');
+
+                    $ub->setAncestorBody($ancestor_body);
+
                     $ub = $this->getUserExtraData($social_user['id'], $ub);
 
                     $social_users[] = $ub;
@@ -115,6 +119,9 @@ class FacebookConnector extends Connector implements IConnector
                     $ub->setContentId($d['id']);
                     $ub->setDate($social_user['created_time']);
                     $ub->setText($social_user['message']);
+
+                    $ub->setAncestorBody($ancestor_body);
+
                     $ub = $this->getUserExtraData($social_user['id'], $ub);
 
                     $social_users[] = $ub;
@@ -128,6 +135,9 @@ class FacebookConnector extends Connector implements IConnector
                             $ub->setContentId($d['id']);
                             $ub->setDate($sub_comment['created_time']);
                             $ub->setText($sub_comment['message']);
+
+                            $ub->setAncestorBody($social_user['message']);
+
                             $ub = $this->getUserExtraData($social_user['id'], $ub);
 
                             $social_users[] = $ub;
