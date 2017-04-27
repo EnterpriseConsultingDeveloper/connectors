@@ -38,7 +38,7 @@ class WordpressCMSConnector extends WordpressConnector
             ]);
             $bodyResp = json_decode($response->body(), true);
             if ($bodyResp['result'] == true && $bodyResp['error'] == false) {
-                $info['id'] = $bodyResp['content_url'];
+                $info['id'] = $bodyResp['content_id'];
                 $info['url'] = $bodyResp['content_url'];
                 $info['post_status'] = $bodyResp['post_status'];
                 $info['post_date'] = $bodyResp['post_date'];
