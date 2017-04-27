@@ -41,7 +41,7 @@ class FacebookConnector extends Connector implements IConnector
 
         $this->accessToken = $config['app_id'];
         $this->appSecret = $config['app_secret'];
-
+//debug($params); die;
         if ($params != null) {
             if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
                 $this->longLivedAccessToken = $params['longlivetoken'];
@@ -92,7 +92,7 @@ class FacebookConnector extends Connector implements IConnector
         $social_users = array();
 
         foreach($data as $d) {
-            $ancestor_body = !empty($d['message']) ? $d['message'] : !empty($d['story']) ? $d['story'] : '';
+            $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
             if(isset($d['reactions'])) {
                 foreach($d['reactions']['data'] as $social_user) {
                     $ub = new ConnectorUserBean();
