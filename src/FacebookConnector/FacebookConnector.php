@@ -64,6 +64,10 @@ class FacebookConnector extends Connector implements IConnector
 
     }
 
+    /**
+     * @param $config
+     * @return string
+     */
     public function connect($config)
     {
         return "connect";
@@ -243,6 +247,10 @@ class FacebookConnector extends Connector implements IConnector
         return $data;
     }
 
+    /**
+     * @param $objectId
+     * @return array
+     */
     public function stats($objectId)
     {
         if ($objectId == null) $objectId = $this->objectId;
@@ -322,7 +330,13 @@ class FacebookConnector extends Connector implements IConnector
         return $stats;
     }
 
-    public function comments($objectId)
+    /**
+     * @param $objectId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
+     * @param $operation The operation requested, 'r' stand for read, 'w' stand for write
+     * @param $content
+     * @return array
+     */
+    public function comments($objectId, $operation = 'r', $content = null)
     {
         if ($objectId == null) $objectId = $this->objectId;
 
@@ -330,13 +344,29 @@ class FacebookConnector extends Connector implements IConnector
             return [];
         }
 
+        // In case of write first write comment than read all
+        if($operation === 'w' && !empty($content)) {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' + $objectId + '/comments';
+                $data = [
+                    'message' => strip_tags($content['comment']),
+                ];
+                $response = $this->fb->post($url, $data);
+                debug($response);
+            } catch(FacebookResponseException $e) {
+                return [];
+            }
+        }
+
         try {
             $statRequest = '/' . $objectId . '/comments';
 
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-
+            debug($response->getDecodedBody()['data']); die;
             return $response->getDecodedBody()['data'];
+
         } catch(FacebookResponseException $e) {
             return [];
         } catch(FacebookSDKException $e) {
@@ -346,6 +376,11 @@ class FacebookConnector extends Connector implements IConnector
         }
     }
 
+    /**
+     * @param $objectId
+     * @param $fromDate
+     * @return array
+     */
     public function commentFromDate($objectId, $fromDate) {
         if ($objectId == null) $objectId = $this->objectId;
 
@@ -368,7 +403,10 @@ class FacebookConnector extends Connector implements IConnector
         }
     }
 
-
+    /**
+     * @param $objectId
+     * @return array
+     */
     public function user($objectId)
     {
         if ($objectId == null) $objectId = $this->objectId;
@@ -394,11 +432,17 @@ class FacebookConnector extends Connector implements IConnector
         }
     }
 
+    /**
+     * @param $content
+     */
     public function add_user($content)
     {
 
     }
 
+    /**
+     * @param $content
+     */
     public function update_categories($content)
     {
 

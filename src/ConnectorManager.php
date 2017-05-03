@@ -280,7 +280,19 @@ class ConnectorManager
     {
         $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
         $classInstance = new $className($params);
-        return $classInstance->comments($objectId);
+        return $classInstance->comments($objectId, 'r');
+    }
+
+    /**
+     * @param $params
+     * @param $objectId
+     * @return mixed
+     */
+    public function send_comments($params, $objectId, $content)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+        return $classInstance->comments($objectId, 'w', $content);
     }
 
     /**
