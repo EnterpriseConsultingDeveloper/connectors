@@ -125,6 +125,11 @@ class WhiterabbitConnector extends Connector implements IConnector
 
     }
 
+    public function captureFan($objectId = null)
+    {
+
+    }
+
     public function update_categories($content)
     {
         //It's not correct to implement this here. Trying to find a different solutions

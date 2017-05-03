@@ -224,6 +224,18 @@ class ConnectorManager
         return $classInstance->readPublicPage($objectId);
     }
 
+    /**
+     * @param $params
+     * @param $objectId
+     * @return mixed
+     */
+    public function get_fan($params, $objectId)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+        return $classInstance->captureFan($objectId);
+    }
+
     /*
      * function update_content
      *

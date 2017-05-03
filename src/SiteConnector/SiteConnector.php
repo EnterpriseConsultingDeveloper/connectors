@@ -80,6 +80,11 @@ class SiteConnector extends Connector implements IConnector
 
     }
 
+    public function captureFan($objectId = null)
+    {
+
+    }
+
     public function update_categories($content)
     {
 

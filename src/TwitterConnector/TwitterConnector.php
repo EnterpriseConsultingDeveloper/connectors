@@ -394,6 +394,11 @@ class TwitterConnector extends Connector implements IConnector
 
     }
 
+    public function captureFan($objectId = null)
+    {
+
+    }
+
     /**
      * Object ID can be only screen_name or url like 'dinofratelli' or 'https://twitter.com/applenws'
      * @param $objectId

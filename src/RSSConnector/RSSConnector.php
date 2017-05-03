@@ -106,6 +106,11 @@ class RSSConnector extends Connector implements IConnector
     {
     }
 
+    public function captureFan($objectId = null)
+    {
+
+    }
+
     public function add_user($content)
     {
     }
