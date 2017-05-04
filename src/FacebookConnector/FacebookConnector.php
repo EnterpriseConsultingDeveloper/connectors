@@ -41,7 +41,7 @@ class FacebookConnector extends Connector implements IConnector
 
         $this->accessToken = $config['app_id'];
         $this->appSecret = $config['app_secret'];
-
+//debug($params); die;
         if ($params != null) {
             if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
                 $this->longLivedAccessToken = $params['longlivetoken'];
@@ -64,6 +64,10 @@ class FacebookConnector extends Connector implements IConnector
 
     }
 
+    /**
+     * @param $config
+     * @return string
+     */
     public function connect($config)
     {
         return "connect";
@@ -88,66 +92,7 @@ class FacebookConnector extends Connector implements IConnector
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
 
-        // Append users that have taken an action on the page
-        $social_users = array();
-
-        foreach($data as $d) {
-            $ancestor_body = !empty($d['message']) ? $d['message'] : !empty($d['story']) ? $d['story'] : '';
-            if(isset($d['reactions'])) {
-                foreach($d['reactions']['data'] as $social_user) {
-                    $ub = new ConnectorUserBean();
-                    $ub->setName($social_user['name']);
-                    $ub->setId($social_user['id']);
-                    $ub->setAction($social_user['type']);
-                    $ub->setContentId($d['id']);
-                    $ub->setText('');
-
-                    $ub->setAncestorBody($ancestor_body);
-
-                    $ub = $this->getUserExtraData($social_user['id'], $ub);
-
-                    $social_users[] = $ub;
-                }
-            }
-
-            if(isset($d['comments'])) {
-                foreach($d['comments']['data'] as $social_user) {
-                    $ub = new ConnectorUserBean();
-                    $ub->setName($social_user['from']['name']);
-                    $ub->setId($social_user['from']['id']);
-                    $ub->setAction('COMMENT');
-                    $ub->setContentId($d['id']);
-                    $ub->setDate($social_user['created_time']);
-                    $ub->setText($social_user['message']);
-
-                    $ub->setAncestorBody($ancestor_body);
-
-                    $ub = $this->getUserExtraData($social_user['id'], $ub);
-
-                    $social_users[] = $ub;
-
-                    if(isset($social_user['comments'])) {
-                        foreach($social_user['comments']['data'] as $sub_comment) {
-                            $ub = new ConnectorUserBean();
-                            $ub->setName($sub_comment['from']['name']);
-                            $ub->setId($sub_comment['from']['id']);
-                            $ub->setAction('COMMENT');
-                            $ub->setContentId($d['id']);
-                            $ub->setDate($sub_comment['created_time']);
-                            $ub->setText($sub_comment['message']);
-
-                            $ub->setAncestorBody($social_user['message']);
-
-                            $ub = $this->getUserExtraData($social_user['id'], $ub);
-
-                            $social_users[] = $ub;
-                        }
-                    }
-                }
-            }
-        }
-
-        $data['social_users'] = $social_users;
+        $data['social_users'] = [];
 
         //debug($data); die;
         return($data);
@@ -243,6 +188,10 @@ class FacebookConnector extends Connector implements IConnector
         return $data;
     }
 
+    /**
+     * @param $objectId
+     * @return array
+     */
     public function stats($objectId)
     {
         if ($objectId == null) $objectId = $this->objectId;
@@ -322,7 +271,13 @@ class FacebookConnector extends Connector implements IConnector
         return $stats;
     }
 
-    public function comments($objectId)
+    /**
+     * @param $objectId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
+     * @param $operation The operation requested, 'r' stand for read, 'w' stand for write
+     * @param $content
+     * @return array
+     */
+    public function comments($objectId, $operation = 'r', $content = null)
     {
         if ($objectId == null) $objectId = $this->objectId;
 
@@ -330,13 +285,29 @@ class FacebookConnector extends Connector implements IConnector
             return [];
         }
 
+        // In case of write first write comment than read all
+        if($operation === 'w' && !empty($content)) {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' + $objectId + '/comments';
+                $data = [
+                    'message' => strip_tags($content['comment']),
+                ];
+                $response = $this->fb->post($url, $data);
+                debug($response);
+            } catch(FacebookResponseException $e) {
+                return [];
+            }
+        }
+
         try {
             $statRequest = '/' . $objectId . '/comments';
 
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-
+            debug($response->getDecodedBody()['data']); die;
             return $response->getDecodedBody()['data'];
+
         } catch(FacebookResponseException $e) {
             return [];
         } catch(FacebookSDKException $e) {
@@ -346,6 +317,11 @@ class FacebookConnector extends Connector implements IConnector
         }
     }
 
+    /**
+     * @param $objectId
+     * @param $fromDate
+     * @return array
+     */
     public function commentFromDate($objectId, $fromDate) {
         if ($objectId == null) $objectId = $this->objectId;
 
@@ -368,7 +344,10 @@ class FacebookConnector extends Connector implements IConnector
         }
     }
 
-
+    /**
+     * @param $objectId
+     * @return array
+     */
     public function user($objectId)
     {
         if ($objectId == null) $objectId = $this->objectId;
@@ -394,16 +373,108 @@ class FacebookConnector extends Connector implements IConnector
         }
     }
 
+    /**
+     * @param $content
+     */
     public function add_user($content)
     {
 
     }
 
+    /**
+     * @param $content
+     */
     public function update_categories($content)
     {
 
     }
 
+
+
+    /**
+     * Get fan from the stream
+     *
+     * @param null $objectId
+     * @return array
+     */
+    public function captureFan($objectId = null)
+    {
+        // Read complete page feed
+        if ($objectId == null) $objectId = $this->objectId;
+
+        if ($objectId == null) {
+            return [];
+        }
+
+        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+        $response = $this->fb->sendRequest('GET', $streamToRead);
+        $data = $response->getDecodedBody()['data'];
+
+        // Append users that have taken an action on the page
+        $social_users = array();
+
+        foreach($data as $d) {
+            $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
+
+            if(isset($d['reactions'])) {
+                foreach($d['reactions']['data'] as $social_user) {
+                    $ub = new ConnectorUserBean();
+                    $ub->setName($social_user['name']);
+                    $ub->setId($social_user['id']);
+                    $ub->setAction($social_user['type']);
+                    $ub->setContentId($d['id']);
+                    $ub->setText('');
+
+                    $ub->setAncestorBody($ancestor_body);
+
+                    $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+                    $social_users[] = $ub;
+                }
+            }
+
+            if(isset($d['comments'])) {
+                foreach($d['comments']['data'] as $social_user) {
+                    $ub = new ConnectorUserBean();
+                    $ub->setName($social_user['from']['name']);
+                    $ub->setId($social_user['from']['id']);
+                    $ub->setAction('COMMENT');
+                    $ub->setContentId($d['id']);
+                    $ub->setDate($social_user['created_time']);
+                    $ub->setText($social_user['message']);
+
+                    $ub->setAncestorBody($ancestor_body);
+
+                    $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+                    $social_users[] = $ub;
+
+                    if(isset($social_user['comments'])) {
+                        foreach($social_user['comments']['data'] as $sub_comment) {
+                            $ub = new ConnectorUserBean();
+                            $ub->setName($sub_comment['from']['name']);
+                            $ub->setId($sub_comment['from']['id']);
+                            $ub->setAction('COMMENT');
+                            $ub->setContentId($d['id']);
+                            $ub->setDate($sub_comment['created_time']);
+                            $ub->setText($sub_comment['message']);
+
+                            $ub->setAncestorBody($social_user['message']);
+
+                            $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+                            $social_users[] = $ub;
+                        }
+                    }
+                }
+            }
+        }
+
+        $data['social_users'] = $social_users;
+
+        //debug($data); die;
+        return($data);
+    }
 
     /**
      * @param $posts

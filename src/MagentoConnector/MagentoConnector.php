@@ -103,7 +103,7 @@ class MagentoConnector extends Connector implements IConnector
 
     }
 
-    public function comments($objectId)
+    public function comments($objectId, $operation = 'r', $content = null)
     {
 
     }
@@ -114,6 +114,11 @@ class MagentoConnector extends Connector implements IConnector
     }
 
     public function add_user($content)
+    {
+
+    }
+
+    public function captureFan($objectId = null)
     {
 
     }

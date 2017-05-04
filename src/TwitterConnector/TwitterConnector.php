@@ -321,7 +321,7 @@ class TwitterConnector extends Connector implements IConnector
         return $stats;
     }
 
-    public function comments($objectId)
+    public function comments($objectId, $operation = 'r', $content = null)
     {
         if ($this->objectId == null) {
             return [];
@@ -390,6 +390,11 @@ class TwitterConnector extends Connector implements IConnector
     }
 
     public function update_categories($content)
+    {
+
+    }
+
+    public function captureFan($objectId = null)
     {
 
     }

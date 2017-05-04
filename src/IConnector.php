@@ -17,8 +17,9 @@ interface IConnector
     public function connect($config);
     public function mapFormData($data);
     public function stats($objectId);
-    public function comments($objectId);
+    public function comments($objectId, $operation = 'r', $content = null);
     public function user($objectId);
     public function add_user($content);
     public function update_categories($content);
+    public function captureFan($objectId);
 }
