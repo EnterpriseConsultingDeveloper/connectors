@@ -35,13 +35,14 @@ class WordpressCMSConnector extends WordpressConnector
                 'token' => $this->_wptoken,
                 'datestart' => null,
                 'dateend' => null
-            ]);
+            ], ['timeout' => 120]);
             $bodyResp = json_decode($response->body(), true);
             if ($bodyResp['result'] == true && $bodyResp['error'] == false) {
                 $info['id'] = $bodyResp['content_id'];
                 $info['url'] = $bodyResp['content_url'];
                 $info['post_status'] = $bodyResp['post_status'];
                 $info['post_date'] = $bodyResp['post_date'];
+                $info['debug'] = !empty($bodyResp['debug']) ? $bodyResp['debug'] : null;
                 return $info;
                 //return $bodyResp['content_url']; // Should return the content post reference
             } else {
