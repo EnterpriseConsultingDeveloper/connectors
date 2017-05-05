@@ -18,7 +18,7 @@ use Facebook\Exceptions\FacebookResponseException;
 use Cake\Network\Http\Client;
 use WR\Connector\ConnectorBean;
 use WR\Connector\ConnectorUserBean;
-
+use Cake\Log\Log;
 class FacebookConnector extends Connector implements IConnector
 {
     protected $fb;
@@ -41,7 +41,7 @@ class FacebookConnector extends Connector implements IConnector
 
         $this->accessToken = $config['app_id'];
         $this->appSecret = $config['app_secret'];
-//debug($params); die;
+
         if ($params != null) {
             if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
                 $this->longLivedAccessToken = $params['longlivetoken'];
@@ -94,7 +94,6 @@ class FacebookConnector extends Connector implements IConnector
 
         $data['social_users'] = [];
 
-        //debug($data); die;
         return($data);
     }
 
@@ -289,13 +288,20 @@ class FacebookConnector extends Connector implements IConnector
         if($operation === 'w' && !empty($content)) {
             try {
                 $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-                $url = '/' + $objectId + '/comments';
+                $url = '/' . $objectId . '/comments';
                 $data = [
                     'message' => strip_tags($content['comment']),
                 ];
                 $response = $this->fb->post($url, $data);
-                debug($response);
+
+                $commentId = $response->getDecodedBody()['id'];
+                $commentRequest = '/' . $commentId;
+
+                $request = $this->fb->request('GET', $commentRequest);
+                $response = $this->fb->getClient()->sendRequest($request);
+                return $response->getDecodedBody();
             } catch(FacebookResponseException $e) {
+                Log::write('debug', $e);
                 return [];
             }
         }
@@ -305,14 +311,14 @@ class FacebookConnector extends Connector implements IConnector
 
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-            debug($response->getDecodedBody()['data']); die;
             return $response->getDecodedBody()['data'];
 
         } catch(FacebookResponseException $e) {
+            Log::write('debug', $e);
             return [];
         } catch(FacebookSDKException $e) {
             // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            Log::write('debug', $e);
             return [];
         }
     }
