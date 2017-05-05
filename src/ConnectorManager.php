@@ -312,6 +312,31 @@ class ConnectorManager
      * @param $objectId
      * @return mixed
      */
+    public function update_comment($params, $objectId, $content)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+        return $classInstance->comments($objectId, 'u', $content);
+    }
+
+
+    /**
+     * @param $params
+     * @param $objectId
+     * @return mixed
+     */
+    public function delete_comment($params, $objectId)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+        return $classInstance->comments($objectId, 'd');
+    }
+
+    /**
+     * @param $params
+     * @param $objectId
+     * @return mixed
+     */
     public function get_user($params, $objectId)
     {
         $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
