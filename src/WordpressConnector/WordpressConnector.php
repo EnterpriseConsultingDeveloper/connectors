@@ -49,7 +49,9 @@ class WordpressConnector extends Connector implements IConnector
         // In the connect we can eventually return properties of this media, like the category tree
         $category_tree = array();
         $wp_category = array();
-        if($this->_wptoken != null) {
+        $wp_authors = array();
+        $authors_tree = array();
+        if ($this->_wptoken != null) {
             $readPath = $this->_wpapipath . 'connect';
 
             $response = $this->_http->get($readPath, [
@@ -57,8 +59,10 @@ class WordpressConnector extends Connector implements IConnector
                 'token' => $this->_wptoken
             ]);
             $bodyResp = json_decode($response->body(), true);
-            if(isset($bodyResp['categories']))
+            if (isset($bodyResp['categories']))
                 $wp_category = $bodyResp['categories'];
+            if (isset($bodyResp['authors']))
+                $wp_authors = $bodyResp['authors'];
         }
 //        Category Array from WP
 //        (int) 0 => [
@@ -80,13 +84,23 @@ class WordpressConnector extends Connector implements IConnector
 //            'category_parent' => (int) 0
 //        ],
 //      The category list must attain the standard only with id and text
-        foreach($wp_category as $cat) {
+        foreach ($wp_category as $cat) {
             $c['id'] = $cat['term_id'];
             $c['text'] = $cat['name'];
 
             $category_tree[] = $c;
         }
-        return $category_tree;
+
+        foreach ($wp_authors as $author) {
+            $c['id'] = $author['data']['ID'];
+            $c['text'] = $author['data']['display_name'] . " - " . $author['data']['user_email'];
+            $authors_tree[] = $c;
+        }
+
+        $result = array();
+        $result['category'] = $category_tree;
+        $result['authors'] = $authors_tree;
+        return $result;
     }
 
     public function read($objectId = null)
@@ -124,7 +138,7 @@ class WordpressConnector extends Connector implements IConnector
 
     public function delete($objectId = null)
     {
-        if($this->_wptoken != null) {
+        if ($this->_wptoken != null) {
             $deletePath = $this->_wpapipath . 'delete';
             $response = $this->_http->post($deletePath, [
                 'type' => 'post',
@@ -139,7 +153,8 @@ class WordpressConnector extends Connector implements IConnector
         }
     }
 
-    public function mapFormData($data) {
+    public function mapFormData($data)
+    {
         return $data;
     }
 
@@ -178,7 +193,7 @@ class WordpressConnector extends Connector implements IConnector
             ->first();
 
         if ($ciChannel && isset($content['categories_tree'])) {
-            $ciChannel->categories_tree = json_encode ($content['categories_tree']);
+            $ciChannel->categories_tree = json_encode($content['categories_tree']);
             try {
                 return $ciChannels->save($ciChannel);
             } catch (\PDOException $e) {
