@@ -284,7 +284,7 @@ class FacebookConnector extends Connector implements IConnector
             return [];
         }
 
-        // In case of write first write comment than read all
+        // In case of write first write comment than read the comment
         if($operation === 'w' && !empty($content)) {
             try {
                 $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
@@ -300,6 +300,43 @@ class FacebookConnector extends Connector implements IConnector
                 $request = $this->fb->request('GET', $commentRequest);
                 $response = $this->fb->getClient()->sendRequest($request);
                 return $response->getDecodedBody();
+            } catch(FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return [];
+            }
+        }
+
+
+        // In case of update first write comment than read the comment
+        if($operation === 'u' && !empty($content)) {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' . $objectId;
+
+                $data = [
+                    'message' => strip_tags($content['comment']),
+                ];
+                $this->fb->post($url, $data);
+
+                $request = $this->fb->request('GET', $url);
+                $response = $this->fb->getClient()->sendRequest($request);
+                return $response->getDecodedBody();
+            } catch(FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return [];
+            }
+        }
+
+
+        // In case of delete
+        if($operation === 'd') {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' . $objectId;
+
+                $request = $this->fb->request('DELETE', $url);
+                $this->fb->getClient()->sendRequest($request);
+                return [];
             } catch(FacebookResponseException $e) {
                 Log::write('debug', $e);
                 return [];
@@ -322,6 +359,7 @@ class FacebookConnector extends Connector implements IConnector
             return [];
         }
     }
+
 
     /**
      * @param $objectId
