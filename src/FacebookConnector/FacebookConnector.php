@@ -295,10 +295,11 @@ class FacebookConnector extends Connector implements IConnector
                 $response = $this->fb->post($url, $data);
 
                 $commentId = $response->getDecodedBody()['id'];
-                $commentRequest = '/' . $commentId;
+                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture,link}';
 
                 $request = $this->fb->request('GET', $commentRequest);
                 $response = $this->fb->getClient()->sendRequest($request);
+
                 return $response->getDecodedBody();
             } catch(FacebookResponseException $e) {
                 Log::write('debug', $e);
@@ -318,6 +319,7 @@ class FacebookConnector extends Connector implements IConnector
                 ];
                 $this->fb->post($url, $data);
 
+                $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
                 $request = $this->fb->request('GET', $url);
                 $response = $this->fb->getClient()->sendRequest($request);
                 return $response->getDecodedBody();
