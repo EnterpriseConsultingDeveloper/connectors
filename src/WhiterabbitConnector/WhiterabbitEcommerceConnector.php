@@ -36,11 +36,10 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+        $data['productActivity'] = $this->notSetToEmptyString(unserialize($content['productActivity']));
         try {
             $crmManager = new CRMManager();
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
-
-
             return $cmrRes;
         } catch (\PDOException $e) {
             return false;
@@ -104,9 +103,8 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
-
-
-
+        $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
+        $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
 

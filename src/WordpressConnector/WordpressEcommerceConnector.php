@@ -120,7 +120,8 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
-
+        $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
+        $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
 
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
