@@ -1,9 +1,9 @@
 <?php
 /**
- * Created by Dino Fratelli.
+ * Created by Fabio Mugnano.
  * User: user
- * Date: 24/02/2016
- * Time: 15:31
+ * Date: 18/06/2017
+ * Time: 10:12
  */
 
 namespace WR\Connector\WordpressConnector;
@@ -14,7 +14,7 @@ use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
 
-class WordpressNewsletterConnector extends WordpressConnector
+class WordpressContactConnector extends WordpressConnector
 {
 
     public function __construct($params)
@@ -93,23 +93,21 @@ class WordpressNewsletterConnector extends WordpressConnector
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] = $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
+        $data['telephone1'] = $this->notSetToEmptyString($content['telephone1']);
         $data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
         $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
         $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+        $data['description'] = $this->notSetToEmptyString($content['message']);
+        $data['title'] = $this->notSetToEmptyString($content['title']);
 
         try {
-            //nlRecipients->saveFromConnector($nlRecipient);
 
-            //if($res) {
-            //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
-            $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
+            $cmrRes = $crmManager->pushSalesTicketToCrm($content['customer_id'], $data);
 
-            //debug($cmrRes); die;
-            //}
             return $cmrRes;
         } catch (\PDOException $e) {
             return false;
