@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by PhpStorm.
+ * Created by Dino Fratelli.
  * User: user
  * Date: 24/02/2016
  * Time: 15:31
@@ -14,7 +14,7 @@ use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
 
-class WhiterabbitEcommerceConnector extends WhiterabbitConnector
+class WhiterabbitContactConnector extends WhiterabbitConnector
 {
 
     public function __construct($params) {
@@ -26,22 +26,27 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
      */
     public function write($content)
     {
-//        $data = [];
-        $data['orderIdExt'] = $this->notSetToEmptyString($content['orderIdExt']);
-        $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
-        $data['orderNum'] = $this->notSetToEmptyString($content['orderNum']);
-        $data['orderDate'] = $this->notSetToEmptyString($content['orderDate']);
-        $data['orderTotal'] =  $this->notSetToEmptyString($content['orderTotal']);
-        $data['email'] =  $this->notSetToEmptyString($content['email']);
-        $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
-        $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
-        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
-        $data['productActivity'] = $this->notSetToEmptyString(unserialize($content['productActivity']));
-        try {
-            $crmManager = new CRMManager();
-            $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
-            return $cmrRes;
-        } catch (\PDOException $e) {
+        if($this->_wptoken != null) {
+            $publishPath = $this->_wpapipath . 'publish';
+            $response = $this->_http->post($publishPath, [
+                'type' => 'newsletter',
+                'content' => $content,
+                'content_id' => $content['content']['original_table_id'],
+                'token' => $this->_wptoken,
+                'datestart' => null,
+                'dateend' => null
+            ]);
+            $bodyResp = json_decode($response->body(), true);
+            if ($bodyResp['result'] == true && $bodyResp['error'] == false) {
+                $info['id'] = $bodyResp['content_url'];
+                $info['url'] = $bodyResp['content_url'];
+                return $info;
+                //return $bodyResp['content_url']; // Should return the content post reference
+            } else {
+                return false;
+            }
+
+        } else {
             return false;
         }
 
@@ -63,6 +68,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
     }
 
 
+
     /**
      * @param $content
      * @return bool|\Cake\Datasource\EntityInterface|mixed
@@ -82,36 +88,29 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
 
         $data = [];
         $data['externalid'] = $this->notSetToEmptyString($content['customer_id']);
-        $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
+        //$data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
-        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
-        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
-
-        //extra
-
-
-        $data['address'] = $this->notSetToEmptyString($content['address']);
-        $data['city'] = $this->notSetToEmptyString($content['city']);
-        $data['postalcode'] = $this->notSetToEmptyString($content['postalcode']);
-        $data['province'] = $this->notSetToEmptyString($content['province']);
-        $data['birthdaydate'] = $this->notSetToEmptyString($content['birthdaydate']);
+        $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
         $data['telephone1'] = $this->notSetToEmptyString($content['telephone1']);
-        $data['taxcode'] = $this->notSetToEmptyString($content['taxcode']);
-        $data['nation'] = $this->notSetToEmptyString($content['nation']);
         $data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
         $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
         $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+        $data['description'] = $this->notSetToEmptyString($content['message']);
+        $data['title'] = $this->notSetToEmptyString($content['title']);
+
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
 
             //if($res) {
             //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
-            $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
+           // $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
+            $cmrRes = $crmManager->pushSalesTicketToCrm($content['customer_id'], $data);
 
             //debug($cmrRes); die;
             //}

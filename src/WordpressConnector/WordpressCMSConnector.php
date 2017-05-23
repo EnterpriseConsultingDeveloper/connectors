@@ -15,7 +15,8 @@ use WR\Connector\IConnector;
 class WordpressCMSConnector extends WordpressConnector
 {
 
-    public function __construct($params) {
+    public function __construct($params)
+    {
         parent::__construct($params);
     }
 

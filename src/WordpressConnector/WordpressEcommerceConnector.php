@@ -1,6 +1,6 @@
 <?php
 /**
- * Created by Dino Fratelli.
+ * Created by Dino Fratelli / Mugnano Fabio.
  * User: user
  * Date: 24/02/2016
  * Time: 15:31
@@ -27,7 +27,6 @@ class WordpressEcommerceConnector extends WordpressConnector
      */
     public function write($content)
     {
-
         /*$data = array(
             'orderIdExt' => '100',
             'sourceId' => 'magento',
@@ -45,7 +44,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
-
+        $data['productActivity'] = $this->notSetToEmptyString(unserialize($content['productActivity']));
         try {
             $crmManager = new CRMManager();
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
@@ -121,7 +120,8 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
-
+        $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
+        $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
 
         try {
             //nlRecipients->saveFromConnector($nlRecipient);
