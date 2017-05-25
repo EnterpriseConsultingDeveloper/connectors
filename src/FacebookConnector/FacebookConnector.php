@@ -263,7 +263,8 @@ class FacebookConnector extends Connector implements IConnector
 
             $myInsights = [];
             foreach ($insights as $key => $value) {
-                $myInsights[$value['name']] = $value['values'][0]['value'];
+                if(isset($value['values']) && isset($value['values'][0]['value']))
+                    $myInsights[$value['name']] = $value['values'][0]['value'];
             }
 
             $stats['insights'] = $myInsights;

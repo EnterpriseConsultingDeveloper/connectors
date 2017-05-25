@@ -117,22 +117,19 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['telephone1'] = $this->notSetToEmptyString($content['telephone1']);
         $data['taxcode'] = $this->notSetToEmptyString($content['taxcode']);
         $data['nation'] = $this->notSetToEmptyString($content['nation']);
-        $data['operation'] = $this->notSetToEmptyString($content['operation']);
+        //$data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
         $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
         $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
 
         try {
-            //nlRecipients->saveFromConnector($nlRecipient);
-
-            //if($res) {
-            //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
+            //actionid =  $data['typeid']  . $data['operation']
             $crmManager = new CRMManager();
+            $data['typeid'] = $crmManager::$ecommerceTypeId;
+            $data['operation'] = $crmManager::$ecommerceActionAddUserId;
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
-            //debug($cmrRes); die;
-            //}
             return $cmrRes;
         } catch (\PDOException $e) {
             return false;
