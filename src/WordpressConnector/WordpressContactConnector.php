@@ -108,6 +108,7 @@ class WordpressContactConnector extends WordpressConnector
             $crmManager = new CRMManager();
             $data['typeid'] = $crmManager::$crmTypeId;
             $data['operation'] = $crmManager::$crmAddProspect;
+            $data['actionid'] = $crmManager::$crmAddProspect;
             $cmrRes = $crmManager->pushSalesTicketToCrm($content['customer_id'], $data);
 
             return $cmrRes;

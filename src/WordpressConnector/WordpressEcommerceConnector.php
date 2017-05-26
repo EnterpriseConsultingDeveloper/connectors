@@ -128,6 +128,7 @@ class WordpressEcommerceConnector extends WordpressConnector
             $crmManager = new CRMManager();
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
+            $data['actionid'] = $crmManager::$ecommerceActionAddUserId;
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
             return $cmrRes;

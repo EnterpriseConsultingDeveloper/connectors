@@ -111,6 +111,9 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             //if($res) {
             //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
+            $data['typeid'] = $crmManager::$ecommerceTypeId;
+            $data['operation'] = $crmManager::$ecommerceActionAddUserId;
+            $data['actionid'] = $crmManager::$ecommerceActionAddUserId;
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
             //debug($cmrRes); die;

@@ -93,7 +93,6 @@ class WordpressNewsletterConnector extends WordpressConnector
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
         $data['email1'] = $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
-        $data['operation'] = $this->notSetToEmptyString($content['operation']);
         $data['newsletter_subscription_date'] = $this->notSetToEmptyString($content['newsletter_subscription_date']);
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
         $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
@@ -102,8 +101,9 @@ class WordpressNewsletterConnector extends WordpressConnector
 
         try {
             $crmManager = new CRMManager();
-            $data['typeid'] = $crmManager::$newslettertTypeId;
+            $data['typeid'] = $crmManager::$newslettertTypeid;
             $data['operation'] = $crmManager::$newsletterSubscribe;
+            $data['actionid'] = $crmManager::$newsletterSubscribe;
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
             return $cmrRes;
