@@ -101,15 +101,11 @@ class WordpressNewsletterConnector extends WordpressConnector
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
         try {
-            //nlRecipients->saveFromConnector($nlRecipient);
-
-            //if($res) {
-            //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
+            $data['typeid'] = $crmManager::$newsletterTypeId;
+            $data['operation'] = $crmManager::$newsletterSubscribe;
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
-            //debug($cmrRes); die;
-            //}
             return $cmrRes;
         } catch (\PDOException $e) {
             return false;

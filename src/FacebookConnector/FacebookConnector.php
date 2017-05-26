@@ -28,6 +28,8 @@ class FacebookConnector extends Connector implements IConnector
 
     private $feedLimit;
     private $objectId;
+    private $since;
+    private $until;
 
     function __construct($params)
     {
@@ -51,6 +53,8 @@ class FacebookConnector extends Connector implements IConnector
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
 
             $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
+            $this->since = $params['since']; // Unix timestamp since
+            $this->until = $params['until']; // Unix timestamp until
         }
 
         $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
@@ -88,7 +92,12 @@ class FacebookConnector extends Connector implements IConnector
             return [];
         }
 
-        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+        $limitString = '&limit=' . $this->feedLimit;
+        if(!empty($this->since) && !empty($this->until)) {
+            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+        }
+
+        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}' . $limitString;
         $response = $this->fb->sendRequest('GET', $streamToRead);
         $data = $response->getDecodedBody()['data'];
 
@@ -254,7 +263,8 @@ class FacebookConnector extends Connector implements IConnector
 
             $myInsights = [];
             foreach ($insights as $key => $value) {
-                $myInsights[$value['name']] = $value['values'][0]['value'];
+                if(isset($value['values']) && isset($value['values'][0]['value']))
+                    $myInsights[$value['name']] = $value['values'][0]['value'];
             }
 
             $stats['insights'] = $myInsights;
@@ -322,6 +332,7 @@ class FacebookConnector extends Connector implements IConnector
                 $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
                 $request = $this->fb->request('GET', $url);
                 $response = $this->fb->getClient()->sendRequest($request);
+                Log::write('debug', $url);
                 return $response->getDecodedBody();
             } catch(FacebookResponseException $e) {
                 Log::write('debug', $e);
@@ -338,10 +349,10 @@ class FacebookConnector extends Connector implements IConnector
 
                 $request = $this->fb->request('DELETE', $url);
                 $this->fb->getClient()->sendRequest($request);
-                return [];
+                return true;
             } catch(FacebookResponseException $e) {
                 Log::write('debug', $e);
-                return [];
+                return false;
             }
         }
 
