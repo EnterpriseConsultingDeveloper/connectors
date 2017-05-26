@@ -29,7 +29,7 @@ class MagentoConnector extends Connector implements IConnector
     {
         // Call Magento app
         $this->_http = new WRClient();
-        $this->_mageapipath = $params['mage_apipath'];
+        $this->_mageapipath = $params['apipath'];
         $this->_mageuser = $params['username'];
         $this->_magepass = $params['password'];
 
@@ -47,7 +47,19 @@ class MagentoConnector extends Connector implements IConnector
 
     public function connect($config)
     {
-        return "connect";
+        if ($this->_magetoken != null) {
+            $readPath = $this->_wpapipath . 'connect';
+
+            $response = $this->_http->get($readPath, [
+                'q' => 'categories',
+                'token' => $this->_magetoken
+            ]);
+            $bodyResp = json_decode($response->body(), true);
+            if (isset($bodyResp['categories']))
+                $wp_category = $bodyResp['categories'];
+            if (isset($bodyResp['authors']))
+                $wp_authors = $bodyResp['authors'];
+        }
     }
 
     public function read($objectId = null)
@@ -55,6 +67,12 @@ class MagentoConnector extends Connector implements IConnector
 //        $response = $this->_http->get('http://google.com/search', ['q' => 'widget'], [
 //            'headers' => ['X-Requested-With' => 'XMLHttpRequest']
 //        ]);
+
+    }
+
+
+    public function readPublicPage($objectId = null)
+    {
 
     }
 
