@@ -53,8 +53,8 @@ class FacebookConnector extends Connector implements IConnector
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
 
             $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
-            $this->since = $params['since']; // Unix timestamp since
-            $this->until = $params['until']; // Unix timestamp until
+            $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
+            $this->until = isset($params['until']) ? $params['until'] : null; // Unix timestamp until
         }
 
         $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
