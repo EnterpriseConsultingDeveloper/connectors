@@ -1,0 +1,81 @@
+{
+  "name":"PrestashopConnector",
+  "description":"Prestashop connector for WhiteRabbit suite",
+  "icon":"fa-shopping-cart",
+  "install":"external",
+  "channels":[
+    {
+      "name":"ECommerce",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"Products",
+          "permitted_operations":"RPD",
+          "connection_string":"PrestashopProductConnector",
+          "type": "product"
+        },
+        {
+          "name":"CMS",
+          "permitted_operations":"RPDU",
+          "connection_string":"PrestashopCMSConnector",
+          "type": "blogging"
+        },
+        {
+          "name":"Newsletter",
+          "permitted_operations":"RPDU",
+          "connection_string":"PrestashopNewsletterConnector",
+          "type": "newsletter"
+        },
+        {
+          "name":"Survey",
+          "permitted_operations":"RPDU",
+          "connection_string":"PrestashopSurveyConnector",
+          "type": "survey"
+        },
+        {
+          "name":"Landing",
+          "permitted_operations":"RPDU",
+          "connection_string":"PrestashopLandingConnector",
+          "type": "landing"
+        }
+      ],
+      "settings":[
+        {
+          "name":"username",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"password",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"uri",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"token",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"apipath",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        }
+      ]
+    }
+  ]
+}
