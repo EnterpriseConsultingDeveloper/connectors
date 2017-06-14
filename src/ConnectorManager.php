@@ -66,7 +66,6 @@ class ConnectorManager
 
             $connectorChannel->connector_channel_streams = $connectorChannelStreams;
 
-
             $settings = $channel['settings'];
             $connectorChannelSettings = [];
             foreach ($settings as $setting) {

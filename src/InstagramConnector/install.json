@@ -1,0 +1,57 @@
+{
+  "name":"InstagramConnector",
+  "description":"Instagram connector for WhiteRabbit suite",
+  "icon":"fa-instagram",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"Profile",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"Instagram Status",
+          "permitted_operations":"RPDU",
+          "connection_string":"InstagramProfileStatusConnector",
+          "type": "social"
+        }
+      ],
+      "settings":[
+        {
+          "name":"accesstoken",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"secret",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"clientid",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"code",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"profileid",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        }
+      ]
+    }
+  ]
+}
