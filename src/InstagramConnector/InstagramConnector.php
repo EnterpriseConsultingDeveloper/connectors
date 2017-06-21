@@ -50,16 +50,14 @@ class InstagramConnector extends Connector implements IConnector
 
 
             $ch = curl_init();
-
+            $pf = "client_id=".$client_id."&client_secret=".$secret."&grant_type=authorization_code&redirect_uri=".$redirectUri."&code=".$code;
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS,
-                "client_id=".$client_id."&client_secret=".$secret."&grant_type=authorization_code&redirect_uri=".$redirectUri."&code=".$code);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $pf);
 
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
             $server_output = curl_exec ($ch);
-
             curl_close ($ch);
             if ($server_output == "OK") {
 
