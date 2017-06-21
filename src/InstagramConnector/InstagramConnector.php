@@ -89,29 +89,12 @@ class InstagramConnector extends Connector implements IConnector
         if ($objectId == null) {
             return [];
         }
-
-        $objectId = $this->cleanObjectId($objectId);
-        if (substr($objectId, 0, 1) === '#') {// hashtag search
-            $objectId = str_replace('#', '%23', $objectId);
-            $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
-        } else {
-            $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-        }
-
+        $serviceUrl = '1.1/search/tweets.json?q='; //TODO
+        $json = file_get_contents($this->insta . $serviceUrl . $objectId, false, $this->context);
         $data = json_decode($json, true);
 
         // Append users that have taken an action on the page
         $social_users = array();
-//        foreach($data as $d) {
-//            foreach($d['reactions']['data'] as $social_user) {
-//                $ub = new ConnectorUserBean();
-//                $ub->setName($social_user['name']);
-//                $ub->setId($social_user['id']);
-//                $ub->setAction($social_user['type']);
-//
-//                $social_users[] = $ub;
-//            }
-//        }
         $data['social_users'] = $social_users;
 
         return($data);
@@ -134,12 +117,8 @@ class InstagramConnector extends Connector implements IConnector
         $formatted_res = array();
 
         try {
-            if (substr($objectId, 0, 1) === '#') {// hashtag search
-                $objectId = str_replace('#', '%23', $objectId);
-                $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
-            } else {
-                $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-            }
+            $serviceUrl = '1.1/search/tweets.json?q='; //TODO
+            $json = file_get_contents($this->insta . $serviceUrl . $objectId, false, $this->context);
 
             $res = json_decode($json, true);
             if(isset($res['statuses'])) {
