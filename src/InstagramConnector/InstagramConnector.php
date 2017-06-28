@@ -6,17 +6,19 @@
  * Time: 15:31
  */
 
-namespace WR\Connector\TwitterConnector;
+namespace WR\Connector\InstagramConnector;
+
 
 use WR\Connector\Connector;
-use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
 use Cake\Network\Http\Client;
-use WR\Connector\TwitterConnection;
+use WR\Connector\ConnectorBean;
+use WR\Connector\ConnectorUserBean;
+use Cake\Log\Log;
 use Cake\Collection\Collection;
-class TwitterConnector extends Connector implements IConnector
+class InstagramConnector extends Connector implements IConnector
 {
-    protected $tw;
+    protected $insta;
     protected $accessToken;
     protected $appSecret;
 
@@ -30,42 +32,41 @@ class TwitterConnector extends Connector implements IConnector
         $api_base = $config['api_base'];
 
         //This is all you need to configure.
-        $app_key = $config['api_key'];
-        $app_token = $config['api_secret'];
+        $secret = $config['secret'];
 
-        $bearer_token_creds = base64_encode($app_key.':'.$app_token);
-        //Get a bearer token.
-        $opts = array(
-            'http'=>array(
-                'method' => 'POST',
-                'header' => 'Authorization: Basic '.$bearer_token_creds."\r\n".
-                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                'content' => 'grant_type=client_credentials'
-            )
-        );
+        $client_id = $config['client_id'];
+        $url = $api_base.'oauth/access_token';
+        $redirectUri = '';
+        if(!empty($params)) {
+            $code = $params['code'];
 
-        $context = stream_context_create($opts);
-        $json = file_get_contents($api_base.'oauth2/token', false, $context);
-        $result = json_decode($json,true);
+            //echo $result;//Your response
+//        curl -F 'client_id=CLIENT_ID' \
+//    -F 'client_secret=CLIENT_SECRET' \
+//    -F 'grant_type=authorization_code' \
+//    -F 'redirect_uri=AUTHORIZATION_REDIRECT_URI' \
+//    -F 'code=CODE' \
+//    https://api.instagram.com/oauth/access_token
 
-        if (!is_array($result) || !isset($result['token_type']) || !isset($result['access_token'])) {
-            die("Something went wrong. This isn't a valid array: ".$json);
+
+            $ch = curl_init();
+            $pf = "client_id=".$client_id."&client_secret=".$secret."&grant_type=authorization_code&redirect_uri=".$redirectUri."&code=".$code;
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $pf);
+
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            $server_output = curl_exec ($ch);
+            curl_close ($ch);
+            if ($server_output == "OK") {
+
+            } else {
+                die("Something went wrong.");
+            }
         }
-        if ($result['token_type'] !== "bearer") {
-            die("Invalid token type. Twitter says we need to make sure this is a bearer.");
-        }
-        //Set our bearer token. Now issued, this won't ever* change unless it's invalidated by a call to /oauth2/invalidate_token.
-        //*probably - it's not documentated that it'll ever change.
-        $bearer_token = $result['access_token'];
-        //Try a twitter API request now.
-        $opts = array(
-            'http'=>array(
-                'method' => 'GET',
-                'header' => 'Authorization: Bearer '.$bearer_token
-            )
-        );
-        $this->context = stream_context_create($opts);
-        $this->tw = $api_base;
+
+        $this->insta = $api_base;
 
     }
 
@@ -88,29 +89,12 @@ class TwitterConnector extends Connector implements IConnector
         if ($objectId == null) {
             return [];
         }
-
-        $objectId = $this->cleanObjectId($objectId);
-        if (substr($objectId, 0, 1) === '#') {// hashtag search
-            $objectId = str_replace('#', '%23', $objectId);
-            $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
-        } else {
-            $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-        }
-
+        $serviceUrl = '1.1/search/tweets.json?q='; //TODO
+        $json = file_get_contents($this->insta . $serviceUrl . $objectId, false, $this->context);
         $data = json_decode($json, true);
 
         // Append users that have taken an action on the page
         $social_users = array();
-//        foreach($data as $d) {
-//            foreach($d['reactions']['data'] as $social_user) {
-//                $ub = new ConnectorUserBean();
-//                $ub->setName($social_user['name']);
-//                $ub->setId($social_user['id']);
-//                $ub->setAction($social_user['type']);
-//
-//                $social_users[] = $ub;
-//            }
-//        }
         $data['social_users'] = $social_users;
 
         return($data);
@@ -133,12 +117,8 @@ class TwitterConnector extends Connector implements IConnector
         $formatted_res = array();
 
         try {
-            if (substr($objectId, 0, 1) === '#') {// hashtag search
-                $objectId = str_replace('#', '%23', $objectId);
-                $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
-            } else {
-                $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
-            }
+            $serviceUrl = '1.1/search/tweets.json?q='; //TODO
+            $json = file_get_contents($this->insta . $serviceUrl . $objectId, false, $this->context);
 
             $res = json_decode($json, true);
             if(isset($res['statuses'])) {
@@ -223,23 +203,6 @@ class TwitterConnector extends Connector implements IConnector
      * @return mixed
      */
     public function mapFormData($data) {
-
-        // Necessary only if are authenticating a page, not a profile
-        if(isset($data['token'])) {
-            $client = $this->fb->getOAuth2Client();
-
-            try {
-                // Returns a long-lived access token
-                $accessToken = $client->getLongLivedAccessToken($data['token']);
-            } catch(TwitterSDKException $e) {
-                // There was an error communicating with Graph
-                echo $e->getMessage();
-                exit;
-            }
-
-            $data['longlivetoken'] = $accessToken->getValue();
-        }
-
         return $data;
     }
 
