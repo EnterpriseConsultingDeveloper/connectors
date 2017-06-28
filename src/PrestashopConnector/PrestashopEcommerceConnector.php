@@ -44,7 +44,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
-        $data['productActivity'] = $this->notSetToEmptyString(unserialize($content['productActivity']));
+        $data['productActivity'] = (unserialize($content['productActivity']));
         try {
             $crmManager = new CRMManager();
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
@@ -105,6 +105,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['email1'] =  $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+        $data['gender'] = $this->notSetToEmptyString($content['gender']);
 
         //extra
 
@@ -128,6 +129,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $crmManager = new CRMManager();
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
+
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
             return $cmrRes;

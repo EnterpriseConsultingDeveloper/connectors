@@ -37,8 +37,6 @@ class PrestashopConnector extends Connector implements IConnector
         $this->_psuser = $params['username'];
         $this->_pspass = $params['password'];
 
-
-
         $connectPath = $this->_psapipath . 'connect';
 
         $response = $this->_http->post($connectPath, [
