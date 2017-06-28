@@ -66,6 +66,20 @@ class InstagramConnector extends Connector implements IConnector
             }
         }
 
+        $opts = array(
+            'http'=>array(
+                'method' => 'POST',
+                'header' => 'Authorization: Basic '.$bearer_token_creds."\r\n".
+                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+                'content' => 'grant_type=client_credentials'
+            )
+        );
+
+        $context = stream_context_create($opts);
+        $json = file_get_contents($api_base.'oauth2/token', false, $context);
+        $result = json_decode($json,true);
+
+
         $this->insta = $api_base;
 
     }
@@ -117,7 +131,7 @@ class InstagramConnector extends Connector implements IConnector
         $formatted_res = array();
 
         try {
-            $serviceUrl = '1.1/search/tweets.json?q='; //TODO
+            $serviceUrl = '/v1/media/shortcode/auto?access_token=ACCESS-TOKEN';
             $json = file_get_contents($this->insta . $serviceUrl . $objectId, false, $this->context);
 
             $res = json_decode($json, true);
