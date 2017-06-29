@@ -413,4 +413,17 @@ class TwitterConnector extends Connector implements IConnector
         return $objectId;
     }
 
+    /**
+     * @return bool
+     */
+    public function isLogged()
+    {
+
+    }
+
+    public function callback($params)
+    {
+
+    }
+
 }

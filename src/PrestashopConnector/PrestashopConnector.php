@@ -135,4 +135,17 @@ class PrestashopConnector extends Connector implements IConnector
         return (!isset($myString)) ? '' : $myString;
     }
 
+    /**
+     * @return bool
+     */
+    public function isLogged()
+    {
+
+    }
+
+    public function callback($params)
+    {
+
+    }
+
 }

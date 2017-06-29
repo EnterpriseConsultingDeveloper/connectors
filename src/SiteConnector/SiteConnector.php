@@ -89,4 +89,17 @@ class SiteConnector extends Connector implements IConnector
     {
 
     }
+    
+    /**
+     * @return bool
+     */
+    public function isLogged()
+    {
+
+    }
+
+    public function callback($params)
+    {
+
+    }
 }

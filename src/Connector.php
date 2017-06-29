@@ -71,4 +71,9 @@ abstract class Connector
         return "update_categories " . $content;
 
     }
+
+    public function callback($params) {
+      return "Callback " . $params . " da FacebookConnector";
+    }
+
 }

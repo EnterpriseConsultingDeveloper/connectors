@@ -160,4 +160,17 @@ class MagentoConnector extends Connector implements IConnector
 
         return false;
     }
+
+    /**
+     * @return bool
+     */
+    public function isLogged()
+    {
+
+    }
+
+    public function callback($params)
+    {
+//
+    }
 }
