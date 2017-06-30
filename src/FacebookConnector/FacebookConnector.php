@@ -122,14 +122,37 @@ class FacebookConnector extends Connector implements IConnector
       // Returns a `Facebook\FacebookResponse` object
       $response = $this->fb->get('/me?fields=accounts', $this->longLivedAccessToken);
       $logged = true;
-    } catch(Facebook\Exceptions\FacebookResponseException $e) {
+    } catch (Facebook\Exceptions\FacebookResponseException $e) {
       $logged = false;
 //        echo 'Graph returned an error: ' . $e->getMessage();
 //        exit;
-    } catch(Facebook\Exceptions\FacebookSDKException $e) {
+    } catch (Facebook\Exceptions\FacebookSDKException $e) {
       $logged = false;
 //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
 //        exit;
+    }
+
+    return $response->getDecodedBody();
+  }
+
+  /**
+   * @return array
+   */
+  public function getUser()
+  {
+
+    try {
+      // Returns a `Facebook\FacebookResponse` object
+      $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
+      $logged = true;
+    } catch(Facebook\Exceptions\FacebookResponseException $e) {
+      $logged = false;
+      //        echo 'Graph returned an error: ' . $e->getMessage();
+      //        exit;
+    } catch(Facebook\Exceptions\FacebookSDKException $e) {
+      $logged = false;
+      //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
+      //        exit;
     }
 
     return $response->getDecodedBody();
