@@ -79,7 +79,7 @@ class FacebookConnector extends Connector implements IConnector
     $helper = $this->fb->getRedirectLoginHelper();
 
     $permissions = ['publish_actions','read_insights','public_profile','email','user_friends','manage_pages','publish_pages']; // Optional permissions
-    $loginUrl = $helper->getLoginUrl('https://social-dev.whiterabbit.online/socialLogin/response', $permissions);
+    $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions);
 
 
     return '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
