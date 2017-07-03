@@ -49,7 +49,7 @@ class InstagramConnector extends Connector implements IConnector
 //    https://api.instagram.com/oauth/access_token
 
 
-            $ch = curl_init();
+/*            $ch = curl_init();
             $pf = "client_id=".$client_id."&client_secret=".$secret."&grant_type=authorization_code&redirect_uri=".$redirectUri."&code=".$code;
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, 1);
@@ -63,30 +63,19 @@ class InstagramConnector extends Connector implements IConnector
 
             } else {
                 die("Something went wrong.");
-            }
+            }*/
         }
 
-        $opts = array(
-            'http'=>array(
-                'method' => 'POST',
-                'header' => 'Authorization: Basic '.$bearer_token_creds."\r\n".
-                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                'content' => 'grant_type=client_credentials'
-            )
-        );
-
-        $context = stream_context_create($opts);
-        $json = file_get_contents($api_base.'oauth2/token', false, $context);
-        $result = json_decode($json,true);
-
-
         $this->insta = $api_base;
-
     }
 
+    /**
+     * @param $config
+     * @return string
+     */
     public function connect($config)
     {
-        return "connect";
+        return '<a href="TEST">Log in with AAA!</a>';
     }
 
 
@@ -98,12 +87,34 @@ class InstagramConnector extends Connector implements IConnector
     public function read($objectId = null)
     {
         // Read complete public page feed
-        if ($objectId == null) $objectId = $this->objectId;
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-        if ($objectId == null) {
+        if ($objectId == null)
             return [];
-        }
-        $serviceUrl = '1.1/search/tweets.json?q='; //TODO
+
+        $objectId = $this->cleanObjectId($objectId);
+
+
+        $token = '3561573774.cab61f6.3475cbbc097c4ab1b1dcc4deb69aace6';
+        $url = 'https://api.instagram.com/v1/media/5536012723?access_token=' . $token;
+        $url = 'https://api.instagram.com/v1/users/self/media/recent/?access_token=' . $token;
+        $url = $this->insta . 'v1/users/3561573774/media/recent/?access_token=' . $token;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $jsonDecoded = json_decode($response, true); // Returns an array
+        //debug($jsonDecoded);
+       // die;
+
+/*
+
+        $serviceUrl = $this->api_base . '/v1/media/shortcode/auto?access_token=ACCESS-TOKEN';
         $json = file_get_contents($this->insta . $serviceUrl . $objectId, false, $this->context);
         $data = json_decode($json, true);
 
@@ -111,7 +122,8 @@ class InstagramConnector extends Connector implements IConnector
         $social_users = array();
         $data['social_users'] = $social_users;
 
-        return($data);
+        return($data); */
+        return null;
     }
 
     /**
@@ -174,27 +186,6 @@ class InstagramConnector extends Connector implements IConnector
      */
     public function write($content)
     {
-        // Di default inserisco sul feed
-        $post = strip_tags($content['content']['body']);
-        if ($content['content']['main_url'] != null) {
-            $post .= " " . $content['content']['main_url'];
-        }
-
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
-
-
-        $response = $this->fb->post('me/feed', $data);
-
-        $nodeId = $response->getGraphNode()->getField('id');
-
-        $info['id'] = $nodeId;
-        $info['url'] = 'http://www.twitter.com/' . $nodeId;
-
-        return $info;
-
     }
 
     public function update($content, $objectId)
@@ -376,16 +367,13 @@ class InstagramConnector extends Connector implements IConnector
     }
 
     /**
-     * Object ID can be only screen_name or url like 'dinofratelli' or 'https://twitter.com/applenws'
+     * Object ID can be only screen_name or url like 'dinofratelli' or 'https://www.instagram.com/applenws'
      * @param $objectId
      * @return mixed
      */
     private function cleanObjectId($objectId) {
-        if(substr($objectId, 0, 20) === 'https://twitter.com/')
-            return substr($objectId, 20, strlen($objectId));
-
-        if(substr($objectId, 0, 19) === 'http://twitter.com/')
-            return substr($objectId, 19, strlen($objectId));
+        if(substr($objectId, 0, 25) === 'https://www.instagram.com/')
+            return substr($objectId, 25, strlen($objectId));
 
         return $objectId;
     }
@@ -400,7 +388,29 @@ class InstagramConnector extends Connector implements IConnector
 
     public function callback($params)
     {
-      
+        //$data['code'] = $_GET['code'];
+        $code = $_GET['code'];
+
+        $url = 'https://api.instagram.com/oauth/access_token';
+        $opts = "client_id=cab61f6a3ba04ca484c5eb5cc1b8d62a&redirect_uri=" . SUITE_SOCIAL_LOGIN_CALLBACK_URL . "&client_secret=8e89d198b5874d94ac41bb4b588aafb5&grant_type=authorization_code&code=" . $code;
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $opts);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $jsonDecoded = json_decode($response, true); // Returns an array
+
+        $data = [];
+        $data['token'] = $jsonDecoded['access_token'];
+        $data['username'] = $jsonDecoded['username'];
+        $data['userid'] = $jsonDecoded['id'];
+        $data['full_name'] = $jsonDecoded['full_name'];
+
+        return $data;
     }
 
 }
