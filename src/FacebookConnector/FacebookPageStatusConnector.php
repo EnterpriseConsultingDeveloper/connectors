@@ -16,68 +16,68 @@ use WR\Connector\IConnector;
 class FacebookPageStatusConnector extends FacebookConnector
 {
 
-    public function __construct($params) {
-        parent::__construct($params);
+  public function __construct($params) {
+    parent::__construct($params);
+  }
+
+  /**
+   *
+   */
+  public function write($content)
+  {
+    $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+
+    $post = strip_tags($content['content']['abstract']);
+    if ($content['content']['main_url'] != null) {
+      $post .= " " . $content['content']['main_url'];
     }
 
-    /**
-     *
-     */
-    public function write($content)
-    {
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+    $data = [
+      'title' => $content['content']['title'],
+      'message' => $post,
+    ];
 
-        $post = strip_tags($content['content']['body']);
-        if ($content['content']['main_url'] != null) {
-            $post .= " " . $content['content']['main_url'];
-        }
+    $response = $this->fb->post('me/feed', $data, $this->longLivedAccessToken);
 
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
+    $nodeId = $response->getGraphNode()->getField('id');
 
-        $response = $this->fb->post('me/feed', $data);
+    $info['id'] = $nodeId;
+    $info['url'] = 'http://www.facebook.com/' . $nodeId;
 
-        $nodeId = $response->getGraphNode()->getField('id');
+    return $info;
+  }
 
-        $info['id'] = $nodeId;
-        $info['url'] = 'http://www.facebook.com/' . $nodeId;
-
-        return $info;
+  public function read($objectId = null)
+  {
+    if ($objectId == null) {
+      return [];
     }
 
-    public function read($objectId = null)
-    {
-        if ($objectId == null) {
-            return [];
-        }
+    $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+    $streamToRead = '/' . $objectId;
+    $response = $this->fb->get($streamToRead);
+    return($response->getDecodedBody());
+  }
 
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-        $streamToRead = '/' . $objectId;
-        $response = $this->fb->get($streamToRead);
-        return($response->getDecodedBody());
+
+  public function update($content, $objectId)
+  {
+    $post = strip_tags($content['content']['abstract']);
+    if ($content['content']['main_url'] != null) {
+      $post .= " " . $content['content']['main_url'];
     }
 
+    $data = [
+      'title' => $content['content']['title'],
+      'message' => $post,
+    ];
 
-    public function update($content, $objectId)
-    {
-        $post = strip_tags($content['content']['body']);
-        if ($content['content']['main_url'] != null) {
-            $post .= " " . $content['content']['main_url'];
-        }
+    $streamToRead = '/' . $objectId;
+    $response = $this->fb->post($streamToRead, $data, $this->longLivedAccessToken);
 
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
+    $nodeId = $response->getGraphNode()->getField('id');
+    return $nodeId;
 
-        $streamToRead = '/' . $objectId;
-        $response = $this->fb->post($streamToRead, $data);
-
-        $nodeId = $response->getGraphNode()->getField('id');
-        return $nodeId;
-
-    }
+  }
 
 }

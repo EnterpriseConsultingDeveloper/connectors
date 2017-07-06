@@ -79,7 +79,7 @@ class FacebookConnector extends Connector implements IConnector
     $helper = $this->fb->getRedirectLoginHelper();
 
     $permissions = ['publish_actions','read_insights','public_profile','email','user_friends','manage_pages','publish_pages']; // Optional permissions
-    $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions);
+    $loginUrl = $helper->getLoginUrl('https://social-dev.whiterabbit.online/socialLogin/response', $permissions);
 
 
     return '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
@@ -228,7 +228,6 @@ class FacebookConnector extends Connector implements IConnector
       'message' => $post,
     ];
 
-
     $response = $this->fb->post('me/feed', $data);
 
     $nodeId = $response->getGraphNode()->getField('id');
@@ -251,7 +250,19 @@ class FacebookConnector extends Connector implements IConnector
    */
   public function delete($objectId = null)
   {
-    $response = $this->fb->delete($objectId);
+
+    if ($objectId == null) {
+      return;
+    }
+
+    //'/'.$graphNode['id'] ,array(), $facebook_access_token // esempio
+
+    try {
+      $response = $this->fb->delete($objectId);
+    } catch(FacebookApiException $e) {
+      $response = false;
+    }
+
     return $response;
   }
 
@@ -262,20 +273,20 @@ class FacebookConnector extends Connector implements IConnector
   public function mapFormData($data) {
 
     // Necessary only if are authenticating a page, not a profile
-    if(isset($data['token'])) {
-      $client = $this->fb->getOAuth2Client();
-
-      try {
-        // Returns a long-lived access token
-        $accessToken = $client->getLongLivedAccessToken($data['token']);
-      } catch(FacebookSDKException $e) {
-        // There was an error communicating with Graph
-        echo $e->getMessage();
-        exit;
-      }
-
-      $data['longlivetoken'] = $accessToken->getValue();
-    }
+//    if(isset($data['token'])) {
+//      $client = $this->fb->getOAuth2Client();
+//
+//      try {
+//        // Returns a long-lived access token
+//        $accessToken = $client->getLongLivedAccessToken($data['token']);
+//      } catch(FacebookSDKException $e) {
+//        // There was an error communicating with Graph
+//        echo $e->getMessage();
+//        exit;
+//      }
+//
+//      $data['longlivetoken'] = $accessToken->getValue();
+//    }
 
     return $data;
   }
