@@ -33,11 +33,12 @@ class FacebookPageStatusConnector extends FacebookConnector
     }
 
     $data = [
-      'title' => $content['content']['title'],
       'message' => $post,
     ];
 
-    $response = $this->fb->post('me/feed', $data, $this->longLivedAccessToken);
+    $streamToPost = '/'.$this->objectFbId.'/feed';
+
+    $response = $this->fb->post($streamToPost, $data, $this->longLivedAccessToken);
 
     $nodeId = $response->getGraphNode()->getField('id');
 

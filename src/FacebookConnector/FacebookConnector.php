@@ -26,6 +26,7 @@ class FacebookConnector extends Connector implements IConnector
   protected $longLivedAccessToken;
   protected $accessToken;
   protected $appSecret;
+  protected $objectFbId;
 
   private $feedLimit;
   private $objectId;
@@ -52,6 +53,7 @@ class FacebookConnector extends Connector implements IConnector
       }
 
       $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
+      $this->objectFbId = isset($params['pageid']) ? $params['pageid'] : '';
 
       $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
       $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
