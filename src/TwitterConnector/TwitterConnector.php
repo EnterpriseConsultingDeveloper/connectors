@@ -180,26 +180,11 @@ class TwitterConnector extends Connector implements IConnector
      */
     public function write($content)
     {
-        // Di default inserisco sul feed
         $post = strip_tags($content['content']['body']);
-        if ($content['content']['main_url'] != null) {
-            $post .= " " . $content['content']['main_url'];
-        }
+        $json = file_get_contents($this->tw . '1.1/statuses/update.json?status=' . $post, false, $this->context);
 
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
-
-
-        $response = $this->fb->post('me/feed', $data);
-
-        $nodeId = $response->getGraphNode()->getField('id');
-
-        $info['id'] = $nodeId;
-        $info['url'] = 'http://www.twitter.com/' . $nodeId;
-
-        return $info;
+        debug($json); die;
+        return $json;
 
     }
 
@@ -322,23 +307,25 @@ class TwitterConnector extends Connector implements IConnector
 
     public function comments($objectId, $operation = 'r', $content = null)
     {
-        if ($this->objectId == null) {
+        if ($objectId == null) {
             return [];
         }
 
-        try {
-            $statRequest = '/' . $objectId . '/comments';
 
-            $request = $this->fb->request('GET', $statRequest);
-            $response = $this->fb->getClient()->sendRequest($request);
 
-            return $response->getDecodedBody()['data'];
-        } catch(TwitterResponseException $e) {
-            return [];
-        } catch(TwitterSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Twitter SDK returned an error: ' . $e->getMessage();
-            return [];
+        // In case of write first write comment than read the comment
+        if($operation === 'w' && !empty($content)) {
+            try {
+                $post = strip_tags($content['content']['body']);
+                $json = file_get_contents($this->tw . '1.1/statuses/update.json?in_reply_to_status_id=' . $objectId . '&status=' . $post, false, $this->context);
+
+                debug($json); die;
+                return $json;
+
+            } catch(FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return [];
+            }
         }
     }
 

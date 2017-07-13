@@ -96,7 +96,9 @@ class InstagramConnector extends Connector implements IConnector
         curl_close($ch);
 
         $jsonDecoded = json_decode($response, true); // Returns an array
-        return($jsonDecoded);
+
+        $formattedResult = $this->format_result($jsonDecoded);
+        return($formattedResult);
     }
 
 
@@ -210,6 +212,30 @@ class InstagramConnector extends Connector implements IConnector
         $data['code'] = $params['code'];
 
         return $data;
+    }
+
+
+    /**
+     * @param $posts
+     * @return array
+     */
+    private function format_result($posts) {
+        $beans = array();
+        foreach($posts['data'] as $post) {
+            $element =  new ConnectorBean();
+            $element->setBody($post['caption']['text']);
+
+            $element->setIsContentMeaningful(1);
+            $element->setCreationDate($post['created_time']);
+            $element->setMessageId($post['id']);
+            $element->setAuthor('');
+            $element->setUri($post['link']);
+
+            $element->setRawPost($post);
+
+            $beans[] = $element;
+        }
+        return $beans;
     }
 
 }

@@ -302,6 +302,7 @@ class ConnectorManager
   {
     $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
     $classInstance = new $className($params);
+
     return $classInstance->comments($objectId, 'w', $content);
   }
 
