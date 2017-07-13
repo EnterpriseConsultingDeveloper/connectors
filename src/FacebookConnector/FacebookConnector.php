@@ -33,6 +33,8 @@ class FacebookConnector extends Connector implements IConnector
   private $since;
   private $until;
 
+  var $error = false;
+
   function __construct($params)
   {
     $config = json_decode(file_get_contents('appdata.cfg', true), true);
@@ -60,10 +62,22 @@ class FacebookConnector extends Connector implements IConnector
       $this->until = isset($params['until']) ? $params['until'] : null; // Unix timestamp until
     }
 
-    $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
+//    $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
+    $debugTokenCommand = 'https://graph.facebook.com/me?access_token='.$this->longLivedAccessToken;
+
     $http = new Client();
     $response = $http->get($debugTokenCommand);
+    $body = $response->json;
+
+//    if ($body['error']) {
+//      $this->error = $body;
+//      $error = ['Error' => $body['error']['code'], 'Message' => $body['error']['message']];
+//      //debug($error); die;
+//      return $error;
+//    }
+
     if($response->code !== 200) {
+      $this->error = 2;
       $error = ['Error' => $response->code, 'Message' => $response->headers['WWW-Authenticate']];
       //debug($error); die;
       return $error;
@@ -171,6 +185,11 @@ class FacebookConnector extends Connector implements IConnector
    */
   public function read($objectId = null)
   {
+
+    if ($this->tokenValid = false) {
+      return;
+    }
+
     // Read complete page feed
     if ($objectId == null) $objectId = $this->objectId;
 

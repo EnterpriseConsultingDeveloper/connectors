@@ -208,7 +208,11 @@ class ConnectorManager
   public function get_content($params, $objectId)
   {
     $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+
     $classInstance = new $className($params);
+//    debug($classInstance->error);
+//    return;
+//    exit;
     return $classInstance->read($objectId);
   }
 
