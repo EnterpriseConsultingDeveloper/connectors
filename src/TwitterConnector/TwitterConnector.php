@@ -22,7 +22,7 @@ class TwitterConnector extends Connector implements IConnector
 
     private $feedLimit;
     private $objectId;
-    private $context;
+    protected $context;
 
     function __construct($params)
     {
@@ -99,6 +99,15 @@ class TwitterConnector extends Connector implements IConnector
 
         $data = json_decode($json, true);
 
+        // Remove comments that are tweets in_reply_to_status_id
+        foreach($data as $key => $value) {
+            if($value['in_reply_to_status_id'] != '')
+                unset($data[$key]);
+        }
+
+
+        debug($data);die;
+        //in_reply_to_status_id
         // Append users that have taken an action on the page
         $social_users = array();
 //        foreach($data as $d) {
@@ -144,9 +153,13 @@ class TwitterConnector extends Connector implements IConnector
             if(isset($res['statuses'])) {
                 $res = $res['statuses'];
             }
+            debug($res); die;
             foreach($res as $key => $value) {
                 try {
                     // Check if the array returned is not related to content (e.g. stats array)
+                    if(!isset($value['text']) || empty($value['text']))
+                        continue;
+
                     if(!isset($value['text']) || empty($value['text']))
                         continue;
 
@@ -312,9 +325,12 @@ class TwitterConnector extends Connector implements IConnector
         }
 
         if($operation === 'r') {
+            // Tweets in response of a tweet are comments
             try {
-                //https://api.twitter.com/1.1/search/tweets.json
-                $tweeterusername = 'dinofratelli';
+                $tweetConnector = new TwitterTweetConnector();
+                $originalPost = $tweetConnector->read($objectId);
+                $tweeterusername = $originalPost['user']['screen_name'];
+
                 $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=to:' . $tweeterusername . '&since_id=' . $objectId, false, $this->context);
 
                 debug($json); die;
