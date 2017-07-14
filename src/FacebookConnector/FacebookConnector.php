@@ -693,6 +693,8 @@ class FacebookConnector extends Connector implements IConnector
           $ub->setContentId($d['id']);
           $ub->setText('');
 
+          $ub->setDate($d['created_time']);
+
           $ub->setAncestorBody($ancestor_body);
 
           $ub = $this->getUserExtraData($social_user['id'], $ub);

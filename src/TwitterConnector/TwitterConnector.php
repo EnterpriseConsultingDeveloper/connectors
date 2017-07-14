@@ -311,6 +311,21 @@ class TwitterConnector extends Connector implements IConnector
             return [];
         }
 
+        if($operation === 'r') {
+            try {
+                //https://api.twitter.com/1.1/search/tweets.json
+                $tweeterusername = 'dinofratelli';
+                $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=to:' . $tweeterusername . '&since_id=' . $objectId, false, $this->context);
+
+                debug($json); die;
+                return $json;
+
+            } catch(FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return [];
+            }
+        }
+
 
 
         // In case of write first write comment than read the comment
