@@ -38,14 +38,17 @@ class TwitterTweetConnector extends TwitterConnector
         if ($objectId == null) {
             return [];
         }
-        $json = file_get_contents($this->tw . '1.1/statuses/show.json?id=' . $objectId, false, $this->context);
 
-        $data = json_decode($json, true);
+        $url = $this->tw . '1.1/statuses/show.json';
+        $getfield = '?id=' . $objectId;
 
-        $social_users = array();
-        $data['social_users'] = $social_users;
+        $requestMethod = 'GET';
 
-        return($data);
+        $res = $this->twitter->setGetfield($getfield)
+            ->buildOauth($url, $requestMethod)
+            ->performRequest();
+
+        return $res;
     }
 
 

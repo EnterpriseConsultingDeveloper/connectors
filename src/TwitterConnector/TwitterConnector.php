@@ -7,6 +7,7 @@
  */
 
 namespace WR\Connector\TwitterConnector;
+require_once('Lib/TwitterAPIExchange.php');
 
 use WR\Connector\Connector;
 use WR\Connector\ConnectorBean;
@@ -23,6 +24,8 @@ class TwitterConnector extends Connector implements IConnector
     private $feedLimit;
     private $objectId;
     protected $context;
+
+    protected $twitter;
 
     function __construct($params)
     {
@@ -67,6 +70,15 @@ class TwitterConnector extends Connector implements IConnector
         $this->context = stream_context_create($opts);
         $this->tw = $api_base;
 
+        /**/
+        $settings = array(
+            'oauth_access_token' => $config['access_token'],
+            'oauth_access_token_secret' => $config['access_token_secret'],
+            'consumer_key' => $config['api_key'],
+            'consumer_secret' => $config['api_secret']
+        );
+
+        $this->twitter = new \TwitterAPIExchange($settings);
     }
 
     public function connect($config)
@@ -82,7 +94,7 @@ class TwitterConnector extends Connector implements IConnector
      */
     public function read($objectId = null)
     {
-        // Read complete public page feed
+        // Read complete public page feed, used in STREAM!
         if ($objectId == null) $objectId = $this->objectId;
 
         if ($objectId == null) {
@@ -103,23 +115,13 @@ class TwitterConnector extends Connector implements IConnector
         foreach($data as $key => $value) {
             if($value['in_reply_to_status_id'] != '')
                 unset($data[$key]);
+            //debug($value['id']); die;
+            $data[$key]['comments'] = $this->comments($value['id'], 'r');
         }
 
-
-        debug($data);die;
         //in_reply_to_status_id
         // Append users that have taken an action on the page
         $social_users = array();
-//        foreach($data as $d) {
-//            foreach($d['reactions']['data'] as $social_user) {
-//                $ub = new ConnectorUserBean();
-//                $ub->setName($social_user['name']);
-//                $ub->setId($social_user['id']);
-//                $ub->setAction($social_user['type']);
-//
-//                $social_users[] = $ub;
-//            }
-//        }
         $data['social_users'] = $social_users;
 
         return($data);
@@ -153,7 +155,7 @@ class TwitterConnector extends Connector implements IConnector
             if(isset($res['statuses'])) {
                 $res = $res['statuses'];
             }
-            debug($res); die;
+
             foreach($res as $key => $value) {
                 try {
                     // Check if the array returned is not related to content (e.g. stats array)
@@ -193,11 +195,21 @@ class TwitterConnector extends Connector implements IConnector
      */
     public function write($content)
     {
-        $post = strip_tags($content['content']['body']);
-        $json = file_get_contents($this->tw . '1.1/statuses/update.json?status=' . $post, false, $this->context);
+        $post = '@dinofratelli ' . strip_tags($content['content']['body']);
+        $url = 'https://api.twitter.com/1.1/statuses/update.json';
+        $requestMethod = 'POST';
 
-        debug($json); die;
-        return $json;
+        $postfields = array(
+            'screen_name' => 'dinofratelli',
+            'status' => $post,
+            'in_reply_to_status_id' => '879728813617401856'
+        );
+
+        $res = $this->twitter->buildOauth($url, $requestMethod)
+            ->setPostfields($postfields)
+            ->performRequest();
+
+        return $res;
 
     }
 
@@ -328,33 +340,61 @@ class TwitterConnector extends Connector implements IConnector
             // Tweets in response of a tweet are comments
             try {
                 $tweetConnector = new TwitterTweetConnector();
-                $originalPost = $tweetConnector->read($objectId);
-                $tweeterusername = $originalPost['user']['screen_name'];
+                $originalPost = json_decode($tweetConnector->read($objectId));
+                $tweeterusername = $originalPost->user->screen_name;
 
-                $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=to:' . $tweeterusername . '&since_id=' . $objectId, false, $this->context);
+                $url = $this->tw . '1.1/search/tweets.json';
+                $getfield = '?q=to:' . $tweeterusername . '&since_id=' . $objectId;
 
-                debug($json); die;
-                return $json;
+                $requestMethod = 'GET';
 
-            } catch(FacebookResponseException $e) {
+                $res = $this->twitter->setGetfield($getfield)
+                    ->buildOauth($url, $requestMethod)
+                    ->performRequest();
+
+                $resArray = json_decode($res, true);
+                foreach($resArray['statuses'] as $key => $val) {
+                    if($val['in_reply_to_status_id'] != $objectId) {
+                        unset($resArray['statuses'][$key]);
+                    }
+
+                    unset($resArray['search_metadata']);
+                }
+                //debug($resArray); die;
+                return $resArray;
+
+            } catch(\Exception $e) {
                 Log::write('debug', $e);
                 return [];
             }
         }
 
-
-
         // In case of write first write comment than read the comment
         if($operation === 'w' && !empty($content)) {
             try {
-                $post = strip_tags($content['content']['body']);
-                $json = file_get_contents($this->tw . '1.1/statuses/update.json?in_reply_to_status_id=' . $objectId . '&status=' . $post, false, $this->context);
+                $tweetConnector = new TwitterTweetConnector();
+                $originalPost = json_decode($tweetConnector->read($objectId));
+                $tweeterusername = $originalPost->user->screen_name;
 
-                debug($json); die;
-                return $json;
+                $post = '@' . $tweeterusername . ' ' . strip_tags($content['content']['body']);
 
-            } catch(FacebookResponseException $e) {
-                Log::write('debug', $e);
+                $url = $this->tw . '1.1/statuses/update.json';
+                $requestMethod = 'POST';
+
+                $postfields = array(
+                    'screen_name' => 'dinofratelli',
+                    'status' => $post,
+                    'in_reply_to_status_id' => $objectId
+                );
+
+                $res = $this->twitter->buildOauth($url, $requestMethod)
+                    ->setPostfields($postfields)
+                    ->performRequest();
+
+                return $res;
+
+            } catch(\Exception $e) {
+
                 return [];
             }
         }
