@@ -330,6 +330,12 @@ class TwitterConnector extends Connector implements IConnector
         return $stats;
     }
 
+    /**
+     * @param $objectId
+     * @param string $operation
+     * @param null $content
+     * @return array|mixed|string
+     */
     public function comments($objectId, $operation = 'r', $content = null)
     {
         if ($objectId == null) {
