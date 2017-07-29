@@ -382,7 +382,7 @@ class TwitterConnector extends Connector implements IConnector
                 $originalPost = json_decode($tweetConnector->read($objectId));
                 $tweeterusername = $originalPost->user->screen_name;
 
-                $post = '@' . $tweeterusername . ' ' . strip_tags($content['content']['body']);
+                $post = '@' . $tweeterusername . ' ' . strip_tags($content['comment']);
 
                 $url = $this->tw . '1.1/statuses/update.json';
                 $requestMethod = 'POST';
@@ -397,7 +397,88 @@ class TwitterConnector extends Connector implements IConnector
                     ->setPostfields($postfields)
                     ->performRequest();
 
-                return $res;
+                $res = json_decode($res);
+                /*
+        [
+            'message' => 'werqwe',
+            'created_time' => '2017-07-29T08:26:16+0000',
+            'like_count' => (int) 0,
+            'from' => [
+                'name' => 'Abbigliamento Donna',
+                'picture' => [
+                    'data' => [
+                        'is_silhouette' => false,
+                        'url' => 'https://scontent.xx.fbcdn.net/v/t1.0-1/p50x50/11120506_827213907398385_4996599747164524750_n.jpg?oh=fc7660af6dce0d51f0f46682973743b0&oe=59FF974D'
+                    ]
+                ],
+                'link' => 'https://www.facebook.com/shoppinglovers/',
+                'id' => '241525822633866'
+            ],
+            'id' => '1037286509724456_1468340773285692'
+        ]
+
+                user => object(stdClass) {
+		id => (int) 807153283651563520
+		id_str => '807153283651563520'
+		name => 'WhiteRabbit Suite'
+		screen_name => 'wrsuite'
+		location => ''
+		description => ''
+		url => null
+		entities => object(stdClass) {
+			description => object(stdClass) {
+				urls => []
+			}
+		}
+		protected => false
+		followers_count => (int) 0
+		friends_count => (int) 60
+		listed_count => (int) 0
+		created_at => 'Fri Dec 09 09:21:53 +0000 2016'
+		favourites_count => (int) 0
+		utc_offset => null
+		time_zone => null
+		geo_enabled => false
+		verified => false
+		statuses_count => (int) 9
+		lang => 'it'
+		contributors_enabled => false
+		is_translator => false
+		is_translation_enabled => false
+		profile_background_color => 'F5F8FA'
+		profile_background_image_url => null
+		profile_background_image_url_https => null
+		profile_background_tile => false
+		profile_image_url => 'http://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png'
+		profile_image_url_https => 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png'
+		profile_link_color => '1DA1F2'
+		profile_sidebar_border_color => 'C0DEED'
+		profile_sidebar_fill_color => 'DDEEF6'
+		profile_text_color => '333333'
+		profile_use_background_image => true
+		has_extended_profile => false
+		default_profile => true
+		default_profile_image => true
+		following => false
+		follow_request_sent => false
+		notifications => false
+		translator_type => 'none'
+	}
+        */
+                $compatibleFromArray = [];
+                $compatibleFromArray['name'] = $res->user->name;
+                $compatibleFromArray['picture'] = $res->user->profile_image_url_https;
+                $compatibleFromArray['link'] = '';
+                $compatibleFromArray['id'] = $res->user->id;
+
+                $compatibleResArray = [];
+                $compatibleResArray['message'] = $res->text;
+                $compatibleResArray['created_time'] = $res->created_at;
+                $compatibleResArray['like_count'] = $res->favorite_count;
+                $compatibleResArray['from'] = $compatibleFromArray;
+                $compatibleResArray['id'] = $res->id_str;
+
+                return $compatibleResArray;
 
             } catch(\Exception $e) {
 
