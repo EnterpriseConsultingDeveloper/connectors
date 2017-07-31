@@ -465,9 +465,13 @@ class TwitterConnector extends Connector implements IConnector
 		translator_type => 'none'
 	}
         */
+                $compatiblePictureArray = [];
+                $compatiblePictureArray['data']['is_silhouette'] = false;
+                $compatiblePictureArray['data']['url'] = $res->user->profile_image_url_https;
+
                 $compatibleFromArray = [];
                 $compatibleFromArray['name'] = $res->user->name;
-                $compatibleFromArray['picture'] = $res->user->profile_image_url_https;
+                $compatibleFromArray['picture'] = $compatiblePictureArray;
                 $compatibleFromArray['link'] = '';
                 $compatibleFromArray['id'] = $res->user->id;
 
