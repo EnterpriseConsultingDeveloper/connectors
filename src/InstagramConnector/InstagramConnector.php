@@ -32,7 +32,7 @@ class InstagramConnector extends Connector implements IConnector
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
         $api_base = $config['api_base'];
 
-        $this->token = $params['accesstoken'];
+        //$this->token = empty($params['accesstoken']) ? '' : $params['accesstoken'];
         $this->insta = $api_base;
     }
 
@@ -87,7 +87,10 @@ class InstagramConnector extends Connector implements IConnector
             return [];
 
         $objectId = $this->cleanObjectId($objectId);
-        $url = $this->insta . 'v1/users/' . $objectId . '/media/recent/?access_token=' . $this->token;
+        //$url = $this->insta . 'v1/users/' . $objectId . '/media/recent/?access_token=' . $this->token;
+
+        //https://api.instagram.com/v1/tags/dino/media/recent?access_token=3561573774.cab61f6.3475cbbc097c4ab1b1dcc4deb69aace6
+        $url = $this->insta . 'v1/tags/' . $objectId . '/media/recent/?access_token=' . $this->token;
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -116,12 +119,11 @@ class InstagramConnector extends Connector implements IConnector
 
     /**
      * @param null $objectId
-     * @return \Twitter\TwitterResponse
      */
     public function delete($objectId = null)
     {
-        $response = $this->fb->delete($objectId);
-        return $response;
+        //$response = $this->fb->delete($objectId);
+        return null;
     }
 
     /**

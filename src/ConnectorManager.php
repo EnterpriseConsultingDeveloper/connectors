@@ -218,6 +218,7 @@ class ConnectorManager
 
   public function callback($params) {
     $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+    //debug($params); debug($className); die;
     $classInstance = new $className($params);
     return $classInstance->callback($params);
   }
