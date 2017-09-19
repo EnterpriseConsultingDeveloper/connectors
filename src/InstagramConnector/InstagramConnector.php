@@ -32,7 +32,7 @@ class InstagramConnector extends Connector implements IConnector
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
         $api_base = $config['api_base'];
 
-        //$this->token = empty($params['accesstoken']) ? '' : $params['accesstoken'];
+        $this->token = empty($params['accesstoken']) ? '' : $params['accesstoken'];
         $this->insta = $api_base;
     }
 
@@ -70,6 +70,26 @@ class InstagramConnector extends Connector implements IConnector
         curl_close($ch);
 
         $jsonDecoded = json_decode($response, true); // Returns an array
+        //debug($jsonDecoded); die;
+        $comments = array();
+        foreach($jsonDecoded['data'] as $key => $value) {
+            $commentsNumber = $value['comments']['count'];
+            if($commentsNumber > 0) {
+                $url = $this->insta . 'v1/media/' . $value['id'] . '/comments?access_token=' . $this->token;
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $response = curl_exec($ch);
+                curl_close($ch);
+
+                $comments = json_decode($response, true);
+                $comments['parent_id'] = $value['id'];
+                $jsonDecoded['data'][$key ]['comments']['list'] = $comments;
+            }
+        }
+
+        //debug($jsonDecoded); die;
+
         return($jsonDecoded);
     }
 
@@ -90,6 +110,8 @@ class InstagramConnector extends Connector implements IConnector
         //$url = $this->insta . 'v1/users/' . $objectId . '/media/recent/?access_token=' . $this->token;
 
         //https://api.instagram.com/v1/tags/dino/media/recent?access_token=3561573774.cab61f6.3475cbbc097c4ab1b1dcc4deb69aace6
+        $objectId = 'whiterabbit';
+        //$this->token = '3561573774.cab61f6.3475cbbc097c4ab1b1dcc4deb69aace6';
         $url = $this->insta . 'v1/tags/' . $objectId . '/media/recent/?access_token=' . $this->token;
 
         $ch = curl_init();
@@ -139,9 +161,87 @@ class InstagramConnector extends Connector implements IConnector
        return null;
     }
 
+    /**
+     * @param $objectId
+     * @param string $operation
+     * @param null $content
+     * @return array|mixed|string
+     */
     public function comments($objectId, $operation = 'r', $content = null)
     {
-        return null;
+        if ($objectId == null) {
+            return [];
+        }
+
+        // In case of write first write comment than read the comment
+        if($operation === 'w' && !empty($content)) {
+            try {
+                $url = $this->insta . 'v1/media/' . $objectId . '/comments';
+                //'https://api.instagram.com/v1/media/1590543212022433315_3561573774/comments'
+
+                $content = strip_tags($content['comment']);
+
+                // Instagram accepts 300chr max for comment
+                $content  = strlen($content) > 300 ? substr($content, 0, 296) . '...' : $content;
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS,
+                    "access_token=" . $this->token . "&text=" . $content);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                $response = curl_exec($ch);
+                curl_close($ch);
+
+                $res = json_decode($response, true); // Returns an array
+
+                $compatiblePictureArray = [];
+                $compatiblePictureArray['data']['is_silhouette'] = false;
+                $compatiblePictureArray['data']['url'] = $res['data']['from']['profile_picture'];
+
+                $compatibleFromArray = [];
+                $compatibleFromArray['name'] = $res['data']['from']['username'];
+                $compatibleFromArray['picture'] = $compatiblePictureArray;
+                $compatibleFromArray['link'] = '';
+                $compatibleFromArray['id'] = $res['data']['from']['id'];
+
+                $compatibleResArray = [];
+                $compatibleResArray['message'] = $res['data']['text'];
+                $compatibleResArray['created_time'] = $res['data']['created_time'];
+                $compatibleResArray['like_count'] = 0;
+                $compatibleResArray['from'] = $compatibleFromArray;
+                $compatibleResArray['id'] = $res['data']['id'];
+
+                return $compatibleResArray;
+
+            } catch(\Exception $e) {
+
+                return [];
+            }
+        }
+
+        // In case of delete
+        if($operation === 'd') {
+            try {
+                $mediaId = $content['id'];
+                $url = $this->insta . 'v1/media/' . $mediaId . '/comments/' . $objectId . '?access_token=' . $this->token;
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_exec($ch);
+
+                //$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                return true;
+            } catch(\Exception $e) {
+                Log::write('debug', $e);
+                return false;
+            }
+        }
     }
 
     public function commentFromDate($objectId, $fromDate) {

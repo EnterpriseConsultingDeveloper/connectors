@@ -325,11 +325,11 @@ class ConnectorManager
    * @param $objectId
    * @return mixed
    */
-  public function delete_comment($params, $objectId)
+  public function delete_comment($params, $objectId, $content='')
   {
     $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
     $classInstance = new $className($params);
-    return $classInstance->comments($objectId, 'd');
+    return $classInstance->comments($objectId, 'd', $content);
   }
 
   /**
