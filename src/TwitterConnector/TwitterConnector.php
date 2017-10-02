@@ -15,6 +15,8 @@ use WR\Connector\IConnector;
 use Cake\Network\Http\Client;
 use WR\Connector\TwitterConnection;
 use Cake\Collection\Collection;
+use Abraham\TwitterOAuth\TwitterOAuth;
+
 class TwitterConnector extends Connector implements IConnector
 {
     protected $tw;
@@ -24,6 +26,8 @@ class TwitterConnector extends Connector implements IConnector
     private $feedLimit;
     private $objectId;
     protected $context;
+
+    protected $profileId;
 
     protected $twitter;
 
@@ -70,7 +74,16 @@ class TwitterConnector extends Connector implements IConnector
         $this->context = stream_context_create($opts);
         $this->tw = $api_base;
 
-        /**/
+//        $params
+//        [
+//            'key' => 'test',
+//            'longlivetoken' => 'test',
+//            'profileid' => 'dinofratelli'
+//        ]
+
+        if(isset($params['profileid']))
+            $this->profileId = $params['profileid'];
+
         $settings = array(
             'oauth_access_token' => $config['access_token'],
             'oauth_access_token_secret' => $config['access_token_secret'],
@@ -195,14 +208,15 @@ class TwitterConnector extends Connector implements IConnector
      */
     public function write($content)
     {
-        $post = '@dinofratelli ' . strip_tags($content['content']['body']);
-        $url = 'https://api.twitter.com/1.1/statuses/update.json';
+        $post = strip_tags($content['content']['body']);
+        $url = $this->tw . '1.1/statuses/update.json';
+
         $requestMethod = 'POST';
 
         $postfields = array(
-            'screen_name' => 'dinofratelli',
+            'screen_name' => $this->profileId,
             'status' => $post,
-            'in_reply_to_status_id' => '879728813617401856'
+            //'in_reply_to_status_id' => '879728813617401856'
         );
 
         $res = $this->twitter->buildOauth($url, $requestMethod)
@@ -388,7 +402,7 @@ class TwitterConnector extends Connector implements IConnector
                 $requestMethod = 'POST';
 
                 $postfields = array(
-                    'screen_name' => 'dinofratelli',
+                    'screen_name' => $this->profileId,
                     'status' => $post,
                     'in_reply_to_status_id' => $objectId
                 );
@@ -504,8 +518,28 @@ class TwitterConnector extends Connector implements IConnector
 
     }
 
-    public function callback($params)
-    {
+    public function callback($params) {
+
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
+        $data = array();
+
+        $request_token = [];
+        $request_token['oauth_token'] = $_SESSION['oauth_token'];
+        $request_token['oauth_token_secret'] = $_SESSION['oauth_token_secret'];
+
+        if (isset($_REQUEST['oauth_token']) && $request_token['oauth_token'] !== $_REQUEST['oauth_token']) {
+            // Abort! Something is wrong.
+            die();
+        }
+
+        $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $request_token['oauth_token'], $request_token['oauth_token_secret']);
+        $access_token = $connection->oauth("oauth/access_token", ["oauth_verifier" => $_REQUEST['oauth_verifier']]);
+
+        // Logged in
+        $data['token'] = $access_token;
+        $data['longlivetoken'] = $access_token;
+debug($data); die;
+        return $data;
 
     }
 

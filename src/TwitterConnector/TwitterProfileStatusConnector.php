@@ -21,30 +21,27 @@ class TwitterProfileStatusConnector extends TwitterConnector
     }
 
     /**
-     *
+     * function write
      */
     public function write($content)
     {
-        //$this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-
         $post = strip_tags($content['content']['body']);
-        if ($content['content']['main_url'] != null) {
-            $post .= " " . $content['content']['main_url'];
-        }
+        $url = $this->tw . '1.1/statuses/update.json';
 
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
+        $requestMethod = 'POST';
 
-        $response = $this->fb->post('me/feed', $data);
+        $postfields = array(
+            'screen_name' => $this->profileId,
+            'status' => $post,
+            //'in_reply_to_status_id' => '879728813617401856'
+        );
 
-        $nodeId = $response->getGraphNode()->getField('id');
+        $res = $this->twitter->buildOauth($url, $requestMethod)
+            ->setPostfields($postfields)
+            ->performRequest();
 
-        $info['id'] = $nodeId;
-        $info['url'] = 'http://www.twitter.com/' . $nodeId;
+        return $res;
 
-        return $info;
     }
 
     public function read($objectId = null)

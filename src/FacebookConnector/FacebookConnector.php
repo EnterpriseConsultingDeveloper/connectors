@@ -602,18 +602,13 @@ class FacebookConnector extends Connector implements IConnector
     }
 
     // Logged in
-//      echo '<h3>Access Token</h3>';
     $data['token'] = $accessToken->getValue();
-//      debug($accessToken->getValue());
 
     // The OAuth 2.0 client handler helps us manage access tokens
     $oAuth2Client = $this->fb->getOAuth2Client();
 
     // Get the access token metadata from /debug_token
     $tokenMetadata = $oAuth2Client->debugToken($accessToken);
-//      $data['pageid'] = $tokenMetadata;
-//      echo '<h3>Metadata</h3>';
-//      debug($tokenMetadata);
 
     // Validation (these will throw FacebookSDKException's when they fail)
     $tokenMetadata->validateAppId($config['app_id']); // Replace {app-id} with your app id
@@ -649,12 +644,6 @@ class FacebookConnector extends Connector implements IConnector
     $data['longlivetoken'] = $accessToken->getValue();
 
     return $data;
-
-//      $_SESSION['fb_access_token'] = (string) $accessToken;
-
-    // User is logged in with a long-lived access token.
-    // You can redirect them to a members-only page.
-    //header('Location: https://example.com/members.php');
 
   }
 
