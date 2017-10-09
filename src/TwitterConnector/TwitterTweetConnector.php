@@ -39,16 +39,19 @@ class TwitterTweetConnector extends TwitterConnector
             return [];
         }
 
-        $url = $this->tw . '1.1/statuses/show.json';
-        $getfield = '?id=' . $objectId;
+        //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+        $data = $this->twitter->get("statuses/show", ["id" => $objectId]);
 
-        $requestMethod = 'GET';
+        if(!isset($data->errors)) {
+            $myRow = array();
+            $myRow = get_object_vars($data);
+            $myRow['user'] = get_object_vars($data->user);
 
-        $res = $this->twitter->setGetfield($getfield)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest();
+            return $myRow;
 
-        return $res;
+        } else {
+            return array();
+        }
     }
 
 

@@ -19,29 +19,40 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 
 class TwitterConnector extends Connector implements IConnector
 {
-    protected $tw;
-    protected $accessToken;
-    protected $appSecret;
+    //protected $tw;
+    protected $app_key;
+    protected $app_secret;
 
     private $feedLimit;
     private $objectId;
     protected $context;
-
     protected $profileId;
-
     protected $twitter;
+    protected $api_base;
+
+    protected $access_token;
+    protected $access_token_secret;
 
     function __construct($params)
     {
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
-        $api_base = $config['api_base'];
+        $this->api_base = $config['api_base'];
+        $this->app_key = $config['api_key'];
+        $this->app_secret = $config['api_secret'];
 
-        //This is all you need to configure.
-        $app_key = $config['api_key'];
-        $app_token = $config['api_secret'];
+        if(!empty($params['key']) && !empty($params['longlivetoken'])) {
+            // ouauth utente
+            $this->access_token = $params['key'];
+            $this->access_token_secret = $params['longlivetoken'];
+        } else {
+            // ouauth whiterabbit
+            $this->access_token = $config['access_token'];
+            $this->access_token_secret = $config['access_token_secret'];
+        }
 
-        $bearer_token_creds = base64_encode($app_key.':'.$app_token);
-        //Get a bearer token.
+
+        /*
+        $bearer_token_creds = base64_encode($this->app_key.':'.$this->app_secret);
         $opts = array(
             'http'=>array(
                 'method' => 'POST',
@@ -61,10 +72,7 @@ class TwitterConnector extends Connector implements IConnector
         if ($result['token_type'] !== "bearer") {
             die("Invalid token type. Twitter says we need to make sure this is a bearer.");
         }
-        //Set our bearer token. Now issued, this won't ever* change unless it's invalidated by a call to /oauth2/invalidate_token.
-        //*probably - it's not documentated that it'll ever change.
         $bearer_token = $result['access_token'];
-        //Try a twitter API request now.
         $opts = array(
             'http'=>array(
                 'method' => 'GET',
@@ -73,13 +81,6 @@ class TwitterConnector extends Connector implements IConnector
         );
         $this->context = stream_context_create($opts);
         $this->tw = $api_base;
-
-//        $params
-//        [
-//            'key' => 'test',
-//            'longlivetoken' => 'test',
-//            'profileid' => 'dinofratelli'
-//        ]
 
         if(isset($params['profileid']))
             $this->profileId = $params['profileid'];
@@ -92,6 +93,9 @@ class TwitterConnector extends Connector implements IConnector
         );
 
         $this->twitter = new \TwitterAPIExchange($settings);
+        */
+
+        $this->twitter = new TwitterOAuth($this->app_key,  $this->app_secret, $this->access_token, $this->access_token_secret);
     }
 
     public function connect($config)
@@ -117,21 +121,29 @@ class TwitterConnector extends Connector implements IConnector
         $objectId = $this->cleanObjectId($objectId);
         if (substr($objectId, 0, 1) === '#') {// hashtag search
             $objectId = str_replace('#', '%23', $objectId);
-            $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
+            //$json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
+            $dataObj = $this->twitter->get("search/tweets", ["q" => $objectId]);
+
         } else {
-            $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+            //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+            $dataObj = $this->twitter->get("statuses/user_timeline", ["count" => 10, "screen_name" => $objectId]);
         }
-
-        $data = json_decode($json, true);
-
+        //$data = json_decode($json, true);
         // Remove comments that are tweets in_reply_to_status_id
-        foreach($data as $key => $value) {
-            if($value['in_reply_to_status_id'] != '')
-                unset($data[$key]);
-            //debug($value['id']); die;
-            $data[$key]['comments'] = $this->comments($value['id'], 'r');
-        }
+        //debug($data);
+        $data = array();
+        foreach($dataObj as $myObj) {
+            if($myObj->in_reply_to_status_id != '')
+                continue;
 
+            $myRow = array();
+            $myRow = get_object_vars($myObj);
+            $myRow['comments'] = $this->comments($myObj->id, 'r');
+            $myRow['user'] = get_object_vars($myObj->user);
+
+            $data[] = $myRow;
+        }
+        //debug($data); die;
         //in_reply_to_status_id
         // Append users that have taken an action on the page
         $social_users = array();
@@ -149,9 +161,51 @@ class TwitterConnector extends Connector implements IConnector
         // Read complete public page feed
         if ($objectId == null) $objectId = $this->objectId;
 
-        if ($objectId == null) {
+        if ($objectId == null)
             return [];
-        }
+
+
+        // Will create a public connection
+        $bearer_token_creds = base64_encode($this->app_key.':'.$this->app_secret);
+        $opts = array(
+            'http'=>array(
+                'method' => 'POST',
+                'header' => 'Authorization: Basic '.$bearer_token_creds."\r\n".
+                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
+                'content' => 'grant_type=client_credentials'
+            )
+        );
+
+        $context = stream_context_create($opts);
+        $json = file_get_contents($this->api_base.'oauth2/token', false, $context);
+        $result = json_decode($json, true);
+
+        if (!is_array($result) || !isset($result['token_type']) || !isset($result['access_token']))
+            die("Something went wrong. This isn't a valid array: " . $json);
+
+        if ($result['token_type'] !== "bearer")
+            die("Invalid token type. Twitter says we need to make sure this is a bearer.");
+
+        $bearer_token = $result['access_token'];
+        $opts = array(
+            'http'=>array(
+                'method' => 'GET',
+                'header' => 'Authorization: Bearer ' . $bearer_token
+            )
+        );
+        $context = stream_context_create($opts);
+/*
+        if(isset($params['profileid']))
+            $this->profileId = $params['profileid'];
+
+        $settings = array(
+            'oauth_access_token' => $this->access_token,
+            'oauth_access_token_secret' => $this->access_token_secret,
+            'consumer_key' => $this->app_key,
+            'consumer_secret' => $this->app_secret
+        );
+
+        $connection = new \TwitterAPIExchange($settings); */
 
         $objectId = $this->cleanObjectId($objectId);
         $formatted_res = array();
@@ -159,15 +213,14 @@ class TwitterConnector extends Connector implements IConnector
         try {
             if (substr($objectId, 0, 1) === '#') {// hashtag search
                 $objectId = str_replace('#', '%23', $objectId);
-                $json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
+                $json = file_get_contents($this->api_base . '1.1/search/tweets.json?q=' . $objectId, false, $context);
             } else {
-                $json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+                $json = file_get_contents($this->api_base . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $context);
             }
 
             $res = json_decode($json, true);
-            if(isset($res['statuses'])) {
+            if(isset($res['statuses']))
                 $res = $res['statuses'];
-            }
 
             foreach($res as $key => $value) {
                 try {
@@ -247,23 +300,6 @@ class TwitterConnector extends Connector implements IConnector
      * @return mixed
      */
     public function mapFormData($data) {
-
-        // Necessary only if are authenticating a page, not a profile
-        if(isset($data['token'])) {
-            $client = $this->fb->getOAuth2Client();
-
-            try {
-                // Returns a long-lived access token
-                $accessToken = $client->getLongLivedAccessToken($data['token']);
-            } catch(TwitterSDKException $e) {
-                // There was an error communicating with Graph
-                echo $e->getMessage();
-                exit;
-            }
-
-            $data['longlivetoken'] = $accessToken->getValue();
-        }
-
         return $data;
     }
 
@@ -360,27 +396,35 @@ class TwitterConnector extends Connector implements IConnector
             // Tweets in response of a tweet are comments
             try {
                 $tweetConnector = new TwitterTweetConnector();
-                $originalPost = json_decode($tweetConnector->read($objectId));
-                $tweeterusername = $originalPost->user->screen_name;
+                $originalPost = $tweetConnector->read($objectId);
+                $tweeterusername = $originalPost['user']['screen_name'];
 
-                $url = $this->tw . '1.1/search/tweets.json';
-                $getfield = '?q=to:' . $tweeterusername . '&since_id=' . $objectId;
+                //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+                //$url = $this->tw . '1.1/search/tweets.json';
+                //$getfield = '?q=to:' . $tweeterusername . '&since_id=' . $objectId;
+                $query = [
+                    "q" => "to:" . $tweeterusername,
+                    "sinceId" => $objectId
+                    //"in_reply_to_status_id"  => $objectId
+                ];
+                $data = $this->twitter->get("search/tweets", $query);
+                //"in_reply_to_status_id" => $objectId
+                $resArray = array();
+                if(!isset($data->errors)) {
+                    foreach($data->statuses as $status) {
+                        //debug($status);die;
+                        if($status->in_reply_to_status_id != $objectId)
+                            continue;
 
-                $requestMethod = 'GET';
+                        $myRow = array();
+                        $myRow = get_object_vars($data);
+                        $myRow['user'] = get_object_vars($status->user);
 
-                $res = $this->twitter->setGetfield($getfield)
-                    ->buildOauth($url, $requestMethod)
-                    ->performRequest();
-
-                $resArray = json_decode($res, true);
-                foreach($resArray['statuses'] as $key => $val) {
-                    if($val['in_reply_to_status_id'] != $objectId) {
-                        unset($resArray['statuses'][$key]);
+                        $resArray[] = $myRow;
+                        //unset($resArray[]['search_metadata']);
                     }
-
-                    unset($resArray['search_metadata']);
                 }
-                //debug($resArray); die;
+
                 return $resArray;
 
             } catch(\Exception $e) {
@@ -393,25 +437,14 @@ class TwitterConnector extends Connector implements IConnector
         if($operation === 'w' && !empty($content)) {
             try {
                 $tweetConnector = new TwitterTweetConnector();
-                $originalPost = json_decode($tweetConnector->read($objectId));
-                $tweeterusername = $originalPost->user->screen_name;
+                $originalPost = $tweetConnector->read($objectId);
+                $tweeterusername = $originalPost['user']['screen_name'];
 
                 $post = '@' . $tweeterusername . ' ' . strip_tags($content['comment']);
-
-                $url = $this->tw . '1.1/statuses/update.json';
-                $requestMethod = 'POST';
-
-                $postfields = array(
-                    'screen_name' => $this->profileId,
-                    'status' => $post,
-                    'in_reply_to_status_id' => $objectId
-                );
-
-                $res = $this->twitter->buildOauth($url, $requestMethod)
-                    ->setPostfields($postfields)
-                    ->performRequest();
-
-                $res = json_decode($res);
+                $res = $this->twitter->post("statuses/update", [
+                    "status" => $post,
+                    "in_reply_to_status_id" => $objectId
+                ]);
 
                 $compatiblePictureArray = [];
                 $compatiblePictureArray['data']['is_silhouette'] = false;
@@ -523,22 +556,15 @@ class TwitterConnector extends Connector implements IConnector
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
         $data = array();
 
-        $request_token = [];
-        $request_token['oauth_token'] = $_SESSION['oauth_token'];
-        $request_token['oauth_token_secret'] = $_SESSION['oauth_token_secret'];
-
-        if (isset($_REQUEST['oauth_token']) && $request_token['oauth_token'] !== $_REQUEST['oauth_token']) {
-            // Abort! Something is wrong.
-            die();
-        }
-
-        $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $request_token['oauth_token'], $request_token['oauth_token_secret']);
+        $connection = new TwitterOAuth($this->app_key,  $this->app_secret, $params['oauth_token'], $params['oauth_token_secret']);
         $access_token = $connection->oauth("oauth/access_token", ["oauth_verifier" => $_REQUEST['oauth_verifier']]);
 
         // Logged in
-        $data['token'] = $access_token;
-        $data['longlivetoken'] = $access_token;
-debug($data); die;
+        $data['key'] = $access_token['oauth_token'];
+        $data['longlivetoken'] = $access_token['oauth_token_secret'];
+        $data['screen_name'] = $access_token['screen_name'];
+        $data['profileid'] = $access_token['screen_name'];
+
         return $data;
 
     }
