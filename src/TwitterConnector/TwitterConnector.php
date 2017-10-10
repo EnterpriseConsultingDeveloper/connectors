@@ -262,19 +262,10 @@ class TwitterConnector extends Connector implements IConnector
     public function write($content)
     {
         $post = strip_tags($content['content']['body']);
-        $url = $this->tw . '1.1/statuses/update.json';
 
-        $requestMethod = 'POST';
-
-        $postfields = array(
-            'screen_name' => $this->profileId,
-            'status' => $post,
-            //'in_reply_to_status_id' => '879728813617401856'
-        );
-
-        $res = $this->twitter->buildOauth($url, $requestMethod)
-            ->setPostfields($postfields)
-            ->performRequest();
+        $res = $this->twitter->post("statuses/update", [
+            "status" => $post
+        ]);
 
         return $res;
 
@@ -417,7 +408,7 @@ class TwitterConnector extends Connector implements IConnector
                             continue;
 
                         $myRow = array();
-                        $myRow = get_object_vars($data);
+                        $myRow = get_object_vars($status);
                         $myRow['user'] = get_object_vars($status->user);
 
                         $resArray[] = $myRow;

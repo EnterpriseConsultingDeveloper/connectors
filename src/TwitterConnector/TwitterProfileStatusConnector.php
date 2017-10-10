@@ -26,54 +26,47 @@ class TwitterProfileStatusConnector extends TwitterConnector
     public function write($content)
     {
         $post = strip_tags($content['content']['body']);
-        $url = $this->tw . '1.1/statuses/update.json';
 
-        $requestMethod = 'POST';
+        if ($content['content']['main_image'] != null) {
+            $media1 = $this->twitter->upload('media/upload', ['media' => $content['content']['main_image']]);
 
-        $postfields = array(
-            'screen_name' => $this->profileId,
-            'status' => $post,
-            //'in_reply_to_status_id' => '879728813617401856'
-        );
+            $parameters = [
+                'status' => $post,
+                'media_ids' => $media1->media_id_string
+            ];
 
-        $res = $this->twitter->buildOauth($url, $requestMethod)
-            ->setPostfields($postfields)
-            ->performRequest();
+        } else {
+            $parameters = [
+                'status' => $post
+            ];
+        }
+
+        $resObj = $this->twitter->post("statuses/update", $parameters);
+
+        $res = get_object_vars($resObj);
+        $res['user'] = get_object_vars($resObj->user);
+        $res['url'] = 'https://twitter.com/' . $res['user']['screen_name'] . '/status/' . $res['id'];
 
         return $res;
-
     }
 
     public function read($objectId = null)
     {
-        if ($objectId == null) {
-            return [];
-        }
-
-        //$this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-        $streamToRead = '/' . $objectId;
-        $response = $this->fb->get($streamToRead);
-        return($response->getDecodedBody());
     }
 
 
     public function update($content, $objectId)
     {
         $post = strip_tags($content['content']['body']);
-        if ($content['content']['main_url'] != null) {
-            $post .= " " . $content['content']['main_url'];
-        }
 
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
+        $resObj = $this->twitter->post("statuses/update", [
+            "status" => $post
+        ]);
 
-        $streamToRead = '/' . $objectId;
-        $response = $this->fb->post($streamToRead, $data);
+        $res = get_object_vars($resObj);
+        $res['user'] = get_object_vars($resObj->user);
 
-        $nodeId = $response->getGraphNode()->getField('id');
-        return $nodeId;
+        return $res;
 
     }
 
