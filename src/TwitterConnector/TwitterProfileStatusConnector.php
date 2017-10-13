@@ -9,7 +9,6 @@
 namespace WR\Connector\TwitterConnector;
 
 
-use Twitter\Twitter;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 
