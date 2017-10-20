@@ -1,12 +1,20 @@
 {
   "name":"ShopifyConnector",
   "description":"Shopify connector for WhiteRabbit suite",
-  "icon":"fa-shopify-square",
+  "icon":"fa-shopping-basket",
   "install":"internal",
   "channels":[
     {
       "name":"Shopify",
       "default_channel":"1",
+      "streams":[
+        {
+          "name":"Products",
+          "permitted_operations":"RPD",
+          "connection_string":"ShopifyProductConnector",
+          "type": "product"
+        }
+      ],
       "settings":[
         {
           "name":"access_token",
