@@ -7,7 +7,6 @@
  */
 
 namespace WR\Connector\ShopifyConnector;
-require_once('Lib/ShopifyAPIExchange.php');
 
 use WR\Connector\Connector;
 use WR\Connector\ConnectorBean;
@@ -35,6 +34,7 @@ class ShopifyConnector extends Connector implements IConnector
 
     function __construct($params)
     {
+        /*
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
         $this->api_base = $config['api_base'];
         $this->app_key = $config['api_key'];
@@ -51,51 +51,9 @@ class ShopifyConnector extends Connector implements IConnector
         }
 
 
-        /*
-        $bearer_token_creds = base64_encode($this->app_key.':'.$this->app_secret);
-        $opts = array(
-            'http'=>array(
-                'method' => 'POST',
-                'header' => 'Authorization: Basic '.$bearer_token_creds."\r\n".
-                    'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                'content' => 'grant_type=client_credentials'
-            )
-        );
-
-        $context = stream_context_create($opts);
-        $json = file_get_contents($api_base.'oauth2/token', false, $context);
-        $result = json_decode($json,true);
-
-        if (!is_array($result) || !isset($result['token_type']) || !isset($result['access_token'])) {
-            die("Something went wrong. This isn't a valid array: ".$json);
-        }
-        if ($result['token_type'] !== "bearer") {
-            die("Invalid token type. Shopify says we need to make sure this is a bearer.");
-        }
-        $bearer_token = $result['access_token'];
-        $opts = array(
-            'http'=>array(
-                'method' => 'GET',
-                'header' => 'Authorization: Bearer '.$bearer_token
-            )
-        );
-        $this->context = stream_context_create($opts);
-        $this->tw = $api_base;
-
-        if(isset($params['profileid']))
-            $this->profileId = $params['profileid'];
-
-        $settings = array(
-            'oauth_access_token' => $config['access_token'],
-            'oauth_access_token_secret' => $config['access_token_secret'],
-            'consumer_key' => $config['api_key'],
-            'consumer_secret' => $config['api_secret']
-        );
-
-        $this->twitter = new \ShopifyAPIExchange($settings);
-        */
 
         $this->twitter = new ShopifyOAuth($this->app_key,  $this->app_secret, $this->access_token, $this->access_token_secret);
+        */
     }
 
     public function connect($config)
@@ -558,6 +516,10 @@ class ShopifyConnector extends Connector implements IConnector
 
         return $data;
 
+    }
+
+    public function configData() {
+        return json_decode(file_get_contents('appdata.cfg', true), true);
     }
 
 }

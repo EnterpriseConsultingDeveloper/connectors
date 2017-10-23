@@ -446,4 +446,10 @@ class ConnectorManager
 
     return new DefaultConnector($name);
   }
+
+  public function configData($params) {
+    $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+    $classInstance = new $className($params);
+    return $classInstance->configData();
+  }
 }
