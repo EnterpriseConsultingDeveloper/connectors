@@ -26,6 +26,7 @@ class ShopifyConnector extends Connector implements IConnector
     private $feedLimit;
     private $objectId;
     protected $shopify;
+    protected $shopUrl;
 
     function __construct($params)
     {
@@ -38,7 +39,7 @@ class ShopifyConnector extends Connector implements IConnector
         );
 
         $this->shopify = new PHPShopify\ShopifySDK($config);
-
+        $this->shopUrl = $params['ShopUrl'];
     }
 
     public function connect($config)
