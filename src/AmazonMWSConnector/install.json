@@ -1,23 +1,17 @@
 {
-  "name":"ShopifyConnector",
-  "description":"Shopify connector for WhiteRabbit suite",
+  "name":"AmazonMWSConnector",
+  "description":"Amazon Marketplace connector for WhiteRabbit suite",
   "icon":"fa-shopping-basket",
   "install":"internal",
   "channels":[
     {
-      "name":"Shopify",
+      "name":"AmazonMWS",
       "default_channel":"1",
       "streams":[
         {
-          "name":"Customer",
+          "name":"Products",
           "permitted_operations":"RPD",
-          "connection_string":"ShopifyCustomerConnector",
-          "type": "product"
-        },
-        {
-          "name":"Order",
-          "permitted_operations":"RPD",
-          "connection_string":"ShopifyOrderConnector",
+          "connection_string":"AmazonMWSProductConnector",
           "type": "product"
         }
       ],
