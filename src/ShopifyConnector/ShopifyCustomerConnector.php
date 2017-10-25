@@ -17,7 +17,7 @@ use Cake\Collection\Collection;
 use Abraham\ShopifyOAuth\ShopifyOAuth;
 use PHPShopify;
 
-class ShopifyOrderConnector extends ShopifyConnector
+class ShopifyCustomerConnector extends ShopifyConnector
 {
 
     function __construct($params)
