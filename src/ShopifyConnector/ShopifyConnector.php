@@ -31,10 +31,10 @@ class ShopifyConnector extends Connector implements IConnector
     function __construct($params)
     {
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
-
+        debug($config); debug($params); die;
         $config = array(
-            'ShopUrl' => $params['ShopUrl'], //'whiterabbittest.myshopify.com',
-            'AccessToken' => $params['AccessToken'], //'6e3e5605965b925764e0c67ffd3f1a0e',
+            'ShopUrl' => $params['shop_url'], //'whiterabbittest.myshopify.com',
+            'AccessToken' => $params['access_token'], //'6e3e5605965b925764e0c67ffd3f1a0e',
             'SharedSecret' => $config['SharedSecret']
         );
 
