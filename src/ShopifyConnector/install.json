@@ -35,13 +35,6 @@
           "is_editable":"1",
           "is_mandatory":"1",
           "access_level":"admin"
-        },
-        {
-          "name":"scope",
-          "type":"string",
-          "is_editable":"1",
-          "is_mandatory":"1",
-          "access_level":"admin"
         }
       ]
     }

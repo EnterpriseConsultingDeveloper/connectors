@@ -9,13 +9,12 @@
 namespace WR\Connector\ShopifyConnector;
 
 use WR\Connector\Connector;
-use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
-use Cake\Network\Http\Client;
-use WR\Connector\ShopifyConnection;
-use Cake\Collection\Collection;
-use Abraham\ShopifyOAuth\ShopifyOAuth;
-use PHPShopify;
+use Cake\ORM\TableRegistry;
+use App\Lib\CRM\CRMManager;
+
+
+
 
 class ShopifyCustomerConnector extends ShopifyConnector
 {
@@ -30,10 +29,9 @@ class ShopifyCustomerConnector extends ShopifyConnector
      * @param null $objectId
      * @return array
      */
-    public function read($objectId = null)
+    public function read($customerId = null)
     {
         $customers = $this->shopify->Customer->get();
-
         foreach($customers as $customer) {
             $data = [];
             $data['externalid'] = $this->notSetToEmptyString($customer['id']);
@@ -69,11 +67,10 @@ class ShopifyCustomerConnector extends ShopifyConnector
                 $data['typeid'] = $crmManager::$ecommerceTypeId;
                 $data['operation'] = $crmManager::$ecommerceActionAddUserId;
 
-                $cmrRes = $crmManager->pushClientToCrm($customer['customer_id'], $data);
-
-                return $cmrRes;
+                $cmrRes = $crmManager->pushClientToCrm($customerId, $data);
+                //return $cmrRes;
             } catch (\PDOException $e) {
-                return false;
+                // Log error
             }
         }
     }
