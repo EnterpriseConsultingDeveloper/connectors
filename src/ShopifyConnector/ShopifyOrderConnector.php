@@ -9,13 +9,9 @@
 namespace WR\Connector\ShopifyConnector;
 
 use WR\Connector\Connector;
-use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
-use Cake\Network\Http\Client;
-use WR\Connector\ShopifyConnection;
-use Cake\Collection\Collection;
-use Abraham\ShopifyOAuth\ShopifyOAuth;
-use PHPShopify;
+use Cake\ORM\TableRegistry;
+use App\Lib\CRM\CRMManager;
 
 class ShopifyOrderConnector extends ShopifyConnector
 {
