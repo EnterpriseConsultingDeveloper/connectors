@@ -535,18 +535,26 @@ class FacebookConnector extends Connector implements IConnector
     //email,about,age_range,birthday,currency,education,favorite_athletes,favorite_teams,hometown,about,birthday,inspirational_people,interested_in,languages,location,meeting_for,political,quotes,relationship_status,religion,significant_other,sports,website,work
     //id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale,name_format,timezone
     try {
-      $request = $this->fb->sendRequest('GET', '/' . $objectId);
-      $response = $this->fb->getClient()->sendRequest($request);
-      //debug($request); die;
-      return $response->getDecodedBody();
+      // Returns a `Facebook\FacebookResponse` object
+      $objectId = '/' . $objectId;
+
+      $response = $this->fb->get(
+          '/' . $objectId,
+          $this->longLivedAccessToken//'{access-token}'
+      );
+      debug($response); die;
     } catch(FacebookResponseException $e) {
-      debug($e); die;
+      debug($e->getMessage());
       return [];
     } catch(FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
+      debug($e->getMessage());
       return [];
     }
+    $graphNode = $response->getGraphNode();
+    /* handle the result */
+
+
+
   }
 
   /**
