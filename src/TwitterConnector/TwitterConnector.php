@@ -132,7 +132,7 @@ class TwitterConnector extends Connector implements IConnector
         // Remove comments that are tweets in_reply_to_status_id
         //debug($data);
         $data = array();
-        foreach($dataObj as $myObj) {
+        foreach($dataObj as $myObj) { 
             if($myObj->in_reply_to_status_id != '')
                 continue;
 
