@@ -40,6 +40,7 @@ class FacebookConnector extends Connector implements IConnector
     $config = json_decode(file_get_contents('appdata.cfg', true), true);
 
     $this->fb = new Facebook([
+      'http_client_handler' => 'stream', // do not use Guzzle 5.*, prefer PHP streams
       'app_id' => $config['app_id'], //'1561093387542751',
       'app_secret' =>  $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
       'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
