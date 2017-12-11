@@ -36,7 +36,8 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
-        $data['productActivity'] = $this->notSetToEmptyString(unserialize($content['productActivity']));
+        $data['productActivity'] = unserialize($content['productActivity']);
+
         try {
             $crmManager = new CRMManager();
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
