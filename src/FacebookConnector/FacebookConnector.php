@@ -137,7 +137,7 @@ class FacebookConnector extends Connector implements IConnector
 
     try {
       // Returns a `Facebook\FacebookResponse` object
-      $response = $this->fb->get('/me?fields=accounts', $this->longLivedAccessToken);
+      $response = $this->fb->get('/me?fields=accounts.limit(255)', $this->longLivedAccessToken);
       $logged = true;
     } catch (Facebook\Exceptions\FacebookResponseException $e) {
       $logged = false;
