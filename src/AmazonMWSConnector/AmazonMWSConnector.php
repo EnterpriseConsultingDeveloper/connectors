@@ -150,4 +150,8 @@ class AmazonMWSConnector extends Connector implements IConnector
         return json_decode(file_get_contents('appdata.cfg', true), true);
     }
 
+    public function setError($message) {
+
+    }
+
 }

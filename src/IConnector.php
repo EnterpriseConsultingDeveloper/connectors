@@ -22,4 +22,5 @@ interface IConnector
     public function add_user($content);
     public function update_categories($content);
     public function captureFan($objectId);
+    public function setError($message);
 }

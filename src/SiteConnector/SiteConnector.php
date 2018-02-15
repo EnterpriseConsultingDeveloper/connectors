@@ -89,7 +89,7 @@ class SiteConnector extends Connector implements IConnector
     {
 
     }
-    
+
     /**
      * @return bool
      */
@@ -100,6 +100,10 @@ class SiteConnector extends Connector implements IConnector
 
     public function callback($params)
     {
+
+    }
+
+    public function setError($message) {
 
     }
 }

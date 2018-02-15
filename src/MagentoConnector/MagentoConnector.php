@@ -259,4 +259,8 @@ class MagentoConnector extends Connector implements IConnector
             return false;
         }
     }
+
+    public function setError($message) {
+
+    }
 }

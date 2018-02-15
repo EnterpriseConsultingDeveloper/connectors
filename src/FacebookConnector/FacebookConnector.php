@@ -19,6 +19,7 @@ use WR\Connector\ConnectorBean;
 use WR\Connector\ConnectorUserBean;
 use Cake\Log\Log;
 use Cake\Cache\Cache;
+use Cake\ORM\TableRegistry;
 
 class FacebookConnector extends Connector implements IConnector
 {
@@ -27,6 +28,7 @@ class FacebookConnector extends Connector implements IConnector
   protected $accessToken;
   protected $appSecret;
   protected $objectFbId;
+  protected $connectorUsersSettingsID;
 
   private $feedLimit;
   private $objectId;
@@ -48,6 +50,7 @@ class FacebookConnector extends Connector implements IConnector
 
     $this->accessToken = $config['app_id'];
     $this->appSecret = $config['app_secret'];
+    $this->connectorUsersSettingsID = $params['connectorUsersSettingsID'];
 
     if ($params != null) {
       if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
@@ -108,24 +111,21 @@ class FacebookConnector extends Connector implements IConnector
    */
   public function isLogged()
   {
-
     $logged = false;
 
     try {
       // Returns a `Facebook\FacebookResponse` object
       $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
       $logged = true;
-    } catch(Facebook\Exceptions\FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $logged = false;
-//        echo 'Graph returned an error: ' . $e->getMessage();
-//        exit;
-    } catch(Facebook\Exceptions\FacebookSDKException $e) {
+      $this->setError($e->getMessage());
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       $logged = false;
-//        echo 'Facebook SDK returned an error: ' . $e->getMessage();
-//        exit;
+      $this->setError($e->getMessage());
     }
 //    $user = $response->getGraphUser();
-    return true;
+    return $logged;
 
   }
 
@@ -139,11 +139,11 @@ class FacebookConnector extends Connector implements IConnector
       // Returns a `Facebook\FacebookResponse` object
       $response = $this->fb->get('/me?fields=accounts.limit(255)', $this->longLivedAccessToken);
       $logged = true;
-    } catch (Facebook\Exceptions\FacebookResponseException $e) {
+    } catch (\Facebook\Exceptions\FacebookResponseException $e) {
       $logged = false;
 //        echo 'Graph returned an error: ' . $e->getMessage();
 //        exit;
-    } catch (Facebook\Exceptions\FacebookSDKException $e) {
+    } catch (\Facebook\Exceptions\FacebookSDKException $e) {
       $logged = false;
 //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
 //        exit;
@@ -162,11 +162,11 @@ class FacebookConnector extends Connector implements IConnector
       // Returns a `Facebook\FacebookResponse` object
       $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
       $logged = true;
-    } catch(Facebook\Exceptions\FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $logged = false;
       //        echo 'Graph returned an error: ' . $e->getMessage();
       //        exit;
-    } catch(Facebook\Exceptions\FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       $logged = false;
       //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
       //        exit;
@@ -284,7 +284,7 @@ class FacebookConnector extends Connector implements IConnector
 
     try {
       $response = $this->fb->delete($objectId);
-    } catch(FacebookApiException $e) {
+    } catch(\Facebook\Exceptions\FacebookApiException $e) {
       $response = false;
     }
 
@@ -336,10 +336,10 @@ class FacebookConnector extends Connector implements IConnector
       $response = $this->fb->getClient()->sendRequest($request);
       $stats['likes_number'] = count($response->getDecodedBody()['data']);
       $stats['likes'] = $response->getDecodedBody()['data'];
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $stats['likes'] = [];
       $stats['likes_number'] = 0;
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       $stats = [];
@@ -351,9 +351,9 @@ class FacebookConnector extends Connector implements IConnector
       $request = $this->fb->request('GET', $statRequest);
       $response = $this->fb->getClient()->sendRequest($request);
       $stats['comment_number'] = count($response->getDecodedBody()['data']);
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $stats['comment_number'] = 0;
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       $stats = [];
@@ -366,9 +366,9 @@ class FacebookConnector extends Connector implements IConnector
       $response = $this->fb->getClient()->sendRequest($request);
       $stats['sharedposts'] = count($response->getDecodedBody()['data']);
 
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $stats['sharedposts'] = 0;
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       $stats = [];
@@ -389,9 +389,9 @@ class FacebookConnector extends Connector implements IConnector
 
       $stats['insights'] = $myInsights;
 
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $stats['insights'] = [];
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       $stats = [];
@@ -431,7 +431,7 @@ class FacebookConnector extends Connector implements IConnector
         $response = $this->fb->getClient()->sendRequest($request);
 
         return $response->getDecodedBody();
-      } catch(FacebookResponseException $e) {
+      } catch(\Facebook\Exceptions\FacebookResponseException $e) {
         Log::write('debug', $e);
         return [];
       }
@@ -454,7 +454,7 @@ class FacebookConnector extends Connector implements IConnector
         $response = $this->fb->getClient()->sendRequest($request);
         Log::write('debug', $url);
         return $response->getDecodedBody();
-      } catch(FacebookResponseException $e) {
+      } catch(\Facebook\Exceptions\FacebookResponseException $e) {
         Log::write('debug', $e);
         return [];
       }
@@ -470,7 +470,7 @@ class FacebookConnector extends Connector implements IConnector
         $request = $this->fb->request('DELETE', $url);
         $this->fb->getClient()->sendRequest($request);
         return true;
-      } catch(FacebookResponseException $e) {
+      } catch(\Facebook\Exceptions\FacebookResponseException $e) {
         Log::write('debug', $e);
         return false;
       }
@@ -483,10 +483,10 @@ class FacebookConnector extends Connector implements IConnector
       $response = $this->fb->getClient()->sendRequest($request);
       return $response->getDecodedBody()['data'];
 
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       Log::write('debug', $e);
       return [];
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       Log::write('debug', $e);
       return [];
@@ -512,9 +512,9 @@ class FacebookConnector extends Connector implements IConnector
       $request = $this->fb->request('GET', $statRequest);
       $response = $this->fb->getClient()->sendRequest($request);
       return $response->getDecodedBody()['data'];
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       return [];
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       return [];
@@ -544,10 +544,10 @@ class FacebookConnector extends Connector implements IConnector
           $this->longLivedAccessToken//'{access-token}'
       );
       debug($response); die;
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       debug($e->getMessage());
       return [];
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       debug($e->getMessage());
       return [];
     }
@@ -586,11 +586,11 @@ class FacebookConnector extends Connector implements IConnector
 
     try {
       $accessToken = $helper->getAccessToken();
-    } catch(Facebook\Exceptions\FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       // When Graph returns an error
       echo 'Graph returned an error: ' . $e->getMessage();
       exit;
-    } catch(Facebook\Exceptions\FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // When validation fails or other local issues
       echo 'Facebook SDK returned an error: ' . $e->getMessage();
       exit;
@@ -629,7 +629,7 @@ class FacebookConnector extends Connector implements IConnector
       // Exchanges a short-lived access token for a long-lived one
       try {
         $accessToken = $oAuth2Client->getLongLivedAccessToken($accessToken);
-      } catch (Facebook\Exceptions\FacebookSDKException $e) {
+      } catch (\Facebook\Exceptions\FacebookSDKException $e) {
         echo "<p>Error getting long-lived access token: " . $helper->getMessage() . "</p>\n\n";
         exit;
       }
@@ -644,7 +644,7 @@ class FacebookConnector extends Connector implements IConnector
     try {
       // Returns a long-lived access token
       $accessToken = $client->getLongLivedAccessToken($data['token']);
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
       // There was an error communicating with Graph
       echo $e->getMessage();
       exit;
@@ -790,9 +790,9 @@ class FacebookConnector extends Connector implements IConnector
       $ub->setCurrency($this->blankForEmpty($extraData['currency']));
       //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
 
-    } catch(FacebookResponseException $e) {
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
 
-    } catch(FacebookSDKException $e) {
+    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
 
     }
 
@@ -801,5 +801,15 @@ class FacebookConnector extends Connector implements IConnector
 
   private function blankForEmpty(&$var) {
     return !empty($var) ? $var : '';
+  }
+
+  public function setError($message) {
+
+
+    $connectorUsersSettingsTable = TableRegistry::get('ConnectorUsersSettings');
+    $connectorUsersSettings = $connectorUsersSettingsTable->get($this->connectorUsersSettingsID);
+    $connectorUsersSettings->note = $message;
+    $connectorUsersSettingsTable->save($connectorUsersSettings);
+
   }
 }

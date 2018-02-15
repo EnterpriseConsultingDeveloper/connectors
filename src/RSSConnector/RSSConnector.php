@@ -128,4 +128,8 @@ class RSSConnector extends Connector implements IConnector
 
     }
 
+    public function setError($message) {
+
+    }
+
 }

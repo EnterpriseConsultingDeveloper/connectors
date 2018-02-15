@@ -340,4 +340,9 @@ class InstagramConnector extends Connector implements IConnector
         return $beans;
     }
 
+
+    public function setError($message) {
+
+    }
+
 }
