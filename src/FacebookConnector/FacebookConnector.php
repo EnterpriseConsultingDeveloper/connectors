@@ -806,10 +806,10 @@ class FacebookConnector extends Connector implements IConnector
   public function setError($message) {
 
 
-    $connectorUsersSettingsTable = TableRegistry::get('ConnectorUsersSettings');
-    $connectorUsersSettings = $connectorUsersSettingsTable->get($this->connectorUsersSettingsID);
-    $connectorUsersSettings->note = $message;
-    $connectorUsersSettingsTable->save($connectorUsersSettings);
+    // $connectorUsersSettingsTable = TableRegistry::get('ConnectorUsersSettings');
+    // $connectorUsersSettings = $connectorUsersSettingsTable->get($this->connectorUsersSettingsID);
+    // $connectorUsersSettings->note = $message;
+    // $connectorUsersSettingsTable->save($connectorUsersSettings);
 
   }
 }
