@@ -210,6 +210,7 @@ class FacebookConnector extends Connector implements IConnector
       $data['social_users'] = [];
     } catch(\Facebook\Exceptions\FacebookResponseException $e) {
       $data = [];
+      $data['error'] = $e->getMessage();
     }
 
     return($data);
@@ -672,75 +673,82 @@ class FacebookConnector extends Connector implements IConnector
       return [];
     }
 
-    $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
-    $response = $this->fb->sendRequest('GET', $streamToRead);
-    $data = $response->getDecodedBody()['data'];
+    try {
 
-    // Append users that have taken an action on the page
-    $social_users = array();
+      $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+      $response = $this->fb->sendRequest('GET', $streamToRead);
 
-    foreach($data as $d) {
-      $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
+      $data = $response->getDecodedBody()['data'];
 
-      if(isset($d['reactions'])) {
-        foreach($d['reactions']['data'] as $social_user) {
-          $ub = new ConnectorUserBean();
-          $ub->setName($social_user['name']);
-          $ub->setId($social_user['id']);
-          $ub->setAction($social_user['type']);
-          $ub->setContentId($d['id']);
-          $ub->setText('');
+      // Append users that have taken an action on the page
+      $social_users = array();
 
-          $ub->setDate($d['created_time']);
+      foreach($data as $d) {
+        $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
 
-          $ub->setAncestorBody($ancestor_body);
+        if(isset($d['reactions'])) {
+          foreach($d['reactions']['data'] as $social_user) {
+            $ub = new ConnectorUserBean();
+            $ub->setName($social_user['name']);
+            $ub->setId($social_user['id']);
+            $ub->setAction($social_user['type']);
+            $ub->setContentId($d['id']);
+            $ub->setText('');
 
-          $ub = $this->getUserExtraData($social_user['id'], $ub);
+            $ub->setDate($d['created_time']);
 
-          $social_users[] = $ub;
+            $ub->setAncestorBody($ancestor_body);
+
+            $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+            $social_users[] = $ub;
+          }
         }
-      }
 
-      if(isset($d['comments'])) {
-        foreach($d['comments']['data'] as $social_user) {
-          $ub = new ConnectorUserBean();
-          $ub->setName($social_user['from']['name']);
-          $ub->setId($social_user['from']['id']);
-          $ub->setAction('COMMENT');
-          $ub->setContentId($d['id']);
-          $ub->setDate($social_user['created_time']);
-          $ub->setText($social_user['message']);
+        if(isset($d['comments'])) {
+          foreach($d['comments']['data'] as $social_user) {
+            $ub = new ConnectorUserBean();
+            $ub->setName($social_user['from']['name']);
+            $ub->setId($social_user['from']['id']);
+            $ub->setAction('COMMENT');
+            $ub->setContentId($d['id']);
+            $ub->setDate($social_user['created_time']);
+            $ub->setText($social_user['message']);
 
-          $ub->setAncestorBody($ancestor_body);
+            $ub->setAncestorBody($ancestor_body);
 
-          $ub = $this->getUserExtraData($social_user['id'], $ub);
+            $ub = $this->getUserExtraData($social_user['id'], $ub);
 
-          $social_users[] = $ub;
+            $social_users[] = $ub;
 
-          if(isset($social_user['comments'])) {
-            foreach($social_user['comments']['data'] as $sub_comment) {
-              $ub = new ConnectorUserBean();
-              $ub->setName($sub_comment['from']['name']);
-              $ub->setId($sub_comment['from']['id']);
-              $ub->setAction('COMMENT');
-              $ub->setContentId($d['id']);
-              $ub->setDate($sub_comment['created_time']);
-              $ub->setText($sub_comment['message']);
+            if(isset($social_user['comments'])) {
+              foreach($social_user['comments']['data'] as $sub_comment) {
+                $ub = new ConnectorUserBean();
+                $ub->setName($sub_comment['from']['name']);
+                $ub->setId($sub_comment['from']['id']);
+                $ub->setAction('COMMENT');
+                $ub->setContentId($d['id']);
+                $ub->setDate($sub_comment['created_time']);
+                $ub->setText($sub_comment['message']);
 
-              $ub->setAncestorBody($social_user['message']);
+                $ub->setAncestorBody($social_user['message']);
 
-              $ub = $this->getUserExtraData($social_user['id'], $ub);
+                $ub = $this->getUserExtraData($social_user['id'], $ub);
 
-              $social_users[] = $ub;
+                $social_users[] = $ub;
+              }
             }
           }
         }
       }
+
+      $data['social_users'] = $social_users;
+
+    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
+      $data = [];
+      $data['error'] = $e->getMessage();
     }
 
-    $data['social_users'] = $social_users;
-
-    //debug($data); die;
     return($data);
   }
 
@@ -805,6 +813,7 @@ class FacebookConnector extends Connector implements IConnector
 
   public function setError($message) {
 
+   return $message;
 
     // $connectorUsersSettingsTable = TableRegistry::get('ConnectorUsersSettings');
     // $connectorUsersSettings = $connectorUsersSettingsTable->get($this->connectorUsersSettingsID);
