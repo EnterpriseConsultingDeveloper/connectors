@@ -245,8 +245,8 @@ class FacebookConnector extends Connector implements IConnector
   {
     // Di default inserisco sul feed
     $post = strip_tags($content['content']['body']);
-    if ($content['content']['main_url'] != null) {
-      $post .= " " . $content['content']['main_url'];
+    if ($content['content']['link'] != null) {
+      $post .= " " . $content['content']['link'];
     }
 
     $data = [

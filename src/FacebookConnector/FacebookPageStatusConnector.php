@@ -28,13 +28,20 @@ class FacebookPageStatusConnector extends FacebookConnector
     $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
 
     $post = strip_tags($content['content']['abstract']);
-    if ($content['content']['main_url'] != null) {
-      $post .= " " . $content['content']['main_url'];
-    }
+    /*
+    if ($content['content']['link'] != null) {
+      $post .= " " . $content['content']['link'];
+    }*/
 
     $data = [
       'message' => $post,
+      'link' => $content['content']['link']
     ];
+
+
+    if (($content['content']['main_image'] != '')) {
+      $data['source'] = $content['content']['main_image'];
+    }
 
     $streamToPost = '/'.$this->objectFbId.'/feed';
 
