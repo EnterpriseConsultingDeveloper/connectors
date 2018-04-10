@@ -332,7 +332,10 @@ class FacebookConnector extends Connector implements IConnector
     $stats = [];
 
     try {
-      $statRequest = '/' . $objectId . '/likes';
+      //$statRequest = '/' . $objectId . '/likes';
+
+      //*aggiornamento API fb 2.8*/
+      $statRequest = '/' . $objectId . '/fan_count';
       $request = $this->fb->request('GET', $statRequest);
       $response = $this->fb->getClient()->sendRequest($request);
       $stats['likes_number'] = count($response->getDecodedBody()['data']);
