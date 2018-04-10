@@ -50,7 +50,8 @@ class FacebookConnector extends Connector implements IConnector
 
     $this->accessToken = $config['app_id'];
     $this->appSecret = $config['app_secret'];
-    $this->connectorUsersSettingsID = $params['connectorUsersSettingsID'];
+    if (isset($params['connectorUsersSettingsID']))
+        $this->connectorUsersSettingsID = $params['connectorUsersSettingsID'];
 
     if ($params != null) {
       if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
