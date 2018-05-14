@@ -38,10 +38,11 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = unserialize($content['productActivity']);
 
+        $async = isset($content['crm_push_async']) && $content['crm_push_async']==true;
+        
         try {
             $crmManager = new CRMManager();
-            $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
-            return $cmrRes;
+            return $crmManager->pushOrderToCrm($content['customer_id'], $data, $async);
         } catch (\PDOException $e) {
             return false;
         }
