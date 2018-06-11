@@ -323,6 +323,7 @@ class FacebookConnector extends Connector implements IConnector
   /**
    * @param $objectId
    * @return array
+   * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
    */
   public function stats($objectId) {
         if ($objectId == null)
