@@ -324,90 +324,154 @@ class FacebookConnector extends Connector implements IConnector
    * @param $objectId
    * @return array
    */
-  public function stats($objectId)
-  {
-    if ($objectId == null) $objectId = $this->objectId;
+  public function stats($objectId) {
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-    if ($objectId == null) {
-      return [];
+        if ($objectId == null) {
+            return [];
+        }
+
+        $stats = [];
+
+        try {
+            //$statRequest = '/' . $objectId . '/likes';
+            //*aggiornamento API fb 2.8*/
+            // $statRequest = '/' . $objectId . '/fan_count';
+            $statRequest = '/' . $objectId . '?fields=likes';
+            $request = $this->fb->request('GET', $statRequest);
+            $response = $this->fb->getClient()->sendRequest($request);
+            $stats['likes_number'] = count($response->getDecodedBody()['data']);
+            $stats['likes'] = $response->getDecodedBody()['data'];
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $stats['likes'] = [];
+            $stats['likes_number'] = 0;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            $stats = [];
+        }
+
+        try {
+            $statRequest = '/' . $objectId . '/?fields=comments';
+
+            $request = $this->fb->request('GET', $statRequest);
+            $response = $this->fb->getClient()->sendRequest($request);
+            $stats['comment_number'] = count($response->getDecodedBody()['data']);
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $stats['comment_number'] = 0;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            $stats = [];
+        }
+
+
+        try {
+            $statRequest = '/' . $objectId . '/?fields=sharedposts';
+            $request = $this->fb->request('GET', $statRequest);
+            $response = $this->fb->getClient()->sendRequest($request);
+            $stats['sharedposts'] = count($response->getDecodedBody()['data']);
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $stats['sharedposts'] = 0;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            $stats = [];
+        }
+
+
+        try {
+            /* segue esempio di risposta ricevuta da facebook:
+             {
+                "insights": {
+                  "data": [
+                    {
+                      "values": [
+                        {
+                          "value": {
+                            "like": 34,
+                            "love": 1
+                          }
+                        }
+                      ],
+                      "name": "post_reactions_by_type_total",
+                      "id": "46510140035_10155583890980036/insights/post_reactions_by_type_total/lifetime"
+                    },
+                    {
+                      "values": [
+                        {
+                          "value": 2841
+                        }
+                      ],
+                      "name": "post_impressions_organic",
+                      "id": "46510140035_10155583890980036/insights/post_impressions_organic/lifetime"
+                    },
+                    {
+                      "values": [
+                        {
+                          "value": 24846
+                        }
+                      ],
+                      "name": "post_impressions_unique",
+                      "id": "46510140035_10155583890980036/insights/post_impressions_unique/lifetime"
+                    },
+                    {
+                      "values": [
+                        {
+                          "value": 42036
+                        }
+                      ],
+                      "name": "post_impressions_paid",
+                      "id": "46510140035_10155583890980036/insights/post_impressions_paid/lifetime"
+                    },
+                    {
+                      "values": [
+                        {
+                          "value": 44924
+                        }
+                      ],
+                      "name": "post_impressions",
+                      "id": "46510140035_10155583890980036/insights/post_impressions/lifetime"
+                    }
+                  ],
+                  "paging": {
+                    "previous": "https://graph.facebook.com/v3.0/46510140035_10155583890980036/insights?access_token=EAAVouZCUnfX8BACLv9iYE2dUlbklnlwWXMMESyn8lZB7OsnPKJ2N1QJKzycPgqvQNIpCjWimWMA46mBwu4YEL9nJG8Lg6GLtDavagRGupdWnil09g47TwQgOodGP9ZC9YJFTL0HaSUddPDvizZBscx6ZC887L6OKwfo2iKbJL9AZDZD&pretty=0&fields=values%2Cname&metric=post_reactions_by_type_total%2Cpost_impressions%2Cpost_impressions_organic%2Cpost_impressions_unique%2Cpost_impressions_paid&since=1528182000&until=1528354800",
+                    "next": "https://graph.facebook.com/v3.0/46510140035_10155583890980036/insights?access_token=EAAVouZCUnfX8BACLv9iYE2dUlbklnlwWXMMESyn8lZB7OsnPKJ2N1QJKzycPgqvQNIpCjWimWMA46mBwu4YEL9nJG8Lg6GLtDavagRGupdWnil09g47TwQgOodGP9ZC9YJFTL0HaSUddPDvizZBscx6ZC887L6OKwfo2iKbJL9AZDZD&pretty=0&fields=values%2Cname&metric=post_reactions_by_type_total%2Cpost_impressions%2Cpost_impressions_organic%2Cpost_impressions_unique%2Cpost_impressions_paid&since=1528527600&until=1528700400"
+                  }
+                },
+                "id": "46510140035_10155583890980036"
+              }
+            */
+            $statRequest = '/' . $objectId . '/?fields=insights.metric(post_reactions_by_type_total,post_impressions,post_impressions_organic,post_impressions_unique,post_impressions_paid){values,name}';
+            $request = $this->fb->request('GET', $statRequest);
+            $response = $this->fb->getClient()->sendRequest($request);
+            $insights = $response->getDecodedBody()['data'];
+
+            $myInsights = [];
+            foreach ($insights as $key => $value) {
+                if (isset($value['values']) && isset($value['values'][0]['value'])) {
+                    if ($value['name'] == 'post_reactions_by_type_total') {
+                        foreach ($value['values'][0]['value'] as $rname => $rvalue)
+                            $myInsights[$rname] = $rvalue;
+                    } else
+                        $myInsights[$value['name']] = $value['values'][0]['value'];
+                }
+            }
+
+            $stats['insights'] = $myInsights;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $stats['insights'] = [];
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            $stats = [];
+        }
+
+        return $stats;
     }
 
-    $stats = [];
-
-    try {
-      //$statRequest = '/' . $objectId . '/likes';
-
-      //*aggiornamento API fb 2.8*/
-      $statRequest = '/' . $objectId . '/fan_count';
-      $request = $this->fb->request('GET', $statRequest);
-      $response = $this->fb->getClient()->sendRequest($request);
-      $stats['likes_number'] = count($response->getDecodedBody()['data']);
-      $stats['likes'] = $response->getDecodedBody()['data'];
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $stats['likes'] = [];
-      $stats['likes_number'] = 0;
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      $stats = [];
-    }
-
-    try {
-      $statRequest = '/' . $objectId . '/comments';
-
-      $request = $this->fb->request('GET', $statRequest);
-      $response = $this->fb->getClient()->sendRequest($request);
-      $stats['comment_number'] = count($response->getDecodedBody()['data']);
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $stats['comment_number'] = 0;
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      $stats = [];
-    }
-
-
-    try {
-      $statRequest = '/' . $objectId . '/sharedposts';
-      $request = $this->fb->request('GET', $statRequest);
-      $response = $this->fb->getClient()->sendRequest($request);
-      $stats['sharedposts'] = count($response->getDecodedBody()['data']);
-
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $stats['sharedposts'] = 0;
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      $stats = [];
-    }
-
-
-    try {
-      $statRequest = '/' . $objectId . '/insights';
-      $request = $this->fb->request('GET', $statRequest);
-      $response = $this->fb->getClient()->sendRequest($request);
-      $insights = $response->getDecodedBody()['data'];
-
-      $myInsights = [];
-      foreach ($insights as $key => $value) {
-        if(isset($value['values']) && isset($value['values'][0]['value']))
-          $myInsights[$value['name']] = $value['values'][0]['value'];
-      }
-
-      $stats['insights'] = $myInsights;
-
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $stats['insights'] = [];
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      $stats = [];
-    }
-
-    return $stats;
-  }
-
-  /**
+    /**
    * @param $objectId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
    * @param $operation The operation requested, 'r' stand for read, 'w' stand for write
    * @param $content
