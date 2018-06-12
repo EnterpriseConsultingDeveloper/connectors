@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by Dino Fratelli.
  * User: user
@@ -21,60 +22,58 @@ use Cake\Log\Log;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 
-class FacebookConnector extends Connector implements IConnector
-{
-  protected $fb;
-  protected $longLivedAccessToken;
-  protected $accessToken;
-  protected $appSecret;
-  protected $objectFbId;
-  protected $connectorUsersSettingsID;
+class FacebookConnector extends Connector implements IConnector {
 
-  private $feedLimit;
-  private $objectId;
-  private $since;
-  private $until;
+    /** @var Facebook\Facebook $fb */
+    protected $fb;
+    protected $longLivedAccessToken;
+    protected $accessToken;
+    protected $appSecret;
+    protected $objectFbId;
+    protected $connectorUsersSettingsID;
+    private $feedLimit;
+    private $objectId;
+    private $since;
+    private $until;
+    var $error = false;
 
-  var $error = false;
+    function __construct($params) {
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
 
-  function __construct($params)
-  {
-    $config = json_decode(file_get_contents('appdata.cfg', true), true);
+        $this->fb = new Facebook([
+            'http_client_handler' => 'stream', // do not use Guzzle 5.*, prefer PHP streams
+            'app_id' => $config['app_id'], //'1561093387542751',
+            'app_secret' => $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
+            'default_graph_version' => $config['default_graph_version'] //'v2.6',
+        ]);
 
-    $this->fb = new Facebook([
-      'http_client_handler' => 'stream', // do not use Guzzle 5.*, prefer PHP streams
-      'app_id' => $config['app_id'], //'1561093387542751',
-      'app_secret' =>  $config['app_secret'], //'0c081fec3c3b71d6c8bdf796f9868f03',
-      'default_graph_version' =>  $config['default_graph_version'] //'v2.6',
-    ]);
+        $this->accessToken = $config['app_id'];
+        $this->appSecret = $config['app_secret'];
 
-    $this->accessToken = $config['app_id'];
-    $this->appSecret = $config['app_secret'];
-    
-    // FIXME tolgo il notice, ma è cambiato qualcosa da qualche parte
-    if (@isset($params['connectorUsersSettingsID']))
-        $this->connectorUsersSettingsID = $params['connectorUsersSettingsID'];
+        // FIXME tolgo il notice, ma è cambiato qualcosa da qualche parte
+        if (@isset($params['connectorUsersSettingsID']))
+            $this->connectorUsersSettingsID = $params['connectorUsersSettingsID'];
 
-    if ($params != null) {
-      if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
-        $this->longLivedAccessToken = $params['longlivetoken'];
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-      }
+        if ($params != null) {
+            if (isset($params['longlivetoken']) && $params['longlivetoken'] != null) {
+                $this->longLivedAccessToken = $params['longlivetoken'];
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+            }
 
-      $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
-      $this->objectFbId = isset($params['pageid']) ? $params['pageid'] : '';
+            $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
+            $this->objectFbId = isset($params['pageid']) ? $params['pageid'] : '';
 
-      $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
-      $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
-      $this->until = isset($params['until']) ? $params['until'] : null; // Unix timestamp until
-    }
+            $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
+            $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
+            $this->until = isset($params['until']) ? $params['until'] : null; // Unix timestamp until
+        }
 
 //    $debugTokenCommand = 'https://graph.facebook.com/debug_token?input_token='.$this->longLivedAccessToken.'&amp;access_token='.$this->accessToken;
-    $debugTokenCommand = 'https://graph.facebook.com/me?access_token='.$this->longLivedAccessToken;
+        $debugTokenCommand = 'https://graph.facebook.com/me?access_token=' . $this->longLivedAccessToken;
 
-    $http = new Client();
-    $response = $http->get($debugTokenCommand);
-    $body = $response->json;
+        $http = new Client();
+        $response = $http->get($debugTokenCommand);
+        $body = $response->json;
 
 //    if ($body['error']) {
 //      $this->error = $body;
@@ -83,225 +82,210 @@ class FacebookConnector extends Connector implements IConnector
 //      return $error;
 //    }
 
-    if($response->code !== 200) {
-      $this->error = 2;
-      $error = ['Error' => $response->code, 'Message' => $response->headers['WWW-Authenticate']];
-      //debug($error); die;
-      return $error;
+        if ($response->code !== 200) {
+            $this->error = 2;
+            $error = ['Error' => $response->code, 'Message' => $response->headers['WWW-Authenticate']];
+            //debug($error); die;
+            return $error;
+        }
     }
 
-  }
+    /**
+     * @param $config
+     * @return string
+     */
+    public function connect($config) {
 
-  /**
-   * @param $config
-   * @return string
-   */
-  public function connect($config)
-  {
+        $helper = $this->fb->getRedirectLoginHelper();
 
-    $helper = $this->fb->getRedirectLoginHelper();
-
-    $permissions = ['publish_actions','read_insights','public_profile','email','user_friends','manage_pages','publish_pages']; // Optional permissions
-    $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions);
+        $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
+        $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions);
 
 
-    return '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
-
-  }
-
-  /**
-   * @return bool
-   */
-  public function isLogged()
-  {
-    $logged = false;
-
-    try {
-      // Returns a `Facebook\FacebookResponse` object
-      $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
-      $logged = true;
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $logged = false;
-      $this->setError($e->getMessage());
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      $logged = false;
-      $this->setError($e->getMessage());
+        return '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
     }
+
+    /**
+     * @return bool
+     */
+    public function isLogged() {
+        $logged = false;
+
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
+            $logged = true;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $logged = false;
+            $this->setError($e->getMessage());
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            $logged = false;
+            $this->setError($e->getMessage());
+        }
 //    $user = $response->getGraphUser();
-    return $logged;
+        return $logged;
+    }
 
-  }
+    /**
+     * @return array
+     */
+    public function getAccounts() {
 
-  /**
-   * @return array
-   */
-  public function getAccounts()
-  {
-
-    try {
-      // Returns a `Facebook\FacebookResponse` object
-      $response = $this->fb->get('/me?fields=accounts.limit(255)', $this->longLivedAccessToken);
-      $logged = true;
-    } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-      $logged = false;
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $response = $this->fb->get('/me?fields=accounts.limit(255)', $this->longLivedAccessToken);
+            $logged = true;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $logged = false;
 //        echo 'Graph returned an error: ' . $e->getMessage();
 //        exit;
-    } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-      $logged = false;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            $logged = false;
 //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
 //        exit;
+        }
+
+        return $response->getDecodedBody();
     }
 
-    return $response->getDecodedBody();
-  }
+    /**
+     * @return array
+     */
+    public function getUser() {
 
-  /**
-   * @return array
-   */
-  public function getUser()
-  {
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
+            $logged = true;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $logged = false;
+            //        echo 'Graph returned an error: ' . $e->getMessage();
+            //        exit;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            $logged = false;
+            //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            //        exit;
+        }
 
-    try {
-      // Returns a `Facebook\FacebookResponse` object
-      $response = $this->fb->get('/me?fields=id,name', $this->longLivedAccessToken);
-      $logged = true;
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $logged = false;
-      //        echo 'Graph returned an error: ' . $e->getMessage();
-      //        exit;
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      $logged = false;
-      //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      //        exit;
+        return $response->getDecodedBody();
     }
 
-    return $response->getDecodedBody();
+    /**
+     * Read a Facebook entity
+     *
+     * @param null $objectId
+     * @return array
+     */
+    public function read($objectId = null) {
 
-  }
+        if ($this->tokenValid = false) {
+            return;
+        }
 
+        // Read complete page feed
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
+        if ($objectId == null) {
+            return [];
+        }
 
-  /**
-   * Read a Facebook entity
-   *
-   * @param null $objectId
-   * @return array
-   */
-  public function read($objectId = null)
-  {
+        $limitString = '&limit=' . $this->feedLimit;
+        if (!empty($this->since) && !empty($this->until)) {
+            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+        }
 
-    if ($this->tokenValid = false) {
-      return;
+        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}' . $limitString;
+        try {
+            $response = $this->fb->sendRequest('GET', $streamToRead);
+            $data = $response->getDecodedBody()['data'];
+            $data['social_users'] = [];
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $data = [];
+            $data['error'] = $e->getMessage();
+        }
+
+        return($data);
     }
 
-    // Read complete page feed
-    if ($objectId == null) $objectId = $this->objectId;
+    /**
+     * @param null $objectId
+     * @return array
+     */
+    public function readPublicPage($objectId = null) {
+        // Read complete public page feed
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-    if ($objectId == null) {
-      return [];
+        if ($objectId == null) {
+            return [];
+        }
+
+        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
+        $http = new Client();
+        $response = $http->get($urlToRead);
+        $data = $response->json;
+        $formattedResult = $this->format_result($data);
+        return($formattedResult);
     }
 
-    $limitString = '&limit=' . $this->feedLimit;
-    if(!empty($this->since) && !empty($this->until)) {
-      $limitString = '&since=' . $this->since . '&until=' . $this->until;
+    /**
+     * @return array
+     */
+    public function write($content) {
+        // Di default inserisco sul feed
+        $post = strip_tags($content['content']['body']);
+        if ($content['content']['link'] != null) {
+            $post .= " " . $content['content']['link'];
+        }
+
+        $data = [
+            'title' => $content['content']['title'],
+            'message' => $post,
+        ];
+
+        $response = $this->fb->post('me/feed', $data);
+
+        $nodeId = $response->getGraphNode()->getField('id');
+
+        $info['id'] = $nodeId;
+        $info['url'] = 'http://www.facebook.com/' . $nodeId;
+
+        return $info;
     }
 
-    $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}' . $limitString;
-    try {
-      $response = $this->fb->sendRequest('GET', $streamToRead);
-      $data = $response->getDecodedBody()['data'];
-      $data['social_users'] = [];
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $data = [];
-      $data['error'] = $e->getMessage();
+    public function update($content, $objectId) {
+        return "Ho scritto " . $content . " su " . $objectId;
     }
 
-    return($data);
-  }
+    /**
+     * @param null $objectId
+     * @return \Facebook\FacebookResponse
+     */
+    public function delete($objectId = null) {
 
-  /**
-   * @param null $objectId
-   * @return array
-   */
-  public function readPublicPage($objectId = null)
-  {
-    // Read complete public page feed
-    if ($objectId == null) $objectId = $this->objectId;
+        if ($objectId == null) {
+            return;
+        }
 
-    if ($objectId == null) {
-      return [];
+        //'/'.$graphNode['id'] ,array(), $facebook_access_token // esempio
+
+        try {
+            $response = $this->fb->delete($objectId);
+        } catch (\Facebook\Exceptions\FacebookApiException $e) {
+            $response = false;
+        }
+
+        return $response;
     }
 
-    $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
-    $http = new Client();
-    $response = $http->get($urlToRead);
-    $data = $response->json;
-    $formattedResult = $this->format_result($data);
-    return($formattedResult);
-  }
+    /**
+     * @param $data
+     * @return mixed
+     */
+    public function mapFormData($data) {
 
-
-  /**
-   * @return array
-   */
-  public function write($content)
-  {
-    // Di default inserisco sul feed
-    $post = strip_tags($content['content']['body']);
-    if ($content['content']['link'] != null) {
-      $post .= " " . $content['content']['link'];
-    }
-
-    $data = [
-      'title' => $content['content']['title'],
-      'message' => $post,
-    ];
-
-    $response = $this->fb->post('me/feed', $data);
-
-    $nodeId = $response->getGraphNode()->getField('id');
-
-    $info['id'] = $nodeId;
-    $info['url'] = 'http://www.facebook.com/' . $nodeId;
-
-    return $info;
-
-  }
-
-  public function update($content, $objectId)
-  {
-    return "Ho scritto " . $content . " su " . $objectId;
-  }
-
-  /**
-   * @param null $objectId
-   * @return \Facebook\FacebookResponse
-   */
-  public function delete($objectId = null)
-  {
-
-    if ($objectId == null) {
-      return;
-    }
-
-    //'/'.$graphNode['id'] ,array(), $facebook_access_token // esempio
-
-    try {
-      $response = $this->fb->delete($objectId);
-    } catch(\Facebook\Exceptions\FacebookApiException $e) {
-      $response = false;
-    }
-
-    return $response;
-  }
-
-  /**
-   * @param $data
-   * @return mixed
-   */
-  public function mapFormData($data) {
-
-    // Necessary only if are authenticating a page, not a profile
+        // Necessary only if are authenticating a page, not a profile
 //    if(isset($data['token'])) {
 //      $client = $this->fb->getOAuth2Client();
 //
@@ -317,138 +301,86 @@ class FacebookConnector extends Connector implements IConnector
 //      $data['longlivetoken'] = $accessToken->getValue();
 //    }
 
-    return $data;
-  }
+        return $data;
+    }
 
-  /**
-   * @param $objectId
-   * @return array
-   * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
-   */
-  public function stats($objectId) {
+    /**
+     * @param $objectId
+     * @return array
+     * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
+     */
+    public function stats($objectId) {
         if ($objectId == null)
             $objectId = $this->objectId;
 
-        if ($objectId == null) {
+        if ($objectId == null)
             return [];
-        }
 
-        $stats = [];
-
+        // likes
+        $stats['likes'] = [];
+        $stats['likes_number'] = 0;
         try {
-            //$statRequest = '/' . $objectId . '/likes';
-            //*aggiornamento API fb 2.8*/
-            // $statRequest = '/' . $objectId . '/fan_count';
             $statRequest = '/' . $objectId . '?fields=likes';
-            $request = $this->fb->request('GET', $statRequest);
-            $response = $this->fb->getClient()->sendRequest($request);
-            $stats['likes_number'] = count($response->getDecodedBody()['data']);
-            $stats['likes'] = $response->getDecodedBody()['data'];
+            $response = $this->fb->get($statRequest);
+            /** @var GraphEdge  $ge */
+            $ge = $response->getGraphNode()->getField('likes');
+            while ($ge != null) {
+                $stats['likes'] = array_merge($stats['likes'], $ge->asArray());
+                $ge = $this->fb->next($ge);
+            }
+
+            $stats['likes_number'] = count($stats['likes']);
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            $stats['likes'] = [];
-            $stats['likes_number'] = 0;
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
             // When validation fails or other local issues
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
-            $stats = [];
         }
 
+        // comments
+        $stats['comments'] = [];
+        $stats['comment_number'] = 0;
         try {
             $statRequest = '/' . $objectId . '/?fields=comments';
+            $response = $this->fb->get($statRequest);
+            $ge = $response->getGraphNode()->getField('comments');
+            while ($ge != null) {
+                $stats['comments'] = array_merge($stats['comments'], $ge->asArray());
+                $ge = $this->fb->next($ge);
+            }
 
-            $request = $this->fb->request('GET', $statRequest);
-            $response = $this->fb->getClient()->sendRequest($request);
-            $stats['comment_number'] = count($response->getDecodedBody()['data']);
+            $stats['comment_number'] = count($stats['comments']);
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            $stats['comment_number'] = 0;
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
             // When validation fails or other local issues
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
-            $stats = [];
         }
 
-
+        $stats['sharedposts'] = [];
         try {
             $statRequest = '/' . $objectId . '/?fields=sharedposts';
-            $request = $this->fb->request('GET', $statRequest);
-            $response = $this->fb->getClient()->sendRequest($request);
-            $stats['sharedposts'] = count($response->getDecodedBody()['data']);
+            $response = $this->fb->get($statRequest);
+            $ge = $response->getGraphNode()->getField('sharedposts');
+            while ($ge != null) {
+                $stats['sharedposts'] = array_merge($stats['sharedposts'], $ge->asArray());
+                $ge = $this->fb->next($ge);
+            }
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
             $stats['sharedposts'] = 0;
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
             // When validation fails or other local issues
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
-            $stats = [];
         }
 
-
         try {
-            /* segue esempio di risposta ricevuta da facebook:
-             {
-                "insights": {
-                  "data": [
-                    {
-                      "values": [
-                        {
-                          "value": {
-                            "like": 34,
-                            "love": 1
-                          }
-                        }
-                      ],
-                      "name": "post_reactions_by_type_total",
-                      "id": "46510140035_10155583890980036/insights/post_reactions_by_type_total/lifetime"
-                    },
-                    {
-                      "values": [
-                        {
-                          "value": 2841
-                        }
-                      ],
-                      "name": "post_impressions_organic",
-                      "id": "46510140035_10155583890980036/insights/post_impressions_organic/lifetime"
-                    },
-                    {
-                      "values": [
-                        {
-                          "value": 24846
-                        }
-                      ],
-                      "name": "post_impressions_unique",
-                      "id": "46510140035_10155583890980036/insights/post_impressions_unique/lifetime"
-                    },
-                    {
-                      "values": [
-                        {
-                          "value": 42036
-                        }
-                      ],
-                      "name": "post_impressions_paid",
-                      "id": "46510140035_10155583890980036/insights/post_impressions_paid/lifetime"
-                    },
-                    {
-                      "values": [
-                        {
-                          "value": 44924
-                        }
-                      ],
-                      "name": "post_impressions",
-                      "id": "46510140035_10155583890980036/insights/post_impressions/lifetime"
-                    }
-                  ],
-                  "paging": {
-                    "previous": "https://graph.facebook.com/v3.0/46510140035_10155583890980036/insights?access_token=EAAVouZCUnfX8BACLv9iYE2dUlbklnlwWXMMESyn8lZB7OsnPKJ2N1QJKzycPgqvQNIpCjWimWMA46mBwu4YEL9nJG8Lg6GLtDavagRGupdWnil09g47TwQgOodGP9ZC9YJFTL0HaSUddPDvizZBscx6ZC887L6OKwfo2iKbJL9AZDZD&pretty=0&fields=values%2Cname&metric=post_reactions_by_type_total%2Cpost_impressions%2Cpost_impressions_organic%2Cpost_impressions_unique%2Cpost_impressions_paid&since=1528182000&until=1528354800",
-                    "next": "https://graph.facebook.com/v3.0/46510140035_10155583890980036/insights?access_token=EAAVouZCUnfX8BACLv9iYE2dUlbklnlwWXMMESyn8lZB7OsnPKJ2N1QJKzycPgqvQNIpCjWimWMA46mBwu4YEL9nJG8Lg6GLtDavagRGupdWnil09g47TwQgOodGP9ZC9YJFTL0HaSUddPDvizZBscx6ZC887L6OKwfo2iKbJL9AZDZD&pretty=0&fields=values%2Cname&metric=post_reactions_by_type_total%2Cpost_impressions%2Cpost_impressions_organic%2Cpost_impressions_unique%2Cpost_impressions_paid&since=1528527600&until=1528700400"
-                  }
-                },
-                "id": "46510140035_10155583890980036"
-              }
-            */
+            $stats['insights'] = [];
             $statRequest = '/' . $objectId . '/?fields=insights.metric(post_reactions_by_type_total,post_impressions,post_impressions_organic,post_impressions_unique,post_impressions_paid){values,name}';
-            $request = $this->fb->request('GET', $statRequest);
-            $response = $this->fb->getClient()->sendRequest($request);
-            $insights = $response->getDecodedBody()['data'];
+            $response = $this->fb->get($statRequest);
+            $ge = $response->getGraphNode()->getField('insights');
 
+            $insights = $ge->asArray();
             $myInsights = [];
             foreach ($insights as $key => $value) {
                 if (isset($value['values']) && isset($value['values'][0]['value'])) {
@@ -459,437 +391,427 @@ class FacebookConnector extends Connector implements IConnector
                         $myInsights[$value['name']] = $value['values'][0]['value'];
                 }
             }
+            $ge = $this->fb->next($ge);
 
             $stats['insights'] = $myInsights;
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            $stats['insights'] = [];
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
             // When validation fails or other local issues
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
-            $stats = [];
         }
 
         return $stats;
     }
 
     /**
-   * @param $objectId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
-   * @param $operation The operation requested, 'r' stand for read, 'w' stand for write
-   * @param $content
-   * @return array
-   */
-  public function comments($objectId, $operation = 'r', $content = null)
-  {
-    if ($objectId == null) $objectId = $this->objectId;
+     * @param $objectId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
+     * @param $operation The operation requested, 'r' stand for read, 'w' stand for write
+     * @param $content
+     * @return array
+     */
+    public function comments($objectId, $operation = 'r', $content = null) {
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-    if ($objectId == null) {
-      return [];
+        if ($objectId == null) {
+            return [];
+        }
+
+        // In case of write first write comment than read the comment
+        if ($operation === 'w' && !empty($content)) {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' . $objectId . '/comments';
+                $data = [
+                    'message' => strip_tags($content['comment']),
+                ];
+                $response = $this->fb->post($url, $data);
+
+                $commentId = $response->getDecodedBody()['id'];
+                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture,link}';
+
+                $request = $this->fb->request('GET', $commentRequest);
+                $response = $this->fb->getClient()->sendRequest($request);
+
+                return $response->getDecodedBody();
+            } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return [];
+            }
+        }
+
+
+        // In case of update first write comment than read the comment
+        if ($operation === 'u' && !empty($content)) {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' . $objectId;
+
+                $data = [
+                    'message' => strip_tags($content['comment']),
+                ];
+                $this->fb->post($url, $data);
+
+                $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
+                $request = $this->fb->request('GET', $url);
+                $response = $this->fb->getClient()->sendRequest($request);
+                Log::write('debug', $url);
+                return $response->getDecodedBody();
+            } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return [];
+            }
+        }
+
+
+        // In case of delete
+        if ($operation === 'd') {
+            try {
+                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
+                $url = '/' . $objectId;
+
+                $request = $this->fb->request('DELETE', $url);
+                $this->fb->getClient()->sendRequest($request);
+                return true;
+            } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+                Log::write('debug', $e);
+                return false;
+            }
+        }
+
+        try {
+            $statRequest = '/' . $objectId . '/comments';
+
+            $request = $this->fb->request('GET', $statRequest);
+            $response = $this->fb->getClient()->sendRequest($request);
+            return $response->getDecodedBody()['data'];
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            Log::write('debug', $e);
+            return [];
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            Log::write('debug', $e);
+            return [];
+        }
     }
 
-    // In case of write first write comment than read the comment
-    if($operation === 'w' && !empty($content)) {
-      try {
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-        $url = '/' . $objectId . '/comments';
-        $data = [
-          'message' => strip_tags($content['comment']),
-        ];
-        $response = $this->fb->post($url, $data);
+    /**
+     * @param $objectId
+     * @param $fromDate
+     * @return array
+     */
+    public function commentFromDate($objectId, $fromDate) {
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-        $commentId = $response->getDecodedBody()['id'];
-        $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture,link}';
+        if ($objectId == null) {
+            return [];
+        }
 
-        $request = $this->fb->request('GET', $commentRequest);
-        $response = $this->fb->getClient()->sendRequest($request);
+        try {
+            $statRequest = '/' . $objectId . '/comments';
 
-        return $response->getDecodedBody();
-      } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-        Log::write('debug', $e);
-        return [];
-      }
+            $request = $this->fb->request('GET', $statRequest);
+            $response = $this->fb->getClient()->sendRequest($request);
+            return $response->getDecodedBody()['data'];
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            return [];
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            return [];
+        }
     }
 
+    /**
+     * @param $objectId
+     * @return array
+     */
+    public function user($objectId) {
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-    // In case of update first write comment than read the comment
-    if($operation === 'u' && !empty($content)) {
-      try {
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-        $url = '/' . $objectId;
+        if ($objectId == null) {
+            return [];
+        }
+        //1165594993
+        //email,about,age_range,birthday,currency,education,favorite_athletes,favorite_teams,hometown,about,birthday,inspirational_people,interested_in,languages,location,meeting_for,political,quotes,relationship_status,religion,significant_other,sports,website,work
+        //id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale,name_format,timezone
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $objectId = '/' . $objectId;
 
-        $data = [
-          'message' => strip_tags($content['comment']),
-        ];
-        $this->fb->post($url, $data);
-
-        $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
-        $request = $this->fb->request('GET', $url);
-        $response = $this->fb->getClient()->sendRequest($request);
-        Log::write('debug', $url);
-        return $response->getDecodedBody();
-      } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-        Log::write('debug', $e);
-        return [];
-      }
+            $response = $this->fb->get(
+                '/' . $objectId, $this->longLivedAccessToken//'{access-token}'
+            );
+            debug($response);
+            die;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            debug($e->getMessage());
+            return [];
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            debug($e->getMessage());
+            return [];
+        }
+        $graphNode = $response->getGraphNode();
+        /* handle the result */
     }
 
-
-    // In case of delete
-    if($operation === 'd') {
-      try {
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-        $url = '/' . $objectId;
-
-        $request = $this->fb->request('DELETE', $url);
-        $this->fb->getClient()->sendRequest($request);
-        return true;
-      } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-        Log::write('debug', $e);
-        return false;
-      }
+    /**
+     * @param $content
+     */
+    public function add_user($content) {
+        
     }
 
-    try {
-      $statRequest = '/' . $objectId . '/comments';
-
-      $request = $this->fb->request('GET', $statRequest);
-      $response = $this->fb->getClient()->sendRequest($request);
-      return $response->getDecodedBody()['data'];
-
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      Log::write('debug', $e);
-      return [];
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      Log::write('debug', $e);
-      return [];
-    }
-  }
-
-
-  /**
-   * @param $objectId
-   * @param $fromDate
-   * @return array
-   */
-  public function commentFromDate($objectId, $fromDate) {
-    if ($objectId == null) $objectId = $this->objectId;
-
-    if ($objectId == null) {
-      return [];
+    /**
+     * @param $content
+     */
+    public function update_categories($content) {
+        
     }
 
-    try {
-      $statRequest = '/' . $objectId . '/comments';
+    public function callback($params) {
 
-      $request = $this->fb->request('GET', $statRequest);
-      $response = $this->fb->getClient()->sendRequest($request);
-      return $response->getDecodedBody()['data'];
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      return [];
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      return [];
-    }
-  }
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
+        $data = array();
 
-  /**
-   * @param $objectId
-   * @return array
-   */
-  public function user($objectId)
-  {
-    if ($objectId == null) $objectId = $this->objectId;
+        $helper = $this->fb->getRedirectLoginHelper();
+        if (isset($_GET['state'])) {
+            $helper->getPersistentDataHandler()->set('state', $_GET['state']);
+        }
 
-    if ($objectId == null) {
-      return [];
-    }
-    //1165594993
-    //email,about,age_range,birthday,currency,education,favorite_athletes,favorite_teams,hometown,about,birthday,inspirational_people,interested_in,languages,location,meeting_for,political,quotes,relationship_status,religion,significant_other,sports,website,work
-    //id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale,name_format,timezone
-    try {
-      // Returns a `Facebook\FacebookResponse` object
-      $objectId = '/' . $objectId;
+        try {
+            $accessToken = $helper->getAccessToken();
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            // When Graph returns an error
+            echo 'Graph returned an error: ' . $e->getMessage();
+            exit;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            exit;
+        }
 
-      $response = $this->fb->get(
-          '/' . $objectId,
-          $this->longLivedAccessToken//'{access-token}'
-      );
-      debug($response); die;
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      debug($e->getMessage());
-      return [];
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      debug($e->getMessage());
-      return [];
-    }
-    $graphNode = $response->getGraphNode();
-    /* handle the result */
+        if (!isset($accessToken)) {
+            if ($helper->getError()) {
+                header('HTTP/1.0 401 Unauthorized');
+                echo "Error: " . $helper->getError() . "\n";
+                echo "Error Code: " . $helper->getErrorCode() . "\n";
+                echo "Error Reason: " . $helper->getErrorReason() . "\n";
+                echo "Error Description: " . $helper->getErrorDescription() . "\n";
+            } else {
+                header('HTTP/1.0 400 Bad Request');
+                echo 'Bad request';
+            }
+            exit;
+        }
 
+        // Logged in
+        $data['token'] = $accessToken->getValue();
 
+        // The OAuth 2.0 client handler helps us manage access tokens
+        $oAuth2Client = $this->fb->getOAuth2Client();
 
-  }
+        // Get the access token metadata from /debug_token
+        $tokenMetadata = $oAuth2Client->debugToken($accessToken);
 
-  /**
-   * @param $content
-   */
-  public function add_user($content)
-  {
+        // Validation (these will throw FacebookSDKException's when they fail)
+        $tokenMetadata->validateAppId($config['app_id']); // Replace {app-id} with your app id
+        // If you know the user ID this access token belongs to, you can validate it here
+        //$tokenMetadata->validateUserId('123');
+        $tokenMetadata->validateExpiration();
 
-  }
+        if (!$accessToken->isLongLived()) {
+            // Exchanges a short-lived access token for a long-lived one
+            try {
+                $accessToken = $oAuth2Client->getLongLivedAccessToken($accessToken);
+            } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+                echo "<p>Error getting long-lived access token: " . $helper->getMessage() . "</p>\n\n";
+                exit;
+            }
 
-  /**
-   * @param $content
-   */
-  public function update_categories($content)
-  {
-
-  }
-
-  public function callback($params) {
-
-    $config = json_decode(file_get_contents('appdata.cfg', true), true);
-    $data = array();
-
-    $helper = $this->fb->getRedirectLoginHelper();
-    if (isset($_GET['state'])) {
-      $helper->getPersistentDataHandler()->set('state', $_GET['state']);
-    }
-
-    try {
-      $accessToken = $helper->getAccessToken();
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      // When Graph returns an error
-      echo 'Graph returned an error: ' . $e->getMessage();
-      exit;
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // When validation fails or other local issues
-      echo 'Facebook SDK returned an error: ' . $e->getMessage();
-      exit;
-    }
-
-    if (! isset($accessToken)) {
-      if ($helper->getError()) {
-        header('HTTP/1.0 401 Unauthorized');
-        echo "Error: " . $helper->getError() . "\n";
-        echo "Error Code: " . $helper->getErrorCode() . "\n";
-        echo "Error Reason: " . $helper->getErrorReason() . "\n";
-        echo "Error Description: " . $helper->getErrorDescription() . "\n";
-      } else {
-        header('HTTP/1.0 400 Bad Request');
-        echo 'Bad request';
-      }
-      exit;
-    }
-
-    // Logged in
-    $data['token'] = $accessToken->getValue();
-
-    // The OAuth 2.0 client handler helps us manage access tokens
-    $oAuth2Client = $this->fb->getOAuth2Client();
-
-    // Get the access token metadata from /debug_token
-    $tokenMetadata = $oAuth2Client->debugToken($accessToken);
-
-    // Validation (these will throw FacebookSDKException's when they fail)
-    $tokenMetadata->validateAppId($config['app_id']); // Replace {app-id} with your app id
-    // If you know the user ID this access token belongs to, you can validate it here
-    //$tokenMetadata->validateUserId('123');
-    $tokenMetadata->validateExpiration();
-
-    if (! $accessToken->isLongLived()) {
-      // Exchanges a short-lived access token for a long-lived one
-      try {
-        $accessToken = $oAuth2Client->getLongLivedAccessToken($accessToken);
-      } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-        echo "<p>Error getting long-lived access token: " . $helper->getMessage() . "</p>\n\n";
-        exit;
-      }
-
-      $data['longlivetoken'] = $accessToken->getValue();
+            $data['longlivetoken'] = $accessToken->getValue();
 //        echo '<h3>Long-lived</h3>';
 //        debug($accessToken->getValue());
-    }
-
-    $client = $this->fb->getOAuth2Client();
-
-    try {
-      // Returns a long-lived access token
-      $accessToken = $client->getLongLivedAccessToken($data['token']);
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-      // There was an error communicating with Graph
-      echo $e->getMessage();
-      exit;
-    }
-
-    $data['longlivetoken'] = $accessToken->getValue();
-
-    return $data;
-
-  }
-
-
-  /**
-   * Get fan from the stream
-   *
-   * @param null $objectId
-   * @return array
-   */
-  public function captureFan($objectId = null)
-  {
-    // Read complete page feed
-    if ($objectId == null) $objectId = $this->objectId;
-
-    if ($objectId == null) {
-      return [];
-    }
-
-    try {
-
-      $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
-      $response = $this->fb->sendRequest('GET', $streamToRead);
-
-      $data = $response->getDecodedBody()['data'];
-
-      // Append users that have taken an action on the page
-      $social_users = array();
-
-      foreach($data as $d) {
-        $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
-
-        if(isset($d['reactions'])) {
-          foreach($d['reactions']['data'] as $social_user) {
-            $ub = new ConnectorUserBean();
-            $ub->setName($social_user['name']);
-            $ub->setId($social_user['id']);
-            $ub->setAction($social_user['type']);
-            $ub->setContentId($d['id']);
-            $ub->setText('');
-
-            $ub->setDate($d['created_time']);
-
-            $ub->setAncestorBody($ancestor_body);
-
-            $ub = $this->getUserExtraData($social_user['id'], $ub);
-
-            $social_users[] = $ub;
-          }
         }
 
-        if(isset($d['comments'])) {
-          foreach($d['comments']['data'] as $social_user) {
-            $ub = new ConnectorUserBean();
-            $ub->setName($social_user['from']['name']);
-            $ub->setId($social_user['from']['id']);
-            $ub->setAction('COMMENT');
-            $ub->setContentId($d['id']);
-            $ub->setDate($social_user['created_time']);
-            $ub->setText($social_user['message']);
+        $client = $this->fb->getOAuth2Client();
 
-            $ub->setAncestorBody($ancestor_body);
+        try {
+            // Returns a long-lived access token
+            $accessToken = $client->getLongLivedAccessToken($data['token']);
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // There was an error communicating with Graph
+            echo $e->getMessage();
+            exit;
+        }
 
-            $ub = $this->getUserExtraData($social_user['id'], $ub);
+        $data['longlivetoken'] = $accessToken->getValue();
 
-            $social_users[] = $ub;
+        return $data;
+    }
 
-            if(isset($social_user['comments'])) {
-              foreach($social_user['comments']['data'] as $sub_comment) {
-                $ub = new ConnectorUserBean();
-                $ub->setName($sub_comment['from']['name']);
-                $ub->setId($sub_comment['from']['id']);
-                $ub->setAction('COMMENT');
-                $ub->setContentId($d['id']);
-                $ub->setDate($sub_comment['created_time']);
-                $ub->setText($sub_comment['message']);
+    /**
+     * Get fan from the stream
+     *
+     * @param null $objectId
+     * @return array
+     */
+    public function captureFan($objectId = null) {
+        // Read complete page feed
+        if ($objectId == null)
+            $objectId = $this->objectId;
 
-                $ub->setAncestorBody($social_user['message']);
+        if ($objectId == null) {
+            return [];
+        }
 
-                $ub = $this->getUserExtraData($social_user['id'], $ub);
+        try {
 
-                $social_users[] = $ub;
-              }
+            $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+            $response = $this->fb->sendRequest('GET', $streamToRead);
+
+            $data = $response->getDecodedBody()['data'];
+
+            // Append users that have taken an action on the page
+            $social_users = array();
+
+            foreach ($data as $d) {
+                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
+
+                if (isset($d['reactions'])) {
+                    foreach ($d['reactions']['data'] as $social_user) {
+                        $ub = new ConnectorUserBean();
+                        $ub->setName($social_user['name']);
+                        $ub->setId($social_user['id']);
+                        $ub->setAction($social_user['type']);
+                        $ub->setContentId($d['id']);
+                        $ub->setText('');
+
+                        $ub->setDate($d['created_time']);
+
+                        $ub->setAncestorBody($ancestor_body);
+
+                        $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+                        $social_users[] = $ub;
+                    }
+                }
+
+                if (isset($d['comments'])) {
+                    foreach ($d['comments']['data'] as $social_user) {
+                        $ub = new ConnectorUserBean();
+                        $ub->setName($social_user['from']['name']);
+                        $ub->setId($social_user['from']['id']);
+                        $ub->setAction('COMMENT');
+                        $ub->setContentId($d['id']);
+                        $ub->setDate($social_user['created_time']);
+                        $ub->setText($social_user['message']);
+
+                        $ub->setAncestorBody($ancestor_body);
+
+                        $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+                        $social_users[] = $ub;
+
+                        if (isset($social_user['comments'])) {
+                            foreach ($social_user['comments']['data'] as $sub_comment) {
+                                $ub = new ConnectorUserBean();
+                                $ub->setName($sub_comment['from']['name']);
+                                $ub->setId($sub_comment['from']['id']);
+                                $ub->setAction('COMMENT');
+                                $ub->setContentId($d['id']);
+                                $ub->setDate($sub_comment['created_time']);
+                                $ub->setText($sub_comment['message']);
+
+                                $ub->setAncestorBody($social_user['message']);
+
+                                $ub = $this->getUserExtraData($social_user['id'], $ub);
+
+                                $social_users[] = $ub;
+                            }
+                        }
+                    }
+                }
             }
-          }
+
+            $data['social_users'] = $social_users;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $data = [];
+            $data['error'] = $e->getMessage();
         }
-      }
 
-      $data['social_users'] = $social_users;
-
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-      $data = [];
-      $data['error'] = $e->getMessage();
+        return($data);
     }
 
-    return($data);
-  }
+    /**
+     * @param $posts
+     * @return array
+     */
+    private function format_result($posts) {
+        $beans = array();
+        foreach ($posts['posts']['data'] as $post) {
+            $element = new ConnectorBean();
+            if (!empty($post['message']))
+                $element->setBody($post['message']);
+            else
+                $element->setBody($post['story']);
 
-  /**
-   * @param $posts
-   * @return array
-   */
-  private function format_result($posts) {
-    $beans = array();
-    foreach($posts['posts']['data'] as $post) {
-      $element =  new ConnectorBean();
-      if(!empty($post['message']))
-        $element->setBody($post['message']);
-      else
-        $element->setBody($post['story']);
+            if (!empty($post['story']))
+                $element->setTitle($post['story']);
 
-      if(!empty($post['story']))
-        $element->setTitle($post['story']);
+            $element->setIsContentMeaningful(1);
+            $element->setCreationDate($post['created_time']);
+            $element->setMessageId($post['id']);
+            $element->setAuthor('');
 
-      $element->setIsContentMeaningful(1);
-      $element->setCreationDate($post['created_time']);
-      $element->setMessageId($post['id']);
-      $element->setAuthor('');
+            //https://twitter.com/RadioNightwatch/status/827460856128614401
+            $uri = 'https://www.facebook.com/' . $post['id'];
+            $element->setUri($uri);
 
-      //https://twitter.com/RadioNightwatch/status/827460856128614401
-      $uri = 'https://www.facebook.com/' . $post['id'];
-      $element->setUri($uri);
+            $element->setRawPost($post);
 
-      $element->setRawPost($post);
-
-      $beans[] = $element;
-    }
-    return $beans;
-  }
-
-  private function getUserExtraData($userId, ConnectorUserBean $ub) {
-    try {
-      $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale');
-      $response = $this->fb->getClient()->sendRequest($request);
-      $extraData = $response->getDecodedBody();
-
-      $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
-      $ub->setLastname($this->blankForEmpty($extraData['last_name']));
-      $ub->setGender($this->blankForEmpty($extraData['gender']));
-      $ub->setCoverimage($this->blankForEmpty($extraData['cover']['source']));
-      $ub->setLocale($this->blankForEmpty($extraData['locale']));
-      $ub->setCurrency($this->blankForEmpty($extraData['currency']));
-      //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
-
-    } catch(\Facebook\Exceptions\FacebookResponseException $e) {
-
-    } catch(\Facebook\Exceptions\FacebookSDKException $e) {
-
+            $beans[] = $element;
+        }
+        return $beans;
     }
 
-    return $ub;
-  }
+    private function getUserExtraData($userId, ConnectorUserBean $ub) {
+        try {
+            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale');
+            $response = $this->fb->getClient()->sendRequest($request);
+            $extraData = $response->getDecodedBody();
 
-  private function blankForEmpty(&$var) {
-    return !empty($var) ? $var : '';
-  }
+            $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
+            $ub->setLastname($this->blankForEmpty($extraData['last_name']));
+            $ub->setGender($this->blankForEmpty($extraData['gender']));
+            $ub->setCoverimage($this->blankForEmpty($extraData['cover']['source']));
+            $ub->setLocale($this->blankForEmpty($extraData['locale']));
+            $ub->setCurrency($this->blankForEmpty($extraData['currency']));
+            //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            
+        }
 
-  public function setError($message) {
+        return $ub;
+    }
 
-   return $message;
+    private function blankForEmpty(&$var) {
+        return !empty($var) ? $var : '';
+    }
 
-    // $connectorUsersSettingsTable = TableRegistry::get('ConnectorUsersSettings');
-    // $connectorUsersSettings = $connectorUsersSettingsTable->get($this->connectorUsersSettingsID);
-    // $connectorUsersSettings->note = $message;
-    // $connectorUsersSettingsTable->save($connectorUsersSettings);
+    public function setError($message) {
 
-  }
+        return $message;
+
+        // $connectorUsersSettingsTable = TableRegistry::get('ConnectorUsersSettings');
+        // $connectorUsersSettings = $connectorUsersSettingsTable->get($this->connectorUsersSettingsID);
+        // $connectorUsersSettings->note = $message;
+        // $connectorUsersSettingsTable->save($connectorUsersSettings);
+    }
+
 }
