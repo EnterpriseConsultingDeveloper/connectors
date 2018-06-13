@@ -325,11 +325,12 @@ class FacebookConnector extends Connector implements IConnector {
             /** @var GraphEdge  $ge */
             $ge = $response->getGraphNode()->getField('likes');
             while ($ge != null) {
-                $stats['likes'] = array_merge($stats['likes'], $ge->asArray());
+                // $stats['likes'] = array_merge($stats['likes'], $ge->asArray());
+                $stats['likes_number'] += count($ge->asArray());
                 $ge = $this->fb->next($ge);
             }
 
-            $stats['likes_number'] = count($stats['likes']);
+            // $stats['likes_number'] = count($stats['likes']);
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
@@ -338,18 +339,19 @@ class FacebookConnector extends Connector implements IConnector {
         }
 
         // comments
-        $stats['comments'] = [];
+        // $stats['comments'] = [];
         $stats['comment_number'] = 0;
         try {
             $statRequest = '/' . $objectId . '/?fields=comments';
             $response = $this->fb->get($statRequest);
             $ge = $response->getGraphNode()->getField('comments');
             while ($ge != null) {
-                $stats['comments'] = array_merge($stats['comments'], $ge->asArray());
+                // $stats['comments'] = array_merge($stats['comments'], $ge->asArray());
+                $stats['comment_number'] += count($ge->asArray());
                 $ge = $this->fb->next($ge);
             }
 
-            $stats['comment_number'] = count($stats['comments']);
+            // $stats['comment_number'] = count($stats['comments']);
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
