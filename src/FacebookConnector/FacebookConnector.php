@@ -21,8 +21,10 @@ use WR\Connector\ConnectorUserBean;
 use Cake\Log\Log;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
+use Cake\Utility\Hash;
 
-class FacebookConnector extends Connector implements IConnector {
+class FacebookConnector extends Connector implements IConnector
+{
 
     /** @var Facebook\Facebook $fb */
     protected $fb;
@@ -37,7 +39,8 @@ class FacebookConnector extends Connector implements IConnector {
     private $until;
     var $error = false;
 
-    function __construct($params) {
+    function __construct($params)
+    {
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
 
         $this->fb = new Facebook([
@@ -94,7 +97,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $config
      * @return string
      */
-    public function connect($config) {
+    public function connect($config)
+    {
 
         $helper = $this->fb->getRedirectLoginHelper();
 
@@ -108,7 +112,8 @@ class FacebookConnector extends Connector implements IConnector {
     /**
      * @return bool
      */
-    public function isLogged() {
+    public function isLogged()
+    {
         $logged = false;
 
         try {
@@ -129,7 +134,8 @@ class FacebookConnector extends Connector implements IConnector {
     /**
      * @return array
      */
-    public function getAccounts() {
+    public function getAccounts()
+    {
 
         try {
             // Returns a `Facebook\FacebookResponse` object
@@ -151,7 +157,8 @@ class FacebookConnector extends Connector implements IConnector {
     /**
      * @return array
      */
-    public function getUser() {
+    public function getUser()
+    {
 
         try {
             // Returns a `Facebook\FacebookResponse` object
@@ -176,7 +183,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param null $objectId
      * @return array
      */
-    public function read($objectId = null) {
+    public function read($objectId = null)
+    {
 
         if ($this->tokenValid = false) {
             return;
@@ -191,28 +199,104 @@ class FacebookConnector extends Connector implements IConnector {
         }
 
         $limitString = '&limit=' . $this->feedLimit;
+        $limitString = '&limit=' . "2";
         if (!empty($this->since) && !empty($this->until)) {
             $limitString = '&since=' . $this->since . '&until=' . $this->until;
         }
-
+        $data = array();
         $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}' . $limitString;
         try {
-            $response = $this->fb->sendRequest('GET', $streamToRead);
+            /*$response = $this->fb->sendRequest('GET', $streamToRead);
             $data = $response->getDecodedBody()['data'];
-            $data['social_users'] = [];
+
+            debug($data);
+            die;*/
+
+            /*debug($data[4]);
+            $data = array();*/
+
+            $response = $this->fb->get($streamToRead);
+            $feedEdge = $response->getGraphEdge();
+
+            $data = array_merge($data, $feedEdge->asArray());
+
+            $nextFeed = $this->fb->next($feedEdge);
+
+            while ($nextFeed != Null) {
+                $data = array_merge($data, $nextFeed->asArray());
+                $nextFeed = $this->fb->next($nextFeed);
+            }
+
+            // $res = Hash::flatten($data);
+            // $result = Hash::insert($data, '{n}.from.data.picture', Hash::extract($data, '{n}.from.picture'));
+            $result = $data;
+
+            foreach ($result as $id => $value) {
+                $val = Hash::extract($result, $id . '.from.picture');
+                $result = Hash::remove($result, $id . '.from.picture');
+                $result = Hash::insert($result, $id . '.from.picture.data', $val);
+
+                if (Hash::extract($result, $id . '.reactions') != Null) {
+                    $val = Hash::extract($result, $id . '.reactions');
+                    $result = Hash::remove($result, $id . '.reactions');
+                    $result = Hash::insert($result, $id . '.reactions.data', $val);
+                }
+
+                if (Hash::extract($result, $id . '.comments') != Null) {
+                    $val = Hash::extract($result, $id . '.comments');
+                    $result = Hash::remove($result, $id . '.comments');
+                    $result = Hash::insert($result, $id . '.comments.data', $val);
+                    foreach ($result[$id]['comments']['data'] as $id2 => $value2) {
+                        $val = Hash::extract($result, $id . '.comments.data.' . $id2 . '.from.picture');
+                        $result = Hash::remove($result, $id . '.comments.data.' . $id2 . '.from.picture');
+                        $result = Hash::insert($result, $id . '.comments.data.' . $id2 . '.from.picture.data', $val);
+                    }
+                }
+            }
+
+
+            /*foreach ($data as $id => $value) {
+                if (isset($data[$id]['from']['picture'])) {
+                    $val = $data[$id]['from']['picture'];
+                    unset($data[$id]['from']['picture']);
+                    $data[$id]['from']['picture']['data'] = $val;
+                }
+
+               if (isset($data[$id]['reactions'])) {
+                    $val = $data[$id]['reactions'];
+                    unset($data[$id]['reactions']);
+                    $data[$id]['reactions']['data'] = $val;
+                }
+
+                if (isset($data[$id]['comments'])) {
+                    $val = $data[$id]['comments'];
+                    unset($data[$id]['comments']);
+                    $data[$id]['comments']['data'] = $val;
+                    foreach ($data[$id]['comments']['data'] as $id2 => $value2) {
+                        $val2 = $value2['from']['picture'];
+
+                        unset($data[$id]['comments']['data'][$id2]['from']['picture']);
+                        $data[$id]['comments']['data'][$id2]['from']['picture']['data'] = $val2;
+                    }
+                }
+            }*/
+
+
+            $result['social_users'] = [];
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            $data = [];
-            $data['error'] = $e->getMessage();
+            $result = [];
+            $result['error'] = $e->getMessage();
         }
 
-        return($data);
+        return ($result);
     }
 
     /**
      * @param null $objectId
      * @return array
      */
-    public function readPublicPage($objectId = null) {
+    public function readPublicPage($objectId = null)
+    {
         // Read complete public page feed
         if ($objectId == null)
             $objectId = $this->objectId;
@@ -226,13 +310,14 @@ class FacebookConnector extends Connector implements IConnector {
         $response = $http->get($urlToRead);
         $data = $response->json;
         $formattedResult = $this->format_result($data);
-        return($formattedResult);
+        return ($formattedResult);
     }
 
     /**
      * @return array
      */
-    public function write($content) {
+    public function write($content)
+    {
         // Di default inserisco sul feed
         $post = strip_tags($content['content']['body']);
         if ($content['content']['link'] != null) {
@@ -254,7 +339,8 @@ class FacebookConnector extends Connector implements IConnector {
         return $info;
     }
 
-    public function update($content, $objectId) {
+    public function update($content, $objectId)
+    {
         return "Ho scritto " . $content . " su " . $objectId;
     }
 
@@ -262,7 +348,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param null $objectId
      * @return \Facebook\FacebookResponse
      */
-    public function delete($objectId = null) {
+    public function delete($objectId = null)
+    {
 
         if ($objectId == null) {
             return;
@@ -283,7 +370,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $data
      * @return mixed
      */
-    public function mapFormData($data) {
+    public function mapFormData($data)
+    {
 
         // Necessary only if are authenticating a page, not a profile
 //    if(isset($data['token'])) {
@@ -309,7 +397,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @return array
      * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
      */
-    public function stats($objectId) {
+    public function stats($objectId)
+    {
         if ($objectId == null)
             $objectId = $this->objectId;
 
@@ -322,7 +411,7 @@ class FacebookConnector extends Connector implements IConnector {
         try {
             $statRequest = '/' . $objectId . '?fields=likes';
             $response = $this->fb->get($statRequest);
-            /** @var GraphEdge  $ge */
+            /** @var GraphEdge $ge */
             $ge = $response->getGraphNode()->getField('likes');
             while ($ge != null) {
                 // $stats['likes'] = array_merge($stats['likes'], $ge->asArray());
@@ -412,7 +501,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $content
      * @return array
      */
-    public function comments($objectId, $operation = 'r', $content = null) {
+    public function comments($objectId, $operation = 'r', $content = null)
+    {
         if ($objectId == null)
             $objectId = $this->objectId;
 
@@ -503,7 +593,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $fromDate
      * @return array
      */
-    public function commentFromDate($objectId, $fromDate) {
+    public function commentFromDate($objectId, $fromDate)
+    {
         if ($objectId == null)
             $objectId = $this->objectId;
 
@@ -530,7 +621,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $objectId
      * @return array
      */
-    public function user($objectId) {
+    public function user($objectId)
+    {
         if ($objectId == null)
             $objectId = $this->objectId;
 
@@ -563,18 +655,21 @@ class FacebookConnector extends Connector implements IConnector {
     /**
      * @param $content
      */
-    public function add_user($content) {
-        
+    public function add_user($content)
+    {
+
     }
 
     /**
      * @param $content
      */
-    public function update_categories($content) {
-        
+    public function update_categories($content)
+    {
+
     }
 
-    public function callback($params) {
+    public function callback($params)
+    {
 
         $config = json_decode(file_get_contents('appdata.cfg', true), true);
         $data = array();
@@ -661,7 +756,8 @@ class FacebookConnector extends Connector implements IConnector {
      * @param null $objectId
      * @return array
      */
-    public function captureFan($objectId = null) {
+    public function captureFan($objectId = null)
+    {
         // Read complete page feed
         if ($objectId == null)
             $objectId = $this->objectId;
@@ -745,14 +841,15 @@ class FacebookConnector extends Connector implements IConnector {
             $data['error'] = $e->getMessage();
         }
 
-        return($data);
+        return ($data);
     }
 
     /**
      * @param $posts
      * @return array
      */
-    private function format_result($posts) {
+    private function format_result($posts)
+    {
         $beans = array();
         foreach ($posts['posts']['data'] as $post) {
             $element = new ConnectorBean();
@@ -780,7 +877,8 @@ class FacebookConnector extends Connector implements IConnector {
         return $beans;
     }
 
-    private function getUserExtraData($userId, ConnectorUserBean $ub) {
+    private function getUserExtraData($userId, ConnectorUserBean $ub)
+    {
         try {
             $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale');
             $response = $this->fb->getClient()->sendRequest($request);
@@ -794,19 +892,21 @@ class FacebookConnector extends Connector implements IConnector {
             $ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            
+
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-            
+
         }
 
         return $ub;
     }
 
-    private function blankForEmpty(&$var) {
+    private function blankForEmpty(&$var)
+    {
         return !empty($var) ? $var : '';
     }
 
-    public function setError($message) {
+    public function setError($message)
+    {
 
         return $message;
 
