@@ -254,7 +254,6 @@ class FacebookConnector extends Connector implements IConnector
                 }
             }
 
-
             /*foreach ($data as $id => $value) {
                 if (isset($data[$id]['from']['picture'])) {
                     $val = $data[$id]['from']['picture'];
