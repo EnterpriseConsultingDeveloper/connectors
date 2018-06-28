@@ -199,7 +199,6 @@ class FacebookConnector extends Connector implements IConnector
         }
 
         $limitString = '&limit=' . $this->feedLimit;
-        $limitString = '&limit=' . "2";
         if (!empty($this->since) && !empty($this->until)) {
             $limitString = '&since=' . $this->since . '&until=' . $this->until;
         }
