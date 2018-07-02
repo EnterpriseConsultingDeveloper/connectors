@@ -99,9 +99,9 @@ class FacebookConnector extends Connector implements IConnector {
 
         $helper = $this->fb->getRedirectLoginHelper();
 
-        $permissions = ['publish_actions','read_insights','public_profile','email','user_friends','manage_pages','publish_pages']; // Optional permissions
-        $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions)."&state=".$config['query'];
-    
+        $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
+        $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
+
 
         return '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
     }
@@ -191,11 +191,34 @@ class FacebookConnector extends Connector implements IConnector {
         if (!empty($this->since) && !empty($this->until)) {
             $limitString = '&since=' . $this->since . '&until=' . $this->until;
         }
-        $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}' . $limitString;
+        $streamToRead = '/' . $objectId . '/feed/'
+            . '?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},'
+            . 'reactions.limit(5).summary(true),'
+            . 'shares,'
+            . 'comments.limit(10).summary(true){from{name,picture,link},created_time,message,like_count,comments},'
+            . 'from{name,picture}' . $limitString;
         try {
             $response = $this->fb->get($streamToRead);
 
-            $result = $response->getGraphEdge()->asArray();
+            $result = [];
+            foreach ($response->getGraphEdge() as $v) {
+                $row = [];
+                $row['id'] = $v->getField('id');
+                $row['type'] = $v->getField('type');
+                $row['created_time'] = $v->getField('created_time');
+                $row['message'] = $v->getField('message');
+                $row['picture'] = $v->getField('picture');
+                $row['full_picture'] = $v->getField('full_picture');
+                $row['link'] = $v->getField('link');
+                $row['attachments'] = $v->getField('attachments') == null ? [] : $v->getField('attachments')->asArray();
+                $row['from'] = $v->getField('from') == null ? [] : $v->getField('from')->asArray();
+                $row['reactions'] = $v->getField('reactions') == null ? [] : $v->getField('reactions')->asArray();
+                $row['comments'] = $v->getField('comments') == null ? [] : $v->getField('comments')->asArray();
+                $row['reactions_total'] = $v->getField('reactions') == null ? 0 : $v->getField('reactions')->getMetaData()['summary']['total_count'];
+                $row['comments_total'] = $v->getField('comments') == null ? 0 : $v->getField('comments')->getMetaData()['summary']['total_count'];
+                $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->count;
+                $result[] = $row;
+            }
 
             foreach ($result as $id => $value) {
                 $val = Hash::extract($result, $id . '.from.picture');
@@ -226,7 +249,7 @@ class FacebookConnector extends Connector implements IConnector {
             $result['error'] = $e->getMessage();
         }
 
-        return ($result);
+        return $result;
     }
 
     /**
@@ -560,14 +583,14 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $content
      */
     public function add_user($content) {
-
+        
     }
 
     /**
      * @param $content
      */
     public function update_categories($content) {
-
+        
     }
 
     public function callback($params) {
@@ -790,9 +813,9 @@ class FacebookConnector extends Connector implements IConnector {
             $ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-
+            
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-
+            
         }
 
         return $ub;
