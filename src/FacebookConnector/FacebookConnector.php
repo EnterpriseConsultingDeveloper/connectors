@@ -183,9 +183,8 @@ class FacebookConnector extends Connector implements IConnector {
         if ($objectId == null)
             $objectId = $this->objectId;
 
-        if ($objectId == null) {
+        if ($objectId == null)
             return [];
-        }
 
         $limitString = '&limit=' . $this->feedLimit;
         if (!empty($this->since) && !empty($this->until)) {
