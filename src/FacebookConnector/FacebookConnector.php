@@ -216,7 +216,8 @@ class FacebookConnector extends Connector implements IConnector {
                 $row['comments'] = $v->getField('comments') == null ? [] : $v->getField('comments')->asArray();
                 $row['reactions_total'] = $v->getField('reactions') == null ? 0 : $v->getField('reactions')->getMetaData()['summary']['total_count'];
                 $row['comments_total'] = $v->getField('comments') == null ? 0 : $v->getField('comments')->getMetaData()['summary']['total_count'];
-                $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->count;
+                $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->getField('count');
+                if ($row['shares_total']==null) $row['shares_total']=0;
                 $result[] = $row;
             }
 
