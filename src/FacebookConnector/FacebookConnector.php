@@ -778,8 +778,6 @@ class FacebookConnector extends Connector implements IConnector {
             $element = new ConnectorBean();
             if (!empty($post['message']))
                 $element->setBody($post['message']);
-            else
-                $element->setBody($post['story']);
 
             if (!empty($post['story']))
                 $element->setTitle($post['story']);
