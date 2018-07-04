@@ -217,7 +217,8 @@ class FacebookConnector extends Connector implements IConnector {
                 $row['reactions_total'] = $v->getField('reactions') == null ? 0 : $v->getField('reactions')->getMetaData()['summary']['total_count'];
                 $row['comments_total'] = $v->getField('comments') == null ? 0 : $v->getField('comments')->getMetaData()['summary']['total_count'];
                 $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->getField('count');
-                if ($row['shares_total']==null) $row['shares_total']=0;
+                if ($row['shares_total'] == null)
+                    $row['shares_total'] = 0;
                 $result[] = $row;
             }
 
@@ -778,6 +779,9 @@ class FacebookConnector extends Connector implements IConnector {
             $element = new ConnectorBean();
             if (!empty($post['message']))
                 $element->setBody($post['message']);
+            elseif (!empty($post['story'])) {
+                $element->setBody($post['story']);
+            }
 
             if (!empty($post['story']))
                 $element->setTitle($post['story']);
