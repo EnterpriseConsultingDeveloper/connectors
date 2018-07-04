@@ -205,7 +205,7 @@ class FacebookConnector extends Connector implements IConnector {
                 $row = [];
                 $row['id'] = $v->getField('id');
                 $row['type'] = $v->getField('type');
-                $row['created_time'] = $v->getField('created_time');
+                $row['created_time'] = $v->getField('created_time')->format('Y-m-d H:i:s');
                 $row['message'] = $v->getField('message');
                 $row['picture'] = $v->getField('picture');
                 $row['full_picture'] = $v->getField('full_picture');
