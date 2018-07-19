@@ -46,10 +46,9 @@ class TwitterConnector extends Connector implements IConnector
             $this->access_token_secret = $params['longlivetoken'];
         } else {
             // ouauth whiterabbit
-            $this->access_token = $config['access_token'];
-            $this->access_token_secret = $config['access_token_secret'];
+            $this->access_token = isset($config['access_token']) ? $config['access_token'] : $params['access_token'];
+            $this->access_token_secret = isset($config['access_token_secret']) ? $config['access_token_secret'] : $params['access_token_secret'];
         }
-
 
         /*
         $bearer_token_creds = base64_encode($this->app_key.':'.$this->app_secret);
@@ -143,7 +142,6 @@ class TwitterConnector extends Connector implements IConnector
 
             $data[] = $myRow;
         }
-        //debug($data); die;
         //in_reply_to_status_id
         // Append users that have taken an action on the page
         $social_users = array();
@@ -379,6 +377,7 @@ class TwitterConnector extends Connector implements IConnector
      */
     public function comments($objectId, $operation = 'r', $content = null)
     {
+        
         if ($objectId == null) {
             return [];
         }
@@ -386,8 +385,8 @@ class TwitterConnector extends Connector implements IConnector
         if($operation === 'r') {
             // Tweets in response of a tweet are comments
             try {
-                $tweetConnector = new TwitterTweetConnector();
-                $originalPost = $tweetConnector->read($objectId);
+                // $tweetConnector = new TwitterTweetConnector();
+                $originalPost = $this->readComment($objectId);
                 $tweeterusername = $originalPost['user']['screen_name'];
 
                 //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
@@ -415,6 +414,7 @@ class TwitterConnector extends Connector implements IConnector
                         //unset($resArray[]['search_metadata']);
                     }
                 }
+
 
                 return $resArray;
 
@@ -562,6 +562,27 @@ class TwitterConnector extends Connector implements IConnector
 
     public function setError($message) {
 
+    }
+
+    public function readComment($objectId = null)
+    {
+        if ($objectId == null) {
+            return [];
+        }
+
+        //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
+        $data = $this->twitter->get("statuses/show", ["id" => $objectId]);
+
+        if(!isset($data->errors)) {
+            $myRow = array();
+            $myRow = get_object_vars($data);
+            $myRow['user'] = get_object_vars($data->user);
+
+            return $myRow;
+
+        } else {
+            return array();
+        }
     }
 
 }
