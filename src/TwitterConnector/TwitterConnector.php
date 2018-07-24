@@ -16,6 +16,8 @@ use Cake\Network\Http\Client;
 use WR\Connector\TwitterConnection;
 use Cake\Collection\Collection;
 use Abraham\TwitterOAuth\TwitterOAuth;
+use WR\Connector\ConnectorUserBean;
+use Cake\I18n\Time;
 
 class TwitterConnector extends Connector implements IConnector
 {
@@ -119,21 +121,40 @@ class TwitterConnector extends Connector implements IConnector
 
         $objectId = $this->cleanObjectId($objectId);
         if (substr($objectId, 0, 1) === '#') {// hashtag search
+
+            //TODO: inserire il limite
+
             $objectId = str_replace('#', '%23', $objectId);
             //$json = file_get_contents($this->tw . '1.1/search/tweets.json?q=' . $objectId, false, $this->context);
             $dataObj = $this->twitter->get("search/tweets", ["q" => $objectId]);
 
         } else {
+
+            $rateLimitStatus = $this->twitter->get("application/rate_limit_status", ['resources' =>'statuses']);
+    
+            $limitStatus = $rateLimitStatus->resources->statuses->{'/statuses/user_timeline'};
+
+            $remaining = $limitStatus->remaining;
+            $reset = $limitStatus->reset;
+    
+            \Cake\Log\Log::info("-- TWITTER /statuses/user_timeline - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+    
+            if ($remaining == 0) {
+                $time = Time::createFromTimestamp($reset);
+                \Cake\Log\Log::info('-- TWITTER STOP /statuses/user_timeline - next exec '.$time->format('Y-m-d H:i:s'));
+                return;
+            }
+
             //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
             $dataObj = $this->twitter->get("statuses/user_timeline", ["count" => 10, "screen_name" => $objectId]);
         }
         //$data = json_decode($json, true);
         // Remove comments that are tweets in_reply_to_status_id
-        //debug($data);
+       
         $data = array();
         foreach($dataObj as $myObj) {
-            if($myObj->in_reply_to_status_id != '')
-                continue;
+            // if($myObj->in_reply_to_status_id != '')
+            //     continue;
 
             $myRow = array();
             $myRow = get_object_vars($myObj);
@@ -142,6 +163,7 @@ class TwitterConnector extends Connector implements IConnector
 
             $data[] = $myRow;
         }
+
         //in_reply_to_status_id
         // Append users that have taken an action on the page
         $social_users = array();
@@ -517,6 +539,141 @@ class TwitterConnector extends Connector implements IConnector
     public function captureFan($objectId = null)
     {
 
+        if ($objectId == null) {
+            return [];
+        }
+
+        $rateLimitStatus = $this->twitter->get("application/rate_limit_status", ['resources' =>'followers']);
+
+        $limitStatus = $rateLimitStatus->resources->followers->{'/followers/list'};
+        $remaining = $limitStatus->remaining;
+        $reset = $limitStatus->reset;
+
+        \Cake\Log\Log::info("-- TWITTER /followers/list - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+
+        if ($remaining == 0) {
+            $time = Time::createFromTimestamp($reset);
+            \Cake\Log\Log::info('-- TWITTER STOP /followers/list - next exec '.$time->format('Y-m-d H:i:s'));
+            return;
+        }
+
+        $cursor = -1;
+        $cicli = 1;
+        $myRow = [];
+
+        do {
+
+            $data = $this->twitter->get("followers/list", [
+                "screen_name" => $objectId,
+                "cursor" => $cursor,
+                "count" => 50, 
+                "skip_status" => true,
+                "include_user_entities" => false,
+                ]);
+
+
+            $cursor = $data->next_cursor_str;
+
+           if(!isset($data->errors)) {
+               foreach ($data->users as $d) {
+                $myRow[] = $d;
+               }
+           }
+
+        } while ($cursor != 0);
+
+        \Cake\Log\Log::info("-- TWITTER followers/list - found ".count($myRow));
+
+        return $myRow;
+
+        
+
+    }
+
+    /*
+    TODO: Da migliorare , recupera solo gli ultimi 100
+    */
+    public function captureMentions($objectId = null)
+    {
+
+        if ($objectId == null) {
+            return [];
+        }
+
+        $rateLimitStatus = $this->twitter->get("application/rate_limit_status", ['resources' =>'statuses']);
+
+        $limitStatus = $rateLimitStatus->resources->statuses->{'/statuses/mentions_timeline'};
+
+        $remaining = $limitStatus->remaining;
+        $reset = $limitStatus->reset;
+
+        \Cake\Log\Log::info("-- TWITTER /statuses/mentions_timeline - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+
+        if ($remaining == 0) {
+            $time = Time::createFromTimestamp($reset);
+            \Cake\Log\Log::info('-- TWITTER STOP /statuses/mentions_timeline - next exec '.$time->format('Y-m-d H:i:s'));
+            return;
+        }
+
+        $myRow = [];
+
+        $data = $this->twitter->get("statuses/mentions_timeline", [
+            "count" => 100, 
+            ]);
+
+        if(!isset($data->errors)) {
+            foreach ($data as $d) {
+                $myRow[] = $d->user;
+            }
+        }
+
+        \Cake\Log\Log::info("-- TWITTER statuses/mentions_timeline - found ".count($myRow));
+
+        return $myRow;
+
+    }
+
+    /*
+    TODO: Da migliorare , recupera solo gli ultimi 100
+    */
+    public function captureRetweet($objectId = null)
+    {
+
+        if ($objectId == null) {
+            return [];
+        }
+
+        $rateLimitStatus = $this->twitter->get("application/rate_limit_status", ['resources' =>'statuses']);
+
+        $limitStatus = $rateLimitStatus->resources->statuses->{'/statuses/retweets_of_me'};
+
+        $remaining = $limitStatus->remaining;
+        $reset = $limitStatus->reset;
+
+        \Cake\Log\Log::info("-- TWITTER /statuses/retweets_of_me - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+
+        if ($remaining == 0) {
+            $time = Time::createFromTimestamp($reset);
+            \Cake\Log\Log::info('-- TWITTER STOP /statuses/retweets_of_me - next exec '.$time->format('Y-m-d H:i:s'));
+            return;
+        }
+
+        $myRow = [];
+
+        $data = $this->twitter->get("statuses/retweets_of_me", [
+            "count" => 100, 
+            ]);
+
+        if(!isset($data->errors)) {
+            foreach ($data as $d) {
+                $myRow[] = $d->user;
+            }
+        }
+
+        \Cake\Log\Log::info("-- TWITTER statuses/retweets_of_me - found ".count($myRow));
+
+        return $myRow;
+
     }
 
     /**
@@ -570,6 +727,21 @@ class TwitterConnector extends Connector implements IConnector
             return [];
         }
 
+        $rateLimitStatus = $this->twitter->get("application/rate_limit_status", ['resources' =>'statuses']);
+        
+        $limitStatus = $rateLimitStatus->resources->statuses->{'/statuses/show/:id'};
+
+        $remaining = $limitStatus->remaining;
+        $reset = $limitStatus->reset;
+
+        \Cake\Log\Log::info("-- TWITTER /statuses/show - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+
+        if ($remaining == 0) {
+            $time = Time::createFromTimestamp($reset);
+            \Cake\Log\Log::info('-- TWITTER STOP /statuses/show - next exec '.$time->format('Y-m-d H:i:s'));
+            return;
+        }
+
         //$json = file_get_contents($this->tw . '1.1/statuses/user_timeline.json?count=10&screen_name=' . $objectId, false, $this->context);
         $data = $this->twitter->get("statuses/show", ["id" => $objectId]);
 
@@ -577,6 +749,8 @@ class TwitterConnector extends Connector implements IConnector
             $myRow = array();
             $myRow = get_object_vars($data);
             $myRow['user'] = get_object_vars($data->user);
+
+            \Cake\Log\Log::info("-- TWITTER statuses/show - found ");
 
             return $myRow;
 
