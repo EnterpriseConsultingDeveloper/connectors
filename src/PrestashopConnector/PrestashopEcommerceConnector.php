@@ -129,6 +129,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         try {
             //actionid =  $data['typeid']  . $data['operation']
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
 
