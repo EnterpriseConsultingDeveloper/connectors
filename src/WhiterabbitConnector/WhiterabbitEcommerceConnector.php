@@ -42,6 +42,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         
         try {
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             return $crmManager->pushOrderToCrm($content['customer_id'], $data, $async);
         } catch (\PDOException $e) {
             return false;
@@ -113,6 +114,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             //if($res) {
             //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
             $data['actionid'] = $crmManager::$ecommerceActionAddUserId;

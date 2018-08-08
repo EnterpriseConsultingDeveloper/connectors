@@ -102,8 +102,8 @@ class FacebookConnector extends Connector implements IConnector {
         $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
-
-        return '<a href="' . htmlspecialchars($loginUrl) . '">Log in with Facebook!</a>';
+        return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
+        
     }
 
     /**
@@ -205,7 +205,7 @@ class FacebookConnector extends Connector implements IConnector {
                 $row = [];
                 $row['id'] = $v->getField('id');
                 $row['type'] = $v->getField('type');
-                $row['created_time'] = $v->getField('created_time');
+                $row['created_time'] = $v->getField('created_time')->format('Y-m-d H:i:s');
                 $row['message'] = $v->getField('message');
                 $row['picture'] = $v->getField('picture');
                 $row['full_picture'] = $v->getField('full_picture');
@@ -216,7 +216,9 @@ class FacebookConnector extends Connector implements IConnector {
                 $row['comments'] = $v->getField('comments') == null ? [] : $v->getField('comments')->asArray();
                 $row['reactions_total'] = $v->getField('reactions') == null ? 0 : $v->getField('reactions')->getMetaData()['summary']['total_count'];
                 $row['comments_total'] = $v->getField('comments') == null ? 0 : $v->getField('comments')->getMetaData()['summary']['total_count'];
-                $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->count;
+                $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->getField('count');
+                if ($row['shares_total'] == null)
+                    $row['shares_total'] = 0;
                 $result[] = $row;
             }
 
@@ -777,8 +779,9 @@ class FacebookConnector extends Connector implements IConnector {
             $element = new ConnectorBean();
             if (!empty($post['message']))
                 $element->setBody($post['message']);
-            else
+            elseif (!empty($post['story'])) {
                 $element->setBody($post['story']);
+            }
 
             if (!empty($post['story']))
                 $element->setTitle($post['story']);
