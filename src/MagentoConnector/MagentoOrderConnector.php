@@ -34,6 +34,7 @@ class MagentoOrderConnector extends MagentoConnector
             $data['title'] = 'Acquisto fatto da ' . $content['customer_name'];
             $data['note'] = $content['items'];
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushActivityoCrm($content['customer_id'], $data);
 
             return $cmrRes;

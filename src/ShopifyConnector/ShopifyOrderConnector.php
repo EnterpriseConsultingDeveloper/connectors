@@ -54,6 +54,7 @@ class ShopifyOrderConnector extends ShopifyConnector
             $data['productActivity'] = $productActivity;
             try {
                 $crmManager = new CRMManager();
+                $crmManager->setCustomer($customerId);
                 $cmrRes = $crmManager->pushOrderToCrm($customerId, $data);
 
             } catch (\PDOException $e) {
