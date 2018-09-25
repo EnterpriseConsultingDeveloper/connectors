@@ -101,6 +101,7 @@ class WordpressNewsletterConnector extends WordpressConnector
 
         try {
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $data['typeid'] = $crmManager::$newslettertTypeid;
             $data['operation'] = $crmManager::$newsletterSubscribe;
             $data['actionid'] = $crmManager::$newsletterSubscribe;

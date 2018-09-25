@@ -48,6 +48,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['crm_push_async'] = $content['crm_push_async'];
         try {
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
 
             return $cmrRes;
@@ -128,6 +129,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         try {
             //actionid =  $data['typeid']  . $data['operation']
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
             $data['actionid'] = $crmManager::$ecommerceActionAddUserId;

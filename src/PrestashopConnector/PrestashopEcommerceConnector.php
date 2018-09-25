@@ -48,6 +48,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['crm_push_async'] = $content['crm_push_async'];
         try {
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
 
             return $cmrRes;

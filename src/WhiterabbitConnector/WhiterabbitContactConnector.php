@@ -109,6 +109,7 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
             //if($res) {
             //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $data['typeid'] = $crmManager::$crmTypeId;
             $data['operation'] = $crmManager::$crmAddProspect;
             $data['actionid'] = $crmManager::$crmAddProspect;
