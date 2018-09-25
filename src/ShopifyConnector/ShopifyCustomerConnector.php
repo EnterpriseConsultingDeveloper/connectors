@@ -64,6 +64,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
             try {
                 //actionid =  $data['typeid']  . $data['operation']
                 $crmManager = new CRMManager();
+                $crmManager->setCustomer($customerId);
                 $data['typeid'] = $crmManager::$ecommerceTypeId;
                 $data['operation'] = $crmManager::$ecommerceActionAddUserId;
 

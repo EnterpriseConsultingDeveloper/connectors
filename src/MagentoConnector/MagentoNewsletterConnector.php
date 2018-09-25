@@ -100,6 +100,7 @@ class MagentoNewsletterConnector extends MagentoConnector
             //if($res) {
             //$cmrRes = $this->pushToCrm($content['customer_id'], $res);
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
             //debug($cmrRes); die;

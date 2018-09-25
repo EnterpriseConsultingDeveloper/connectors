@@ -47,6 +47,7 @@ class MagentoEcommerceConnector extends MagentoConnector
         $data['productActivity'] =  (unserialize($content['productActivity']));
         try {
             $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
 
             return $cmrRes;
@@ -128,6 +129,7 @@ class MagentoEcommerceConnector extends MagentoConnector
             $crmManager = new CRMManager();
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
+            $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
 
             return $cmrRes;

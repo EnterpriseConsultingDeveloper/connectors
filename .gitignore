@@ -1,2 +1,10 @@
 .push.settings.json
 .vscode/*
+.idea/vcs.xml
+.idea/.name
+.idea/connectors.iml
+.idea/deployment.xml
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/copyright/profiles_settings.xml
