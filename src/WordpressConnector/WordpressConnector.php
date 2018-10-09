@@ -53,10 +53,11 @@ class WordpressConnector extends Connector implements IConnector
         $authors_tree = array();
         if ($this->_wptoken != null) {
             $readPath = $this->_wpapipath . 'connect';
-
             $response = $this->_http->get($readPath, [
                 'q' => 'categories',
-                'token' => $this->_wptoken
+                'token' => $this->_wptoken,
+                'username' => $this->_wpuser,
+                'password' => $this->_wppass
             ]);
             $bodyResp = json_decode($response->body(), true);
             if (isset($bodyResp['categories']))
