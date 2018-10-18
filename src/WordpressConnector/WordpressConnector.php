@@ -18,10 +18,10 @@ class WordpressConnector extends Connector implements IConnector
 {
     protected $_http;
     protected $_wpapipath;
-    protected $_wpuser;
-    protected $_wppass;
     protected $_wptoken;
-
+    protected $_suitetoken;
+    //protected $_wpuser;
+    //protected $_wppass;
     private $objectId;
     private $wp;
 
@@ -30,14 +30,17 @@ class WordpressConnector extends Connector implements IConnector
         // Call Wordpress app
         $this->_http = new WRClient();
         $this->_wpapipath = $params['apipath'];
-        $this->_wpuser = $params['username'];
-        $this->_wppass = $params['password'];
+        $this->_suitetoken = $params['token'];
+
+        // $this->_wpuser = $params['username'];
+        // $this->_wppass = $params['password'];
 
         $connectPath = $this->_wpapipath . 'connect';
 
+        //\Cake\Log\Log::info("tokensuite " .  $this->_tokensuite);
+
         $response = $this->_http->post($connectPath, [
-            'username' => $this->_wpuser,
-            'password' => $this->_wppass
+            'suitetoken' => $this->_suitetoken,
         ]);
 
         $this->_wptoken = json_decode($response->body)->token;
@@ -53,11 +56,11 @@ class WordpressConnector extends Connector implements IConnector
         $authors_tree = array();
         if ($this->_wptoken != null) {
             $readPath = $this->_wpapipath . 'connect';
+
             $response = $this->_http->get($readPath, [
                 'q' => 'categories',
                 'token' => $this->_wptoken,
-                'username' => $this->_wpuser,
-                'password' => $this->_wppass
+                'suitetoken' => $this->_suitetoken,
             ]);
             $bodyResp = json_decode($response->body(), true);
             if (isset($bodyResp['categories']))
@@ -219,6 +222,25 @@ class WordpressConnector extends Connector implements IConnector
     }
 
     public function setError($message) {
+
+    }
+
+
+    /*
+     * Procedura per recuprare solo la risposta json del sito eliminado eventuali warning php.
+     * @param str
+     * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
+     * @add: 18/10/2018
+     * @copyright (c) 2018, WhiteRabbit srl
+     * @return only json
+     */
+
+    public function resultJson($str)
+    {
+        $re = '/[^{]*(\{".*\})/';
+        $subst = '\\1';
+        $result = preg_replace($re, $subst, $str, 1);
+        return $result;
 
     }
 

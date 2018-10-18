@@ -25,9 +25,9 @@ class WordpressCMSConnector extends WordpressConnector
      */
     public function write($content)
     {
-        if($this->_wptoken != null) {
+        if ($this->_wptoken != null) {
             $publishPath = $this->_wpapipath . 'publish';
-//          debug($publishPath); die;
+
             $response = $this->_http->post($publishPath, [
                 'type' => 'post',
                 'content' => $content,
@@ -37,7 +37,8 @@ class WordpressCMSConnector extends WordpressConnector
                 'datestart' => null,
                 'dateend' => null
             ], ['timeout' => 120]);
-            $bodyResp = json_decode($response->body(), true);
+            $body = $this->resultJson($response->body());
+            $bodyResp = json_decode($body, true);
             if ($bodyResp['result'] == true && $bodyResp['error'] == false) {
                 $info['id'] = $bodyResp['content_id'];
                 $info['url'] = $bodyResp['content_url'];
@@ -70,5 +71,7 @@ class WordpressCMSConnector extends WordpressConnector
     {
         return $content;
     }
+
+
 
 }
