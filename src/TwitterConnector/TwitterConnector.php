@@ -326,7 +326,7 @@ class TwitterConnector extends Connector implements IConnector
             $statRequest = '/' . $objectId . '/likes';
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-            $stats['likes_number'] = @count($response->getDecodedBody()['data']);
+            $stats['likes_number'] = count($response->getDecodedBody()['data']);
             $stats['likes'] = $response->getDecodedBody()['data'];
         } catch(TwitterResponseException $e) {
             $stats['likes'] = [];
@@ -342,7 +342,7 @@ class TwitterConnector extends Connector implements IConnector
 
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-            $stats['comment_number'] = @count($response->getDecodedBody()['data']);
+            $stats['comment_number'] = count($response->getDecodedBody()['data']);
         } catch(TwitterResponseException $e) {
             $stats['comment_number'] = 0;
         } catch(TwitterSDKException $e) {
@@ -356,7 +356,7 @@ class TwitterConnector extends Connector implements IConnector
             $statRequest = '/' . $objectId . '/sharedposts';
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
-            $stats['sharedposts'] = @count($response->getDecodedBody()['data']);
+            $stats['sharedposts'] = count($response->getDecodedBody()['data']);
 
         } catch(TwitterResponseException $e) {
             $stats['sharedposts'] = 0;
@@ -582,7 +582,7 @@ class TwitterConnector extends Connector implements IConnector
 
         } while ($cursor != 0);
 
-        \Cake\Log\Log::info("-- TWITTER followers/list - found ".@count($myRow));
+        \Cake\Log\Log::info("-- TWITTER followers/list - found ".count($myRow));
 
         return $myRow;
 
@@ -627,7 +627,7 @@ class TwitterConnector extends Connector implements IConnector
             }
         }
 
-        \Cake\Log\Log::info("-- TWITTER statuses/mentions_timeline - found ".@count($myRow));
+        \Cake\Log\Log::info("-- TWITTER statuses/mentions_timeline - found ".count($myRow));
 
         return $myRow;
 
@@ -670,7 +670,7 @@ class TwitterConnector extends Connector implements IConnector
             }
         }
 
-        \Cake\Log\Log::info("-- TWITTER statuses/retweets_of_me - found ".@count($myRow));
+        \Cake\Log\Log::info("-- TWITTER statuses/retweets_of_me - found ".count($myRow));
 
         return $myRow;
 
