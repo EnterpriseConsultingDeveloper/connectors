@@ -1185,7 +1185,7 @@ class MarketplaceWebServiceProducts_Client implements MarketplaceWebServiceProdu
         $responseComponents = preg_split("/(?:\r?\n){2}/", $response, 2);
         $body = null;
         for ($count = 0; 
-                $count < count($responseComponents) && $body == null; 
+                $count < @count($responseComponents) && $body == null; 
                 $count++) {
             
             $headers = $responseComponents[$count];

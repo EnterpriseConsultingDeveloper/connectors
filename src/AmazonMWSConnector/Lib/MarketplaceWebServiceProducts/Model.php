@@ -262,7 +262,7 @@ abstract class MarketplaceWebServiceProducts_Model
                 $itemPrefix = $prefix;
             }
 
-            for($i = 1; $i <= count($fieldValue); $i++) {
+            for($i = 1; $i <= @count($fieldValue); $i++) {
                 $indexedPrefix = $itemPrefix . $i . '.';
                 $memberType = $fieldType[0];
                 $arr = array_merge($arr, 
