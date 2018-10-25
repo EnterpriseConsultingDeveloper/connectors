@@ -25,7 +25,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
      * @param $content
      * @return bool
      */
-    public function write($content)
+    public function  write($content)
     {
         /*$data = array(
             'orderIdExt' => '100',
@@ -50,6 +50,42 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
             $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
+
+            return $cmrRes;
+        } catch (\PDOException $e) {
+            return false;
+        }
+    }
+
+
+    /**
+     * Funzione per isnerire ecommerce.abandonedCart tra attività per un customer
+     * @param $content
+     * @return bool
+     * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
+     * @add: 05/10/2018
+     * @copyright (c) 2018, WhiteRabbit srl
+     * @return bool
+     */
+
+    public function write_cart($content)
+    {
+        $data = [];
+        $data['cartIdExt'] = $this->notSetToEmptyString($content['cartIdExt']);
+        $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
+        $data['cartNum'] = $this->notSetToEmptyString($content['cartNum']);
+        $data['cartDate'] = $this->notSetToEmptyString($content['cartDate']);
+        $data['cartTotal'] =  $this->notSetToEmptyString($content['cartTotal']);
+        $data['email'] =  $this->notSetToEmptyString($content['email']);
+        $data['cartNote'] =  $this->notSetToEmptyString($content['cartNote']);
+        $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
+        $data['productActivity'] = (unserialize($content['productActivity']));
+        $data['crm_push_async'] = $content['crm_push_async'];
+        try {
+            $crmManager = new CRMManager();
+            $crmManager->setCustomer($content['customer_id']);
+            // $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
+            $cmrRes = $crmManager->pushCartToCrm($content['customer_id'], $data);
 
             return $cmrRes;
         } catch (\PDOException $e) {
