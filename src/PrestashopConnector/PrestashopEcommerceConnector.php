@@ -45,7 +45,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = (unserialize($content['productActivity']));
-        $data['crm_push_async'] = $content['crm_push_async'];
+        $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
         try {
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
@@ -80,7 +80,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['cartNote'] =  $this->notSetToEmptyString($content['cartNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = (unserialize($content['productActivity']));
-        $data['crm_push_async'] = $content['crm_push_async'];
+        $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
         try {
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
@@ -161,7 +161,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
         $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
         $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
-        $data['crm_push_async'] = $content['crm_push_async'];
+        $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
 
         try {
             //actionid =  $data['typeid']  . $data['operation']
