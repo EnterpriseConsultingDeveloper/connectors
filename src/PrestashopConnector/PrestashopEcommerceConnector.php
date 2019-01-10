@@ -13,11 +13,17 @@ use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
+use App\Lib\ActionsManager\ActionsManager;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Controller\MultiSchemaTrait;
 
 class PrestashopEcommerceConnector extends PrestashopConnector
 {
+    use MultiSchemaTrait;
 
-    public function __construct($params) {
+    public function __construct($params)
+    {
         parent::__construct($params);
     }
 
@@ -25,7 +31,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
      * @param $content
      * @return bool
      */
-    public function  write($content)
+    public function write($content)
     {
         /*$data = array(
             'orderIdExt' => '100',
@@ -39,10 +45,10 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
         $data['orderNum'] = $this->notSetToEmptyString($content['orderNum']);
         $data['orderDate'] = $this->notSetToEmptyString($content['orderDate']);
-        $data['orderTotal'] =  $this->notSetToEmptyString($content['orderTotal']);
-        $data['email'] =  $this->notSetToEmptyString($content['email']);
-        $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
-        $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
+        $data['orderTotal'] = $this->notSetToEmptyString($content['orderTotal']);
+        $data['email'] = $this->notSetToEmptyString($content['email']);
+        $data['orderState'] = $this->notSetToEmptyString($content['orderState']);
+        $data['orderNote'] = $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = (unserialize($content['productActivity']));
         $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
@@ -75,9 +81,9 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
         $data['cartNum'] = $this->notSetToEmptyString($content['cartNum']);
         $data['cartDate'] = $this->notSetToEmptyString($content['cartDate']);
-        $data['cartTotal'] =  $this->notSetToEmptyString($content['cartTotal']);
-        $data['email'] =  $this->notSetToEmptyString($content['email']);
-        $data['cartNote'] =  $this->notSetToEmptyString($content['cartNote']);
+        $data['cartTotal'] = $this->notSetToEmptyString($content['cartTotal']);
+        $data['email'] = $this->notSetToEmptyString($content['email']);
+        $data['cartNote'] = $this->notSetToEmptyString($content['cartNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = (unserialize($content['productActivity']));
         $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
@@ -122,7 +128,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
      * @param $content
      * @return bool|\Cake\Datasource\EntityInterface|mixed
      */
-    public function add_user($content)
+    public function add_user_old($content)
     {
         //It's not correct to implement this here. Trying to find a different solutions
 //        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
@@ -140,7 +146,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
-        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['email1'] = $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['gender'] = $this->notSetToEmptyString($content['gender']);
@@ -169,8 +175,9 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $crmManager->setCustomer($content['customer_id']);
             $data['typeid'] = $crmManager::$ecommerceTypeId;
             $data['operation'] = $crmManager::$ecommerceActionAddUserId;
-
             $cmrRes = $crmManager->pushClientToCrm($content['customer_id'], $data);
+            /*$cmrRes = $crmManager->pushSalesTicketToCrm($content['customer_id'], $data);
+             \Cake\Log\Log::info('add_user ' . serialize($cmrRes));*/
 
             return $cmrRes;
         } catch (\PDOException $e) {
@@ -178,7 +185,48 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         }
     }
 
-    private function notSetToEmptyString (&$myString) {
+
+    public function add_user($contact)
+    {
+        $contact['birthdaydate'] = "2018-01-22";
+        $contact['uniqueId'] = $contact['email'];
+        /*        $contact['gdpr']= array();
+                $contact['gdpr']['gdpr_marketing_date']= '2019-01-10 14:53:22';
+                $contact['gdpr']['gdpr_marketing_accept']= true;
+        */
+
+
+        \Cake\Log\Log::debug('Prestashop content params: ' . print_r($contact, true));
+
+        $customerId = $contact['customer_id'];
+        if (empty($customerId)) {
+            // unauthorized
+            return false;
+        }
+
+        \Cake\Log\Log::debug("add_user customerid ".$customerId);
+        $this->createCrmConnection($customerId);
+        $contactBean = new ActivityEcommerceAddUserBean();
+
+        try {
+            $contactBean->setCustomer($customerId)
+                ->setSource($contact['site_name'])
+                ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
+                ->setDataRaw($contact);
+            \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
+            ActionsManager::pushActivity($contactBean);
+        } catch (\Throwable $th) {
+            // \Cake\Log\Log::debug('Prestashop contact exception: ' . print_r($th, true));
+            return false;
+        }
+        /*
+        */
+
+        return true;
+    }
+
+    private function notSetToEmptyString(&$myString)
+    {
         return (!isset($myString)) ? '' : $myString;
     }
 
