@@ -188,15 +188,9 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 
     public function add_user($contact)
     {
-        $contact['birthdaydate'] = "2018-01-22";
         $contact['uniqueId'] = $contact['email'];
-        /*        $contact['gdpr']= array();
-                $contact['gdpr']['gdpr_marketing_date']= '2019-01-10 14:53:22';
-                $contact['gdpr']['gdpr_marketing_accept']= true;
-        */
 
-
-        \Cake\Log\Log::debug('Prestashop content params: ' . print_r($contact, true));
+        //   \Cake\Log\Log::debug('Prestashop content params: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
         if (empty($customerId)) {
@@ -204,7 +198,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             return false;
         }
 
-        \Cake\Log\Log::debug("add_user customerid ".$customerId);
+        //   \Cake\Log\Log::debug("add_user customerid ".$customerId);
         $this->createCrmConnection($customerId);
         $contactBean = new ActivityEcommerceAddUserBean();
 
@@ -213,7 +207,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
                 ->setSource($contact['site_name'])
                 ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
                 ->setDataRaw($contact);
-            \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
+            //       \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
             ActionsManager::pushActivity($contactBean);
         } catch (\Throwable $th) {
             // \Cake\Log\Log::debug('Prestashop contact exception: ' . print_r($th, true));
