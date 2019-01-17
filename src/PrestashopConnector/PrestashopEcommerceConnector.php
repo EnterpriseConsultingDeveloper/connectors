@@ -8,7 +8,6 @@
 
 namespace WR\Connector\PrestashopConnector;
 
-
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
@@ -17,6 +16,8 @@ use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
 use App\Controller\MultiSchemaTrait;
+use Cake\I18n\Time;
+use App\Controller\Component\UtilitiesComponent;
 
 class PrestashopEcommerceConnector extends PrestashopConnector
 {
@@ -31,7 +32,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
      * @param $content
      * @return bool
      */
-    public function write($content)
+    public function write_old($content)
     {
         /*$data = array(
             'orderIdExt' => '100',
@@ -52,6 +53,9 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = (unserialize($content['productActivity']));
         $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
+
+        //  \Cake\Log\Log::debug('Prestashop write $data: ' . print_r($data, true));
+
         try {
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
@@ -61,6 +65,58 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         } catch (\PDOException $e) {
             return false;
         }
+    }
+
+
+    public function write($content)
+    {
+        /*$data = array(
+            'orderIdExt' => '100',
+            'sourceId' => 'Prestashop',
+            'orderNum' => '100',
+            'orderDate' => '2016-11-30',
+            'orderTotal' => '100.10'
+        );*/
+        $data = [];
+        // \Cake\Log\Log::debug('Prestashop write $content call: ' . print_r($content, true));
+
+
+        $products = (unserialize($content['productActivity']));
+        $data['source'] = $this->notSetToEmptyString($content['sourceId']);
+        $data['email'] = $this->notSetToEmptyString($content['email']);
+        $data['orderNumber'] = $this->notSetToEmptyString($content['orderNum']);
+        $data['orderDate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderDate']))->toAtomString();
+        $data['orderStatus'] = $this->notSetToEmptyString($content['orderState']);
+        $data['orderTotal'] = $this->notSetToEmptyString($content['orderTotal']);
+        $data['description'] = $this->notSetToEmptyString($content['orderNote']);
+        $data['products'] = array();
+
+        foreach ($products as $id => $product) {
+            $data['products'][$id]['productId'] = $product['product_id'];
+            $data['products'][$id]['productName'] = $product['name'];
+            $data['products'][$id]['productQuantity'] = $product['qty'];
+            $data['products'][$id]['productPrice'] = $product['price'];
+            $data['products'][$id]['productDiscount'] = $product['discount'];
+        }
+
+        //\Cake\Log\Log::debug('Prestashop write $data: ' . print_r($data, true));
+        // \Cake\Log\Log::debug('Prestashop write customer_id: ' . print_r($content['customer_id'], true));
+
+        try {
+            $changeStatusBean = new ActivityEcommerceChangeStatusBean();
+            $this->createCrmConnection($content['customer_id']);
+            $changeStatusBean->setCustomer($content['customer_id'])
+                ->setSource($data['source'])
+                ->setToken($data['source'])// identificatore univoco della fonte del dato
+                ->setDataRaw($data);
+            ActionsManager::pushOrder($changeStatusBean);
+
+
+        } catch (\PDOException $e) {
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -91,7 +147,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
             // $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
-            $cmrRes = $crmManager->pushCartToCrm($content['customer_id'], $data);
+            $crmManager->pushCartToCrm($content['customer_id'], $data);
 
             return $cmrRes;
         } catch (\PDOException $e) {
@@ -188,9 +244,24 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 
     public function add_user($contact)
     {
+        //\Cake\Log\Log::debug('Prestashop add_user pre $contact: ' . print_r($contact, true));
         $contact['uniqueId'] = $contact['email'];
 
-        //   \Cake\Log\Log::debug('Prestashop content params: ' . print_r($contact, true));
+        if (!empty($contact['province'])) {
+            $contact['province'] = UtilitiesComponent::findCriteriaId($contact['province']);
+            //$contact['province'] = '20541';
+        }
+
+        if (!empty($contact['birthdaydate'])) {
+            $contact['birthdaydate'] .= " 00:00:00";
+            $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
+        }
+
+        if (!empty($contact['date_add'])) {
+            $contact['date'] = $contact['date_add'];
+        }
+
+        //\Cake\Log\Log::debug('Prestashop add_user post $contact: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
         if (empty($customerId)) {
@@ -198,7 +269,6 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             return false;
         }
 
-        //   \Cake\Log\Log::debug("add_user customerid ".$customerId);
         $this->createCrmConnection($customerId);
         $contactBean = new ActivityEcommerceAddUserBean();
 

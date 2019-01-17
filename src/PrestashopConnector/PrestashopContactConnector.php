@@ -8,14 +8,22 @@
 
 namespace WR\Connector\PrestashopConnector;
 
-
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
+use App\Lib\ActionsManager\ActionsManager;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Lib\ActionsManager\Activities\ActivityTicketActionBean;
+use App\Controller\MultiSchemaTrait;
+use Cake\I18n\Time;
+use App\Controller\Component\UtilitiesComponent;
+
 
 class PrestashopContactConnector extends PrestashopConnector
 {
+    use MultiSchemaTrait;
 
     public function __construct($params)
     {
@@ -73,7 +81,7 @@ class PrestashopContactConnector extends PrestashopConnector
      * @param $content
      * @return bool|\Cake\Datasource\EntityInterface|mixed
      */
-    public function add_user($content)
+    public function add_user_old($content)
     {
         //It's not correct to implement this here. Trying to find a different solutions
 //        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
@@ -122,7 +130,7 @@ class PrestashopContactConnector extends PrestashopConnector
                 'sourceid' => $content['email'],
                 'actionid' => $crmManager::$newslettertLandingPageSubmit,
                 //'title' => $crmManager::$ecommerceTypeId . $crmManager::$crmSeparator . $crmManager::$ecommerceActionContactId,
-                'note' => $crmManager::$ecommerceTypeId . $crmManager::$crmSeparator . $crmManager::$ecommerceActionContactId . " on " . $data['site_name']  .   $data['id_order_str'] . " : " .    $data['description'] ,
+                'note' => $crmManager::$ecommerceTypeId . $crmManager::$crmSeparator . $crmManager::$ecommerceActionContactId . " on " . $data['site_name'] . $data['id_order_str'] . " : " . $data['description'],
                 'properties' => serialize($data)
             );
 
@@ -139,6 +147,91 @@ class PrestashopContactConnector extends PrestashopConnector
         }
     }
 
+
+    public function add_user($contact)
+    {
+        //\Cake\Log\Log::debug('Prestashop add_user pre $contact: ' . print_r($contact, true));
+        $contact['uniqueId'] = $contact['email'];
+
+        \Cake\Log\Log::debug('PrestashopContact add_user post $contact: ' . print_r($contact, true));
+
+        $customerId = $contact['customer_id'];
+        if (empty($customerId)) {
+            // unauthorized
+            return false;
+        }
+
+        $this->createCrmConnection($customerId);
+        $contactBean = new ActivityEcommerceAddUserBean();
+
+        try {
+            $contactBean->setCustomer($customerId)
+                ->setSource($contact['site_name'])
+                ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
+                ->setDataRaw($contact);
+            //       \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
+            ActionsManager::pushActivity($contactBean);
+        } catch (\Throwable $th) {
+            // \Cake\Log\Log::debug('Prestashop contact exception: ' . print_r($th, true));
+            return false;
+        }
+        /*
+        */
+        if ($contact['ticket'] == 1) {
+            //$cmrRes = $crmManager->pushSalesTicketToCrm($content['customer_id'], $data, null, false);
+            $this->createTciket($contact, $customerId);
+        }
+
+        return true;
+    }
+
+
+    function createTciket($contact, $customerId)
+    {
+        $contactsTable = \Cake\ORM\TableRegistry::get('Crm.Contacts');
+        $usersTable = \Cake\ORM\TableRegistry::get('Users');
+        $ticketsTable = \Cake\ORM\TableRegistry::get('Crm.Tickets');
+
+        $time = Time::now();
+        $time->setTimezone('Europe/Rome');
+
+        $formHtml = $this->convertInputHtml($contact);
+        $user_id = $usersTable->getPaymentUserId($customerId);
+        $contact_id = $contactsTable->getContactsIDFormUserID($user_id);
+
+        $data = [
+            'start_date' => $time->i18nFormat('dd/MM/yyyy'),
+            'contact_sender' => $contact_id,
+            'contact_delegate' => $contact_id,
+            'status_ticket' => '1',
+            'priority' => 'Low',
+            'contact_ticket' => $contactsTable->getContactsIDFromEmail($contact['email']),
+            'title' => $contact['title'],
+            'note' => $contact['message'] . "<br><br>" . $formHtml
+        ];
+       // \Cake\Log\Log::debug('Prestashop createTciket $data: ' . print_r($data, true));
+
+
+        $result = $ticketsTable->saveTicket($customerId, $data, $contact_id);
+
+        $dataAction = [
+            'email1' => $contact['email'],
+        ];
+
+//          debug($result['data']['ticket_id']);
+
+        $data = array_merge($data, $dataAction);
+
+        $aTicket = new ActivityTicketActionBean();
+        $aTicket->setCustomer($customerId)
+            ->setSource($result['data']['ticket_id'])
+            ->setDataRaw($data)
+            ->setActionId('assign');
+
+        $res = ActionsManager::pushActivity($aTicket);
+    }
+
+
     private function notSetToEmptyString(&$myString)
     {
         return (!isset($myString)) ? '' : $myString;
@@ -153,6 +246,22 @@ class PrestashopContactConnector extends PrestashopConnector
     public function write_cart($content)
     {
         return $content;
+    }
+
+
+    public function convertInputHtml($data)
+    {
+        $html = null;
+
+        foreach ($data as $id => $value) {
+            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId") {
+                continue;
+            }
+            $html .= "<b>" . $id . "</b>: " . $value;
+            $html .= "<br>";
+        }
+
+        return $html;
     }
 
 }
