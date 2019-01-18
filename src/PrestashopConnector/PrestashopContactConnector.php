@@ -204,6 +204,7 @@ class PrestashopContactConnector extends PrestashopConnector
             'contact_sender' => $contact_id,
             'contact_delegate' => $contact_id,
             'status_ticket' => '1',
+            'classification' => 'Assistance',
             'priority' => 'Low',
             'contact_ticket' => $contactsTable->getContactsIDFromEmail($contact['email']),
             'title' => $contact['title'],
