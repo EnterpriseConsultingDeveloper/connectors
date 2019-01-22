@@ -153,7 +153,7 @@ class PrestashopContactConnector extends PrestashopConnector
         //\Cake\Log\Log::debug('Prestashop add_user pre $contact: ' . print_r($contact, true));
         $contact['uniqueId'] = $contact['email'];
 
-        \Cake\Log\Log::debug('PrestashopContact add_user post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('PrestashopContact add_user post $contact: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
         if (empty($customerId)) {
@@ -179,57 +179,10 @@ class PrestashopContactConnector extends PrestashopConnector
         */
         if ($contact['ticket'] == 1) {
             //$cmrRes = $crmManager->pushSalesTicketToCrm($content['customer_id'], $data, null, false);
-            $this->createTciket($contact, $customerId);
+            $this->createTicket($contact, $customerId);
         }
 
         return true;
-    }
-
-
-    function createTciket($contact, $customerId)
-    {
-        $contactsTable = \Cake\ORM\TableRegistry::get('Crm.Contacts');
-        $usersTable = \Cake\ORM\TableRegistry::get('Users');
-        $ticketsTable = \Cake\ORM\TableRegistry::get('Crm.Tickets');
-
-        $time = Time::now();
-        $time->setTimezone('Europe/Rome');
-
-        $formHtml = $this->convertInputHtml($contact);
-        $user_id = $usersTable->getPaymentUserId($customerId);
-        $contact_id = $contactsTable->getContactsIDFormUserID($user_id);
-
-        $data = [
-            'start_date' => $time->i18nFormat('dd/MM/yyyy'),
-            'contact_sender' => $contact_id,
-            'contact_delegate' => $contact_id,
-            'status_ticket' => '1',
-            'classification' => 'Assistance',
-            'priority' => 'Low',
-            'contact_ticket' => $contactsTable->getContactsIDFromEmail($contact['email']),
-            'title' => $contact['title'],
-            'note' => $contact['message'] . "<br><br>" . $formHtml
-        ];
-       // \Cake\Log\Log::debug('Prestashop createTciket $data: ' . print_r($data, true));
-
-
-        $result = $ticketsTable->saveTicket($customerId, $data, $contact_id);
-
-        $dataAction = [
-            'email1' => $contact['email'],
-        ];
-
-//          debug($result['data']['ticket_id']);
-
-        $data = array_merge($data, $dataAction);
-
-        $aTicket = new ActivityTicketActionBean();
-        $aTicket->setCustomer($customerId)
-            ->setSource($result['data']['ticket_id'])
-            ->setDataRaw($data)
-            ->setActionId('assign');
-
-        $res = ActionsManager::pushActivity($aTicket);
     }
 
 
@@ -249,20 +202,5 @@ class PrestashopContactConnector extends PrestashopConnector
         return $content;
     }
 
-
-    public function convertInputHtml($data)
-    {
-        $html = null;
-
-        foreach ($data as $id => $value) {
-            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId") {
-                continue;
-            }
-            $html .= "<b>" . $id . "</b>: " . $value;
-            $html .= "<br>";
-        }
-
-        return $html;
-    }
 
 }

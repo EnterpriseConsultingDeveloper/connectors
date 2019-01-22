@@ -13,10 +13,18 @@ use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
+use App\Lib\ActionsManager\ActionsManager;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Lib\ActionsManager\Activities\ActivityTicketActionBean;
+use App\Controller\MultiSchemaTrait;
+use Cake\I18n\Time;
+use App\Controller\Component\UtilitiesComponent;
+
 
 class WordpressNewsletterConnector extends WordpressConnector
 {
-
+    use MultiSchemaTrait;
     public function __construct($params)
     {
         parent::__construct($params);
@@ -73,7 +81,7 @@ class WordpressNewsletterConnector extends WordpressConnector
      * @param $content
      * @return bool|\Cake\Datasource\EntityInterface|mixed
      */
-    public function add_user($content)
+    public function add_user_old($content)
     {
         //It's not correct to implement this here. Trying to find a different solutions
 //        $nlRecipientLists = TableRegistry::get('MarketingTools.MtNewsletterRecipientLists');
@@ -112,6 +120,43 @@ class WordpressNewsletterConnector extends WordpressConnector
             return false;
         }
     }
+
+
+
+
+    public function add_user($contact)
+    {
+        //\Cake\Log\Log::debug('Prestashop add_user pre $contact: ' . print_r($contact, true));
+        $contact['uniqueId'] = $contact['email'];
+
+        // \Cake\Log\Log::debug('Wordpress add_user post $contact: ' . print_r($contact, true));
+
+        $customerId = $contact['customer_id'];
+        if (empty($customerId)) {
+            // unauthorized
+            return false;
+        }
+
+        $this->createCrmConnection($customerId);
+        $contactBean = new ActivityEcommerceAddUserBean();
+
+        try {
+            $contactBean->setCustomer($customerId)
+                ->setSource($contact['site_name'])
+                ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
+                ->setDataRaw($contact);
+            //       \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
+            ActionsManager::pushActivity($contactBean);
+        } catch (\Throwable $th) {
+            // \Cake\Log\Log::debug('Prestashop contact exception: ' . print_r($th, true));
+            return false;
+        }
+
+        return true;
+    }
+
+
+
 
     private function notSetToEmptyString(&$myString)
     {

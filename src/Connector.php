@@ -5,9 +5,18 @@
  * Date: 24/02/2016
  * Time: 15:34
  */
+/*
+ * Edit by Fabio Mugnano.
+ * User: user
+ * Date: 21/01/2019
+ * Time: 10:15
+ * */
 
 namespace WR\Connector;
 
+use Cake\I18n\Time;
+use App\Lib\ActionsManager\Activities\ActivityTicketActionBean;
+use App\Lib\ActionsManager\ActionsManager;
 
 abstract class Connector
 {
@@ -73,7 +82,75 @@ abstract class Connector
     }
 
     public function callback($params) {
-      return "Callback " . $params . " da FacebookConnector";
+        return "Callback " . $params . " da FacebookConnector";
     }
+
+
+    function createTicket($contact, $customerId)
+    {
+        $contactsTable = \Cake\ORM\TableRegistry::get('Crm.Contacts');
+        $usersTable = \Cake\ORM\TableRegistry::get('Users');
+        $ticketsTable = \Cake\ORM\TableRegistry::get('Crm.Tickets');
+
+        $time = Time::now();
+        $time->setTimezone('Europe/Rome');
+
+        $formHtml = $this->convertInputHtml($contact);
+        $user_id = $usersTable->getPaymentUserId($customerId);
+        $contact_id = $contactsTable->getContactsIDFormUserID($user_id);
+
+        $data = [
+            'start_date' => $time->i18nFormat('dd/MM/yyyy'),
+            'contact_sender' => $contact_id,
+            'contact_delegate' => $contact_id,
+            'status_ticket' => '1',
+            'priority' => 'Low',
+            'classification' => 'Assistance',
+            'contact_ticket' => $contactsTable->getContactsIDFromEmail($contact['email']),
+            'title' => $contact['title'],
+            'note' => $contact['message'] . "<br><br>" . $formHtml
+        ];
+
+        \Cake\Log\Log::debug('Wordpress createTicket $data: ' . print_r($data, true));
+
+
+        $result = $ticketsTable->saveTicket($customerId, $data, $contact_id);
+
+        $dataAction = [
+            'email1' => $contact['email'],
+        ];
+
+
+
+        $data = array_merge($data, $dataAction);
+
+        $aTicket = new ActivityTicketActionBean();
+        $aTicket->setCustomer($customerId)
+            ->setSource($result['data']['ticket_id'])
+            ->setDataRaw($data)
+            ->setActionId('assign');
+
+        $res = ActionsManager::pushActivity($aTicket);
+
+        return $res;
+    }
+
+
+
+    public function convertInputHtml($data)
+    {
+        $html = null;
+
+        foreach ($data as $id => $value) {
+            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId") {
+                continue;
+            }
+            $html .= "<b>" . $id . "</b>: " . $value;
+            $html .= "<br>";
+        }
+
+        return $html;
+    }
+
 
 }
