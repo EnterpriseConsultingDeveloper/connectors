@@ -5,6 +5,7 @@
  * Date: 24/02/2016
  * Time: 15:34
  */
+
 /*
  * Edit by Fabio Mugnano.
  * User: user
@@ -21,6 +22,7 @@ use App\Lib\ActionsManager\ActionsManager;
 abstract class Connector
 {
     public $connector;
+
     public function __construct($connector)
     {
         $this->connector = $connector; // Configuration params
@@ -81,7 +83,8 @@ abstract class Connector
 
     }
 
-    public function callback($params) {
+    public function callback($params)
+    {
         return "Callback " . $params . " da FacebookConnector";
     }
 
@@ -111,15 +114,17 @@ abstract class Connector
             'note' => $contact['message'] . "<br><br>" . $formHtml
         ];
 
-        \Cake\Log\Log::debug('Wordpress createTicket $data: ' . print_r($data, true));
+        //\Cake\Log\Log::debug('Whiterabbit createTicket $data: ' . print_r($data, true));
 
 
         $result = $ticketsTable->saveTicket($customerId, $data, $contact_id);
 
+
+        // \Cake\Log\Log::debug('Whiterabbit createTicket $result: ' . print_r($data, true));
+
         $dataAction = [
             'email1' => $contact['email'],
         ];
-
 
 
         $data = array_merge($data, $dataAction);
@@ -136,13 +141,12 @@ abstract class Connector
     }
 
 
-
     public function convertInputHtml($data)
     {
         $html = null;
 
         foreach ($data as $id => $value) {
-            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId") {
+            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId" || $id == "operation") {
                 continue;
             }
             $html .= "<b>" . $id . "</b>: " . $value;
