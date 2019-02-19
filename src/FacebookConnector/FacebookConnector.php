@@ -273,6 +273,10 @@ class FacebookConnector extends Connector implements IConnector {
         $http = new Client();
         $response = $http->get($urlToRead);
         $data = $response->json;
+
+        if (isset($data['error']))
+          return [];
+
         $formattedResult = $this->format_result($data);
         return ($formattedResult);
     }

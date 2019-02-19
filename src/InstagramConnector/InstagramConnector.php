@@ -72,6 +72,9 @@ class InstagramConnector extends Connector implements IConnector
         $jsonDecoded = json_decode($response, true); // Returns an array
         //debug($jsonDecoded); die;
         $comments = array();
+        if(!isset($jsonDecoded['data']));
+          return($jsonDecoded);
+
         foreach($jsonDecoded['data'] as $key => $value) {
             $commentsNumber = $value['comments']['count'];
             if($commentsNumber > 0) {
