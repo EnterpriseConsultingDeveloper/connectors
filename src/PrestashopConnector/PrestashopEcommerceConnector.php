@@ -78,25 +78,55 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             'orderTotal' => '100.10'
         );*/
         $data = [];
-        // \Cake\Log\Log::debug('Prestashop write $content call: ' . print_r($content, true));
+        //\Cake\Log\Log::debug('Prestashop $content call: ' . print_r($content, true));
 
 
-        $products = (unserialize($content['productActivity']));
+        $products = unserialize($content['productActivity']);
+        $shipping = unserialize($content['shipping']);
+
+
         $data['source'] = $this->notSetToEmptyString($content['sourceId']);
         $data['email'] = $this->notSetToEmptyString($content['email']);
-        $data['orderNumber'] = $this->notSetToEmptyString($content['orderNum']);
-        $data['orderDate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderDate']))->toAtomString();
-        $data['orderStatus'] = $this->notSetToEmptyString($content['orderState']);
-        $data['orderTotal'] = $this->notSetToEmptyString($content['orderTotal']);
+        $data['number'] = $this->notSetToEmptyString($content['orderNum']);
+        $data['orderdate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderDate']))->toAtomString();
+        $data['order_status'] = $this->notSetToEmptyString($content['orderState']);
+        $data['total'] = $this->notSetToEmptyString($content['orderTotal']);
         $data['description'] = $this->notSetToEmptyString($content['orderNote']);
+
+        /*new*/
+        $data['currency'] = $this->notSetToEmptyString($content['currency']);
+        $data['tax_total'] = $this->notSetToEmptyString($content['tax_total']);
+        $data['subtotal'] = $this->notSetToEmptyString($content['subtotal']);
+        $data['cart_discount'] = $this->notSetToEmptyString($content['cart_discount']);
+        $data['payment_method'] = $this->notSetToEmptyString($content['payment_method']);
+        $data['shipping_total'] = $this->notSetToEmptyString($shipping['total']);
+        $data['shipping_firstname'] = $this->notSetToEmptyString($shipping['firstname']);
+        $data['shipping_lastname'] = $this->notSetToEmptyString($shipping['lastname']);
+        $data['shipping_address'] = $this->notSetToEmptyString($shipping['address']);
+        $data['shipping_postalcode'] = $this->notSetToEmptyString($shipping['postalcode']);
+        $data['shipping_city'] = $this->notSetToEmptyString($shipping['city']);
+        $data['shipping_country'] = $this->notSetToEmptyString($shipping['country']);
+        $data['shipping_phone'] = $this->notSetToEmptyString($shipping['phone']);
+        $data['shipping_tax'] = $this->notSetToEmptyString($shipping['tax']);
+        $data['shipping_method'] = $this->notSetToEmptyString($shipping['method']);
+        /*new*/
+
+
         $data['products'] = array();
 
         foreach ($products as $id => $product) {
-            $data['products'][$id]['productId'] = $product['product_id'];
-            $data['products'][$id]['productName'] = $product['name'];
-            $data['products'][$id]['productQuantity'] = $product['qty'];
-            $data['products'][$id]['productPrice'] = $product['price'];
-            $data['products'][$id]['productDiscount'] = $product['discount'];
+            $data['products'][$id]['product_id'] = $product['product_id'];
+            $data['products'][$id]['name'] = $product['name'];
+            $data['products'][$id]['qty'] = $product['qty'];
+            $data['products'][$id]['price'] = $product['price'];
+            $data['products'][$id]['discount'] = $product['discount'];
+            $data['products'][$id]['description'] = $product['description'];
+            /*new*/
+            $data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
+            $data['products'][$id]['description'] = $this->notSetToEmptyString($product['description']);
+            $data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax']);
+            $data['products'][$id]['category'] = $this->notSetToEmptyString($product['category']);
+            /*new*/
         }
 
         //\Cake\Log\Log::debug('Prestashop write $data: ' . print_r($data, true));
