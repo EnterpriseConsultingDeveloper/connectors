@@ -115,12 +115,12 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['products'] = array();
 
         foreach ($products as $id => $product) {
-            $data['products'][$id]['product_id'] = $product['product_id'];
-            $data['products'][$id]['name'] = $product['name'];
-            $data['products'][$id]['qty'] = $product['qty'];
-            $data['products'][$id]['price'] = $product['price'];
-            $data['products'][$id]['discount'] = $product['discount'];
-            $data['products'][$id]['description'] = $product['description'];
+            $data['products'][$id]['product_id'] = $this->notSetToEmptyString($product['product_id']);
+            $data['products'][$id]['name'] = $this->notSetToEmptyString($product['name']);
+            $data['products'][$id]['qty'] = $this->notSetToEmptyString($product['qty']);
+            $data['products'][$id]['price'] = $this->notSetToEmptyString($product['price']);
+            $data['products'][$id]['discount'] = $this->notSetToEmptyString($product['discount']);
+
             /*new*/
             $data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
             $data['products'][$id]['description'] = $this->notSetToEmptyString($product['description']);
