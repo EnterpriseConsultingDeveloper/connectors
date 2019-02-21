@@ -115,27 +115,52 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data = [];
         // \Cake\Log\Log::debug('Prestashop write $content call: ' . print_r($content, true));
 
-
         $products = (unserialize($content['productActivity']));
-        $data['source'] = $this->notSetToEmptyString($content['sourceId']);
+        $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['source']));
         $data['email'] = $this->notSetToEmptyString($content['email']);
-        $data['orderNumber'] = $this->notSetToEmptyString($content['orderNum']);
-        $data['orderDate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderDate']))->toAtomString();
-        $data['orderStatus'] = $this->notSetToEmptyString($content['orderState']);
-        $data['orderTotal'] = $this->notSetToEmptyString($content['orderTotal']);
-        $data['description'] = $this->notSetToEmptyString($content['orderNote']);
+        $data['number'] = $this->notSetToEmptyString($content['number']);
+        $data['orderdate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderdate']))->toAtomString();
+        $data['order_status'] = $this->notSetToEmptyString($content['order_status']);
+        $data['total'] = $this->notSetToEmptyString($content['total']);
+
+        $data['currency'] = $this->notSetToEmptyString($content['currency']);
+        $data['tax_total'] = $this->notSetToEmptyString($content['tax_total']);
+        $data['subtotal'] = $this->notSetToEmptyString($content['subtotal']);
+        $data['cart_discount'] = $this->notSetToEmptyString($content['cart_discount']);
+
+        $data['shipping_total'] = $this->notSetToEmptyString($content['shipping_total']);
+        $data['shipping_firstname'] = $this->notSetToEmptyString($content['shipping_firstname']);
+        $data['shipping_lastname'] = $this->notSetToEmptyString($content['shipping_lastname']);
+        $data['shipping_address'] = $this->notSetToEmptyString($content['shipping_address']);
+
+        $data['shipping_postalcode'] = $this->notSetToEmptyString($content['shipping_postalcode']);
+        $data['shipping_city'] = $this->notSetToEmptyString($content['shipping_city']);
+        $data['shipping_country'] = $this->notSetToEmptyString($content['shipping_country']);
+        $data['shipping_phone'] = $this->notSetToEmptyString($content['shipping_phone']);
+
+        $data['shipping_tax'] = $this->notSetToEmptyString($content['shipping_tax']);
+        $data['payment_method'] = $this->notSetToEmptyString($content['payment_method']);
+        $data['shipping_method'] = $this->notSetToEmptyString($content['shipping_method']);
+        /*new*/
+        $data['description'] = $this->notSetToEmptyString($content['description']);
         $data['products'] = array();
 
         foreach ($products as $id => $product) {
-            $data['products'][$id]['productId'] = $product['product_id'];
-            $data['products'][$id]['productName'] = $product['name'];
-            $data['products'][$id]['productQuantity'] = $product['qty'];
-            $data['products'][$id]['productPrice'] = $product['price'];
-            $data['products'][$id]['productDiscount'] = $product['discount'];
+            $data['products'][$id]['product_id'] = $product['product_id'];
+            $data['products'][$id]['name'] = $product['name'];
+            $data['products'][$id]['qty'] = $product['qty'];
+            $data['products'][$id]['price'] = $product['price'];
+            $data['products'][$id]['discount'] = $product['discount'];
+            /*new*/
+            $data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
+            $data['products'][$id]['description'] = $this->notSetToEmptyString($product['description']);
+            $data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax']);
+            $data['products'][$id]['category'] = $this->notSetToEmptyString($product['category']);
+            /*new*/
         }
 
         //\Cake\Log\Log::debug('Whiterabbit write $data: ' . print_r($data, true));
-        // \Cake\Log\Log::debug('Prestashop write customer_id: ' . print_r($content['customer_id'], true));
+        // \Cake\Log\Log::debug('Whiterabbit write customer_id: ' . print_r($content['customer_id'], true));
 
         try {
             $changeStatusBean = new ActivityEcommerceChangeStatusBean();

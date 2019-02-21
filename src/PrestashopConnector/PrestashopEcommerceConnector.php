@@ -84,8 +84,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $products = unserialize($content['productActivity']);
         $shipping = unserialize($content['shipping']);
 
-
-        $data['source'] = $this->notSetToEmptyString($content['sourceId']);
+        $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
         $data['email'] = $this->notSetToEmptyString($content['email']);
         $data['number'] = $this->notSetToEmptyString($content['orderNum']);
         $data['orderdate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderDate']))->toAtomString();
@@ -120,7 +119,6 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $data['products'][$id]['qty'] = $this->notSetToEmptyString($product['qty']);
             $data['products'][$id]['price'] = $this->notSetToEmptyString($product['price']);
             $data['products'][$id]['discount'] = $this->notSetToEmptyString($product['discount']);
-
             /*new*/
             $data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
             $data['products'][$id]['description'] = $this->notSetToEmptyString($product['description']);
