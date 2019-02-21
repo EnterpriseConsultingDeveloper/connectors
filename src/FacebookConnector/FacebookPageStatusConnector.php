@@ -28,6 +28,10 @@ class FacebookPageStatusConnector extends FacebookConnector
     $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
 
     $post = strip_tags($content['content']['abstract']);
+
+    if (empty($post))
+      return false;
+
     /*
     if ($content['content']['link'] != null) {
       $post .= " " . $content['content']['link'];
