@@ -81,10 +81,15 @@ class WordpressEcommerceConnector extends WordpressConnector
         );*/
         $data = [];
         // \Cake\Log\Log::debug('Wordpress write $content call: ' . print_r($content, true));
+        $shipping = array();
+        $products = array();
+        if (!empty($content['productActivity'])){
+            $products = unserialize($content['productActivity'])  ;
+        }
 
-
-        $products = unserialize($content['productActivity']);
-        $shipping = unserialize($content['shipping']);
+        if (!empty($content['shipping'])){
+            $shipping = unserialize($content['shipping']); ;
+        }
 
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
         $data['email'] = $this->notSetToEmptyString($content['email']);
