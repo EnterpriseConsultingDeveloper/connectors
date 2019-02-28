@@ -38,11 +38,13 @@ class RSSConnector extends Connector implements IConnector
 
     public function readPublicPage($objectId = null)
     {
+
+        sleep(1); // fix per google, troppe richeste ravvicinate bloccano il recupero
+
         //debug($objectId); die;
         $rssArray = [];
         if($objectId != null) {
             $content = file_get_contents($objectId); // Feed url
-
             try {
                 $x = new \SimpleXMLElement($content);
                 if(isset($x->channel->item))
