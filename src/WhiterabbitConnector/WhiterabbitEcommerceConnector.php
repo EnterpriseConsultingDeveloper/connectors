@@ -9,6 +9,7 @@
 namespace WR\Connector\WhiterabbitConnector;
 
 
+use App\Lib\ActionsManager\Activities\ActivityEcommerceEditUserBean;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
@@ -23,7 +24,9 @@ use App\Controller\Component\UtilitiesComponent;
 class WhiterabbitEcommerceConnector extends WhiterabbitConnector
 {
     use MultiSchemaTrait;
-    public function __construct($params) {
+
+    public function __construct($params)
+    {
         parent::__construct($params);
     }
 
@@ -37,14 +40,14 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
         $data['orderNum'] = $this->notSetToEmptyString($content['orderNum']);
         $data['orderDate'] = $this->notSetToEmptyString($content['orderDate']);
-        $data['orderTotal'] =  $this->notSetToEmptyString($content['orderTotal']);
-        $data['email'] =  $this->notSetToEmptyString($content['email']);
-        $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
-        $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
+        $data['orderTotal'] = $this->notSetToEmptyString($content['orderTotal']);
+        $data['email'] = $this->notSetToEmptyString($content['email']);
+        $data['orderState'] = $this->notSetToEmptyString($content['orderState']);
+        $data['orderNote'] = $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = unserialize($content['productActivity']);
 
-        $async = isset($content['crm_push_async']) && $content['crm_push_async']==true;
+        $async = isset($content['crm_push_async']) && $content['crm_push_async'] == true;
 
         try {
             $crmManager = new CRMManager();
@@ -102,6 +105,57 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
 
         return true;
     }
+
+
+    public function edit_user($contact)
+    {
+        //\Cake\Log\Log::debug('Wordpress add_user pre $contact: ' . print_r($contact, true));
+        $contact['uniqueId'] = $contact['email'];
+
+        if (!empty($contact['province'])) {
+            $contact['province'] = UtilitiesComponent::findCriteriaId($contact['province']);
+            //$contact['province'] = '20541';
+        }
+
+        if (!empty($contact['birthdaydate'])) {
+            $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
+        }
+
+        if (!empty($contact['date_add'])) {
+            $contact['date'] = $contact['date_add'];
+        }
+
+        //\Cake\Log\Log::debug('Whiterabbit edit post $contact: ' . print_r($contact, true));
+
+
+        $customerId = $contact['customer_id'];
+        if (empty($customerId)) {
+            // unauthorized
+            return false;
+        }
+
+        $this->createCrmConnection($customerId);
+
+
+        $contactBean = new ActivityEcommerceEditUserBean();
+
+        try {
+            $contactBean->setCustomer($customerId)
+                ->setSource($contact['site_name'])
+                ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
+                ->setDataRaw($contact);
+            //       \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
+            ActionsManager::pushActivity($contactBean);
+        } catch (\Throwable $th) {
+            // \Cake\Log\Log::debug('Prestashop contact exception: ' . print_r($th, true));
+            return false;
+        }
+        /*
+        */
+
+        return true;
+    }
+
 
     public function write($content)
     {
@@ -217,7 +271,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
-        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['email1'] = $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
@@ -257,7 +311,8 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         }
     }
 
-    private function notSetToEmptyString (&$myString) {
+    private function notSetToEmptyString(&$myString)
+    {
         return (!isset($myString)) ? '' : $myString;
     }
 
