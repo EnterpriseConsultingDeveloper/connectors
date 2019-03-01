@@ -77,7 +77,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Whiterabbit add_user post $contact: ' . print_r($contact, true));
+        \Cake\Log\Log::debug('Whiterabbit add_user post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
@@ -125,7 +125,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Whiterabbit edit post $contact: ' . print_r($contact, true));
+        \Cake\Log\Log::debug('Whiterabbit edit post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
@@ -169,7 +169,13 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data = [];
         // \Cake\Log\Log::debug('Prestashop write $content call: ' . print_r($content, true));
 
-        $products = (unserialize($content['productActivity']));
+
+        $products = array();
+        if (!empty($content['productActivity'])){
+            $products = unserialize($content['productActivity'])  ;
+        }
+
+
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['source']));
         $data['email'] = $this->notSetToEmptyString($content['email']);
         $data['number'] = $this->notSetToEmptyString($content['number']);
@@ -213,7 +219,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             /*new*/
         }
 
-        //\Cake\Log\Log::debug('Whiterabbit write $data: ' . print_r($data, true));
+        \Cake\Log\Log::debug('Whiterabbit write $data: ' . print_r($data, true));
         // \Cake\Log\Log::debug('Whiterabbit write customer_id: ' . print_r($content['customer_id'], true));
 
         try {
