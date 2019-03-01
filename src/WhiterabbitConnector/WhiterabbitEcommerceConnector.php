@@ -125,7 +125,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        \Cake\Log\Log::debug('Whiterabbit edit post $contact: ' . print_r($contact, true));
+        \Cake\Log\Log::debug('Whiterabbit edit_user post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
