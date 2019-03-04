@@ -62,6 +62,9 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
     public function add_user($contact)
     {
         //\Cake\Log\Log::debug('Wordpress add_user pre $contact: ' . print_r($contact, true));
+
+        $contact['email'] = strtolower($contact['email']);
+
         $contact['uniqueId'] = $contact['email'];
 
         if (!empty($contact['province'])) {
@@ -77,7 +80,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        \Cake\Log\Log::debug('Whiterabbit add_user post $contact: ' . print_r($contact, true));
+        \Cake\Log\Log::debug('Whiterabbit add_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
@@ -110,6 +113,8 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
     public function edit_user($contact)
     {
         //\Cake\Log\Log::debug('Wordpress add_user pre $contact: ' . print_r($contact, true));
+        $contact['email'] = strtolower($contact['email']);
+
         $contact['uniqueId'] = $contact['email'];
 
         if (!empty($contact['province'])) {
@@ -125,7 +130,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        \Cake\Log\Log::debug('Whiterabbit edit_user post $contact: ' . print_r($contact, true));
+        \Cake\Log\Log::debug('Whiterabbit edit_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
@@ -166,13 +171,17 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             'orderDate' => '2016-11-30',
             'orderTotal' => '100.10'
         );*/
+
+
+        $content['email'] = strtolower($content['email']);
+
         $data = [];
         // \Cake\Log\Log::debug('Prestashop write $content call: ' . print_r($content, true));
 
 
         $products = array();
-        if (!empty($content['productActivity'])){
-            $products = unserialize($content['productActivity'])  ;
+        if (!empty($content['productActivity'])) {
+            $products = unserialize($content['productActivity']);
         }
 
 
@@ -219,7 +228,8 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             /*new*/
         }
 
-        \Cake\Log\Log::debug('Whiterabbit write $data: ' . print_r($data, true));
+        \Cake\Log\Log::debug('Whiterabbit write ' . @$content['email'] . ' $data: ' . print_r($data, true));
+
         // \Cake\Log\Log::debug('Whiterabbit write customer_id: ' . print_r($content['customer_id'], true));
 
         try {
