@@ -156,6 +156,12 @@ class PrestashopContactConnector extends PrestashopConnector
         //\Cake\Log\Log::debug('PrestashopContact add_user post $contact: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Prestashop function add_user customer disabled. customer_id ' . $customerId);
+            return false;
+        }
+        
         if (empty($customerId)) {
             // unauthorized
             return false;

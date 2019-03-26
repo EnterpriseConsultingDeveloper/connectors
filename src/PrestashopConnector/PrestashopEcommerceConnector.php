@@ -78,17 +78,25 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             'orderTotal' => '100.10'
         );*/
         $data = [];
-        //\Cake\Log\Log::debug('Prestashop $content call: ' . print_r($content, true));
+        //\Cake\Log\Log::debug('Prestashop $content ' . $content['email'] . ' call: ' . print_r($content, true));
+
+        if ($this->ceckCustomerEnabled($content['customer_id']) == false) {
+            \Cake\Log\Log::debug('Prestashop function write customer disabled. customer_id ' . $content['customer_id']);
+            return false;
+        }
+
 
         $shipping = array();
         $products = array();
-        if (!empty($content['productActivity'])){
-            $products = unserialize($content['productActivity'])  ;
+        if (!empty($content['productActivity'])) {
+            $products = unserialize($content['productActivity']);
         }
 
-        if (!empty($content['shipping'])){
-            $shipping = unserialize($content['shipping']); ;
+        if (!empty($content['shipping'])) {
+            $shipping = unserialize($content['shipping']);;
         }
+
+        $content['email'] = strtolower($content['email']);
 
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
         $data['email'] = $this->notSetToEmptyString($content['email']);
@@ -296,8 +304,14 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         }
 
         //\Cake\Log\Log::debug('Prestashop add_user post $contact: ' . print_r($contact, true));
-
         $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Prestashop function add_user customer disabled. customer_id ' . $customerId);
+            return false;
+        }
+
+
         if (empty($customerId)) {
             // unauthorized
             return false;

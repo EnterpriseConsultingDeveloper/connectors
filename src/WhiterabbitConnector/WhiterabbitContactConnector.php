@@ -67,6 +67,12 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
         //\Cake\Log\Log::debug('WhiterabbitContact add_user post $contact: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Whiterabbit function add_user customer disabled. customer_id ' . $customerId);
+            return false;
+        }
+
         if (empty($customerId)) {
             // unauthorized
             return false;

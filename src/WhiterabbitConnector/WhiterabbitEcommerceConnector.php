@@ -80,10 +80,16 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        \Cake\Log\Log::debug('Whiterabbit add_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
-
+        //\Cake\Log\Log::debug('Whiterabbit add_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Whiterabbit function add_user customer disabled. customer_id ' . $customerId);
+            return false;
+        }
+
+
         if (empty($customerId)) {
             // unauthorized
             return false;
@@ -130,7 +136,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        \Cake\Log\Log::debug('Whiterabbit edit_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Whiterabbit edit_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
@@ -172,23 +178,33 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             'orderTotal' => '100.10'
         );*/
 
+        $customerId = $content['customer_id'];
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Whiterabbit function write customer disabled. customer_id ' . $customerId);
+            return false;
+        }
 
         $content['email'] = strtolower($content['email']);
 
         $data = [];
-        // \Cake\Log\Log::debug('Prestashop write $content call: ' . print_r($content, true));
-
+        // \Cake\Log\Log::debug('Whiterabbit write $content call: ' . print_r($content, true));
 
         $products = array();
         if (!empty($content['productActivity'])) {
             $products = unserialize($content['productActivity']);
         }
 
-
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['source']));
         $data['email'] = $this->notSetToEmptyString($content['email']);
         $data['number'] = $this->notSetToEmptyString($content['number']);
+
+        if (!empty($content['orderdate'])) {
         $data['orderdate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderdate']))->toAtomString();
+        } else {
+            \Cake\Log\Log::debug('Whiterabbit write orderdate null $content call: ' . print_r($content, true));
+            $data['orderdate'] = Time::now()->toAtomString();
+        }
+
         $data['order_status'] = $this->notSetToEmptyString($content['order_status']);
         $data['total'] = $this->notSetToEmptyString($content['total']);
 
@@ -228,7 +244,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             /*new*/
         }
 
-        \Cake\Log\Log::debug('Whiterabbit write ' . @$content['email'] . ' $data: ' . print_r($data, true));
+       // \Cake\Log\Log::debug('Whiterabbit write ' . @$content['email'] . " - Order id " . @$content['number'] . " - Order Status " . $content['order_status'] . ' $data: ' . print_r($data, true));
 
         // \Cake\Log\Log::debug('Whiterabbit write customer_id: ' . print_r($content['customer_id'], true));
 

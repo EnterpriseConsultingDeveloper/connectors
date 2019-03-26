@@ -23,7 +23,9 @@ use App\Controller\Component\UtilitiesComponent;
 class WordpressEcommerceConnector extends WordpressConnector
 {
     use MultiSchemaTrait;
-    public function __construct($params) {
+
+    public function __construct($params)
+    {
         parent::__construct($params);
     }
 
@@ -81,6 +83,14 @@ class WordpressEcommerceConnector extends WordpressConnector
         );*/
         $data = [];
         // \Cake\Log\Log::debug('Wordpress write $content call: ' . print_r($content, true));
+
+
+        $customerId = $content['customer_id'];
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Wordpress function write customer disabled. customer_id ' . $customerId);
+            return false;
+        }
+
         $shipping = array();
         $products = array();
         if (!empty($content['productActivity'])){
@@ -258,6 +268,12 @@ class WordpressEcommerceConnector extends WordpressConnector
         //\Cake\Log\Log::debug('Prestashop add_user post $contact: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Wordpress function add_user customer disabled. customer_id ' . $customerId);
+            return false;
+        }
+
         if (empty($customerId)) {
             // unauthorized
             return false;

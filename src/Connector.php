@@ -140,6 +140,19 @@ abstract class Connector
         return $res;
     }
 
+    public function ceckCustomerEnabled($customer_id)
+    {
+        $customersTable = \Cake\ORM\TableRegistry::get('Customers');
+        $customer = $customersTable->find()
+            ->where(['Customers.id' => $customer_id])
+            ->first();
+
+        if (!$customer)
+            return false;
+
+        return $customer['enabled'];
+
+    }
 
     public function convertInputHtml($data)
     {
