@@ -1,0 +1,57 @@
+{
+  "name":"LinkedinConnector",
+  "description":"Linkedin connector for WhiteRabbit suite",
+  "icon":"fa-linkedin",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"Linkedin",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"Linkedin Post",
+          "permitted_operations":"RPDU",
+          "connection_string":"LinkedinProfileStatusConnector",
+          "type": "social"
+        }
+      ],
+      "settings":[
+        {
+          "name":"client_id",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"client_secret",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"code",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"access_token",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"token_expires_in",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        }
+      ]
+    }
+  ]
+}
