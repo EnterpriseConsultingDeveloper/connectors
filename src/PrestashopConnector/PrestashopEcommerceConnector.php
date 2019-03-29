@@ -166,10 +166,10 @@ class PrestashopEcommerceConnector extends PrestashopConnector
      * Funzione per isnerire ecommerce.abandonedCart tra attività per un customer
      * @param $content
      * @return bool
+     * @return bool
+     * @copyright (c) 2018, WhiteRabbit srl
      * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
      * @add: 05/10/2018
-     * @copyright (c) 2018, WhiteRabbit srl
-     * @return bool
      */
 
     public function write_cart($content)
@@ -189,7 +189,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
             // $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
-            $crmManager->pushCartToCrm($content['customer_id'], $data);
+            $cmrRes = $crmManager->pushCartToCrm($content['customer_id'], $data);
 
             return $cmrRes;
         } catch (\PDOException $e) {
