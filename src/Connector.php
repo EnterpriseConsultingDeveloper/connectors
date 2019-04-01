@@ -159,7 +159,7 @@ abstract class Connector
         $html = null;
 
         foreach ($data as $id => $value) {
-            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId" || $id == "operation") {
+            if ($id == "customer_id" || $id == "connector_instance_channel_id" || $id == "uniqueId" || $id == "operation" || $id == "properties" ) {
                 continue;
             }
             $html .= "<b>" . $id . "</b>: " . $value;

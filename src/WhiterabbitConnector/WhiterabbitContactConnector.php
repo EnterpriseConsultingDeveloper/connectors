@@ -1,9 +1,9 @@
 <?php
 /**
- * Created by Dino Fratelli.
+ * Created by Fabio Mugnano.
  * User: user
- * Date: 24/02/2016
- * Time: 15:31
+ * Date: 28/03/2019
+ * Time: 12:00
  */
 
 namespace WR\Connector\WhiterabbitConnector;
@@ -16,6 +16,7 @@ use App\Lib\CRM\CRMManager;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Lib\ActionsManager\Activities\ActivitySiteSubmitFormBean;
 use App\Controller\MultiSchemaTrait;
 use Cake\I18n\Time;
 use App\Controller\Component\UtilitiesComponent;
@@ -23,7 +24,9 @@ use App\Controller\Component\UtilitiesComponent;
 class WhiterabbitContactConnector extends WhiterabbitConnector
 {
     use MultiSchemaTrait;
-    public function __construct($params) {
+
+    public function __construct($params)
+    {
         parent::__construct($params);
     }
 
@@ -32,7 +35,7 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
      */
     public function write($content)
     {
-        if($this->_wptoken != null) {
+        if ($this->_wptoken != null) {
             $publishPath = $this->_wpapipath . 'publish';
             $response = $this->_http->post($publishPath, [
                 'type' => 'newsletter',
@@ -58,7 +61,8 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
 
     }
 
-    public function add_user($contact)
+
+    public function add_user_ecommerce($contact)
     {
         //\Cake\Log\Log::debug('Wordpress add_user WordpressContactConnecor pre $contact: ' . print_r($contact, true));
 
@@ -70,7 +74,7 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
 
         if ($this->ceckCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Whiterabbit function add_user customer disabled. customer_id ' . $customerId);
-            return false;
+            return;
         }
 
         if (empty($customerId)) {
@@ -99,6 +103,73 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
         return true;
     }
 
+
+    /*Site SubmitForm*/
+    public function site_submitform($contact)
+    {
+        //\Cake\Log\Log::debug('Whiterabbit function site_submitform pre $contact: ' . print_r($contact, true));
+
+        $contact['email'] = strtolower($contact['email']);
+        $contact['uniqueId'] = $contact['email'];
+
+        if (!empty($contact['province'])) {
+            $contact['province'] = UtilitiesComponent::findCriteriaId($contact['province']);
+            if (!empty($contact['province'])) {
+                $contact['nation'] = "IT";
+            }
+        }
+
+        $properties = array();
+
+        $properties['url '] = $contact['url'];
+        $properties['referer '] = $contact['referer'];
+
+        $contact['properties'] = $properties;
+
+        if (!empty($contact['date_add'])) {
+            $contact['date'] = $contact['date_add'];
+        }
+
+        \Cake\Log\Log::debug('Whiterabbit function site_submitform post $contact: ' . print_r($contact, true));
+
+        /*$contact['actionDetails'] = $contact['site_name'];
+           $contact['source'] = $contact['site_name'];
+           $contact['date'] = $contact['newsletter_subscription_date'];
+           $contact['properties'] = "properties";*/
+
+        //\Cake\Log\Log::debug('WhiterabbitContact add_user post $contact: ' . print_r($contact, true));
+
+        $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Whiterabbit function site_submitform customer disabled. customer_id ' . $customerId);
+            return;
+        }
+
+        $this->createCrmConnection($customerId);
+        $contactBean = new ActivitySiteSubmitFormBean();
+        try {
+            //\Cake\Log\Log::debug('site_submitform Whiterabbit $contactBean : ' . print_r($contactBean, true));
+            $contactBean->setCustomer($customerId)
+                ->setSource($contact['site_name'])
+                ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
+                ->setDataRaw($contact);
+            ActionsManager::pushActivity($contactBean);
+        } catch (\Throwable $th) {
+            \Cake\Log\Log::debug('site_submitform Whiterabbit contact exception: ' . print_r($th->getMessage(), true));
+            return false;
+        }
+
+
+        if ($contact['ticket'] == 1) {
+            $this->createTicket($contact, $customerId);
+        }
+
+
+        return true;
+    }
+
+
     public function read($objectId = null)
     {
         if ($objectId == null) {
@@ -113,7 +184,6 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
     {
         return $content;
     }
-
 
 
     /**
@@ -138,7 +208,7 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
         //$data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
-        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['email1'] = $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobile']);
         $data['telephone1'] = $this->notSetToEmptyString($content['telephone1']);
         $data['operation'] = $this->notSetToEmptyString($content['operation']);
@@ -171,7 +241,8 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
         }
     }
 
-    private function notSetToEmptyString (&$myString) {
+    private function notSetToEmptyString(&$myString)
+    {
         return (!isset($myString)) ? '' : $myString;
     }
 
