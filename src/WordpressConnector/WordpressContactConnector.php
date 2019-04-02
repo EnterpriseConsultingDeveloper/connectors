@@ -16,6 +16,7 @@ use App\Lib\CRM\CRMManager;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Lib\ActionsManager\Activities\ActivitySiteSubmitFormBean;
 use App\Controller\MultiSchemaTrait;
 use Cake\I18n\Time;
 use App\Controller\Component\UtilitiesComponent;
@@ -59,6 +60,72 @@ class WordpressContactConnector extends WordpressConnector
         }
 
     }
+
+    /*Site SubmitForm*/
+    public function site_submitform($contact)
+    {
+        \Cake\Log\Log::debug('Wordpress function site_submitform pre $contact: ' . print_r($contact, true));
+
+        $contact['email'] = strtolower($contact['email']);
+        $contact['uniqueId'] = $contact['email'];
+
+        if (!empty($contact['province'])) {
+            $contact['province'] = UtilitiesComponent::findCriteriaId($contact['province']);
+            if (!empty($contact['province'])) {
+                $contact['nation'] = "IT";
+            }
+        }
+
+        $properties = array();
+
+        $properties['url '] = $contact['url'];
+        $properties['referer '] = $contact['referer'];
+
+        $contact['properties'] = $properties;
+
+        if (!empty($contact['date_add'])) {
+            $contact['date'] = $contact['date_add'];
+        }
+
+        //\Cake\Log\Log::debug('Wordpress function site_submitform post $contact: ' . print_r($contact, true));
+
+        /*$contact['actionDetails'] = $contact['site_name'];
+           $contact['source'] = $contact['site_name'];
+           $contact['date'] = $contact['newsletter_subscription_date'];
+           $contact['properties'] = "properties";*/
+
+        //\Cake\Log\Log::debug('WhiterabbitContact add_user post $contact: ' . print_r($contact, true));
+
+        $customerId = $contact['customer_id'];
+
+        if ($this->ceckCustomerEnabled($customerId) == false) {
+            \Cake\Log\Log::debug('Wordpress function site_submitform customer disabled. customer_id ' . $customerId);
+            return;
+        }
+
+        $this->createCrmConnection($customerId);
+        $contactBean = new ActivitySiteSubmitFormBean();
+        try {
+            //\Cake\Log\Log::debug('site_submitform Whiterabbit $contactBean : ' . print_r($contactBean, true));
+            $contactBean->setCustomer($customerId)
+                ->setSource($contact['site_name'])
+                ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
+                ->setDataRaw($contact);
+            ActionsManager::pushActivity($contactBean);
+        } catch (\Throwable $th) {
+            \Cake\Log\Log::debug('site_submitform Wordpress contact exception: ' . print_r($th->getMessage(), true));
+            return false;
+        }
+
+        if ($contact['ticket'] == 1) {
+            $this->createTicket($contact, $customerId);
+        }
+
+        return true;
+    }
+
+
+
 
     public function read($objectId = null)
     {
@@ -126,7 +193,7 @@ class WordpressContactConnector extends WordpressConnector
     }
 
 
-    public function add_user($contact)
+    public function add_user_ecommerce($contact)
     {
         //\Cake\Log\Log::debug('Wordpress add_user WordpressContactConnecor pre $contact: ' . print_r($contact, true));
 
