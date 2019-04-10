@@ -64,7 +64,7 @@ class WordpressContactConnector extends WordpressConnector
     /*Site SubmitForm*/
     public function site_submitform($contact)
     {
-        \Cake\Log\Log::debug('Wordpress function site_submitform pre $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Wordpress function site_submitform pre $contact: ' . print_r($contact, true));
 
         $contact['email'] = strtolower($contact['email']);
         $contact['uniqueId'] = $contact['email'];
@@ -87,7 +87,8 @@ class WordpressContactConnector extends WordpressConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Wordpress function site_submitform post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Wordpress function site_submitform on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
+
 
         /*$contact['actionDetails'] = $contact['site_name'];
            $contact['source'] = $contact['site_name'];

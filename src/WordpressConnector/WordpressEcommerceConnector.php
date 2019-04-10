@@ -47,10 +47,10 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
         $data['orderNum'] = $this->notSetToEmptyString($content['orderNum']);
         $data['orderDate'] = $this->notSetToEmptyString($content['orderDate']);
-        $data['orderTotal'] =  $this->notSetToEmptyString($content['orderTotal']);
-        $data['email'] =  $this->notSetToEmptyString($content['email']);
-        $data['orderState'] =  $this->notSetToEmptyString($content['orderState']);
-        $data['orderNote'] =  $this->notSetToEmptyString($content['orderNote']);
+        $data['orderTotal'] = $this->notSetToEmptyString($content['orderTotal']);
+        $data['email'] = $this->notSetToEmptyString($content['email']);
+        $data['orderState'] = $this->notSetToEmptyString($content['orderState']);
+        $data['orderNote'] = $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = unserialize($content['productActivity']);
         $data['crm_push_async'] = $content['crm_push_async'];
@@ -71,7 +71,6 @@ class WordpressEcommerceConnector extends WordpressConnector
      */
 
 
-
     public function write($content)
     {
         /*$data = array(
@@ -82,23 +81,28 @@ class WordpressEcommerceConnector extends WordpressConnector
             'orderTotal' => '100.10'
         );*/
         $data = [];
-        // \Cake\Log\Log::debug('Wordpress write $content call: ' . print_r($content, true));
 
+        //\Cake\Log\Log::debug('Wordpress write function on '. $content['site_name']  .' by ' . $content['email'] . ' call: ' . print_r($content, true));
 
         $customerId = $content['customer_id'];
         if ($this->ceckCustomerEnabled($customerId) == false) {
-            \Cake\Log\Log::debug('Wordpress function write customer disabled. customer_id ' . $customerId);
+            \Cake\Log\Log::debug('Wordpress function write on ' . $content['site_name'] . ' by ' . $content['email'] . ' by customer disabled. customer_id ' . $customerId);
             return false;
+        }
+
+        if (empty($content['email'])) {
+            \Cake\Log\Log::debug('Wordpress write function on '. $content['site_name']  .' by empty email ' . print_r($content, true));
+            return false;;
         }
 
         $shipping = array();
         $products = array();
-        if (!empty($content['productActivity'])){
-            $products = unserialize($content['productActivity'])  ;
+        if (!empty($content['productActivity'])) {
+            $products = unserialize($content['productActivity']);
         }
 
-        if (!empty($content['shipping'])){
-            $shipping = unserialize($content['shipping']); ;
+        if (!empty($content['shipping'])) {
+            $shipping = unserialize($content['shipping']);;
         }
 
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
@@ -163,7 +167,6 @@ class WordpressEcommerceConnector extends WordpressConnector
     }
 
 
-
     public function read($objectId = null)
     {
         if ($objectId == null) {
@@ -207,7 +210,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         $data['companyname'] = $this->notSetToEmptyString($content['customer_id']);
         $data['firstname'] = $this->notSetToEmptyString($content['name']);
         $data['lastname'] = $this->notSetToEmptyString($content['surname']);
-        $data['email1'] =  $this->notSetToEmptyString($content['email']);
+        $data['email1'] = $this->notSetToEmptyString($content['email']);
         $data['mobilephone1'] = $this->notSetToEmptyString($content['mobilephone1']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
 
@@ -245,7 +248,6 @@ class WordpressEcommerceConnector extends WordpressConnector
     }
 
 
-
     public function add_user($contact)
     {
         //\Cake\Log\Log::debug('Wordpress add_user pre $contact: ' . print_r($contact, true));
@@ -265,12 +267,13 @@ class WordpressEcommerceConnector extends WordpressConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Prestashop add_user post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Wordpress function add_user on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
+
 
         $customerId = $contact['customer_id'];
 
         if ($this->ceckCustomerEnabled($customerId) == false) {
-            \Cake\Log\Log::debug('Wordpress function add_user customer disabled. customer_id ' . $customerId);
+            \Cake\Log\Log::debug('Wordpress function add_user ' . $contact['email'] . ' by customer disabled. customer_id ' . $customerId);
             return false;
         }
 
@@ -300,9 +303,8 @@ class WordpressEcommerceConnector extends WordpressConnector
     }
 
 
-
-
-    private function notSetToEmptyString (&$myString) {
+    private function notSetToEmptyString(&$myString)
+    {
         return (!isset($myString)) ? '' : $myString;
     }
 

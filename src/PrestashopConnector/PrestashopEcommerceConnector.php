@@ -78,13 +78,17 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             'orderTotal' => '100.10'
         );*/
         $data = [];
-        //\Cake\Log\Log::debug('Prestashop $content ' . $content['email'] . ' call: ' . print_r($content, true));
+        //\Cake\Log\Log::debug('Prestashop write function on '. $content['site_name']  .' by ' . $content['email'] . ' call: ' . print_r($content, true));
 
         if ($this->ceckCustomerEnabled($content['customer_id']) == false) {
-            \Cake\Log\Log::debug('Prestashop function write customer disabled. customer_id ' . $content['customer_id']);
+            //\Cake\Log\Log::debug('Prestashop write function on '. $content['site_name']  .' by ' .  $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id']);
             return false;
         }
 
+        if (empty($content['email'])) {
+            //\Cake\Log\Log::debug('Prestashop write function on '. $content['site_name']  .' by empty email ' . print_r($content, true));
+            return false;;
+        }
 
         $shipping = array();
         $products = array();
@@ -166,10 +170,10 @@ class PrestashopEcommerceConnector extends PrestashopConnector
      * Funzione per isnerire ecommerce.abandonedCart tra attività per un customer
      * @param $content
      * @return bool
-     * @return bool
-     * @copyright (c) 2018, WhiteRabbit srl
      * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
      * @add: 05/10/2018
+     * @copyright (c) 2018, WhiteRabbit srl
+     * @return bool
      */
 
     public function write_cart($content)
@@ -303,14 +307,19 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Prestashop add_user post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Prestashop add_user function on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
+
         $customerId = $contact['customer_id'];
 
         if ($this->ceckCustomerEnabled($customerId) == false) {
-            \Cake\Log\Log::debug('Prestashop function add_user customer disabled. customer_id ' . $customerId);
-            return false;
+            \Cake\Log\Log::debug('Prestashop function add_user ' . $contact['email'] . ' by customer disabled. customer_id ' . $customerId);
+            return;
         }
 
+        if (empty($contact['email'])) {
+            \Cake\Log\Log::debug('Prestashop function site ' . $contact['site_name'] .  ' add_user empty email ' . print_r($contact, true));
+            return false;;
+        }
 
         if (empty($customerId)) {
             // unauthorized
