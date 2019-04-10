@@ -80,7 +80,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Whiterabbit add_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
+        \Cake\Log\Log::debug('Whiterabbit add_user function on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
 
@@ -136,7 +136,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Whiterabbit edit_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Whiterabbit function edit_user ' . @$contact['email'] . ' post $contact: ' . print_r($contact, true));
 
 
         $customerId = $contact['customer_id'];
@@ -178,13 +178,20 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             'orderTotal' => '100.10'
         );*/
 
+        \Cake\Log\Log::debug('Whiterabbit write function on '. $content['site_name']  .' by ' . $content['email'] . ' call: ' . print_r($content, true));
+
         $customerId = $content['customer_id'];
+        $content['email'] = strtolower($content['email']);
+
         if ($this->ceckCustomerEnabled($customerId) == false) {
-            \Cake\Log\Log::debug('Whiterabbit function write customer disabled. customer_id ' . $customerId);
+            \Cake\Log\Log::debug('Whiterabbit write function on '. $content['site_name']  .' by ' .  $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id']);
             return false;
         }
 
-        $content['email'] = strtolower($content['email']);
+        if (empty($content['email'])) {
+            \Cake\Log\Log::debug('Whiterabbit write function on '. $content['site_name']  .' by empty email ' . print_r($content, true));
+            return false;;
+        }
 
         $data = [];
         // \Cake\Log\Log::debug('Whiterabbit write $content call: ' . print_r($content, true));

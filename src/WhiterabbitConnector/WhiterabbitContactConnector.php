@@ -130,7 +130,8 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        \Cake\Log\Log::debug('Whiterabbit function site_submitform post $contact: ' . print_r($contact, true));
+        //\Cake\Log\Log::debug('Whiterabbit function site_submitform on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
+
 
         /*$contact['actionDetails'] = $contact['site_name'];
            $contact['source'] = $contact['site_name'];
