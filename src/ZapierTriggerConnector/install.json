@@ -1,0 +1,29 @@
+{
+  "name":"ZapierTriggerConnector",
+  "description":"ZapierTrigger connector for WhiteRabbit suite",
+  "icon":"fa-share-alt",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"ZapierTrigger",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"ZapierTrigger Post",
+          "permitted_operations":"RPDU",
+          "connection_string":"ZapierTriggerPostConnecotor",
+          "type": "social"
+        }
+      ],
+      "settings":[
+        {
+          "name":"callback_url",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        }
+      ]
+    }
+  ]
+}
