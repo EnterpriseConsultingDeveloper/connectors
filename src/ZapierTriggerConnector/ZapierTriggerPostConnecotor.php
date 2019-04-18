@@ -23,10 +23,8 @@ use Cake\ORM\TableRegistry;
 class ZapierTriggerPostConnecotor extends ZapierTriggerConnector
 {
 
-    function __construct($params)
-    {
-        parent::__construct($params);
-    }
+    const CONNECTOR_INSTANCE_CHANNEL = 'connector_instance_channel';
+    const CONTENT = 'content';
 
     public function write($content)
     {
@@ -39,27 +37,27 @@ class ZapierTriggerPostConnecotor extends ZapierTriggerConnector
             //$content['content']['post_status']'' => 'publish',
             //$content['content']['post_date_gmt']'' => '',
             //$content['content']['post_date']'' => '',
-            if (!$rhTable->isZapierActive($content['customer']['id'], WREvents::PREPARED_CONTENT_CREATED, $content['connector_instance_channel']['name'])) {
+            if (!$rhTable->isZapierActive($content['customer']['id'], WREvents::PREPARED_CONTENT_CREATED, $content['' . static::CONNECTOR_INSTANCE_CHANNEL . '']['name'])) {
                 $value['Error'] = true;
-                $value['Message'] = print_r("No zap for " . $content['connector_instance_channel']['name'], true);
+                $value['Message'] = print_r("No zap for " . $content[static::CONNECTOR_INSTANCE_CHANNEL]['name'], true);
                 return $value;
             }
 
-            $preparedContentEventBean->setTarget('zapier.' . $content['connector_instance_channel']['name'])
-                ->setTitle($content['content']['title'])
+            $preparedContentEventBean->setTarget('zapier.' . $content[static::CONNECTOR_INSTANCE_CHANNEL]['name'])
+                ->setTitle($content[static::CONTENT]['title'])
                 ->setCustomerId($content['customer']['id'])
-                ->setAbstract($content['content']['abstract'])
-                ->setBody($content['content']['body'])
-                ->setMainUrl($content['content']['main_url'])
-                ->setMainImage($content['content']['main_image'])
-                ->setMetaDescription($content['content']['meta_description'])
-                ->setMetaKeywords($content['content']['meta_keywords']);
+                ->setAbstract($content[static::CONTENT]['abstract'])
+                ->setBody($content[static::CONTENT]['body'])
+                ->setMainUrl($content[static::CONTENT]['main_url'])
+                ->setMainImage($content[static::CONTENT]['main_image'])
+                ->setMetaDescription($content[static::CONTENT]['meta_description'])
+                ->setMetaKeywords($content[static::CONTENT]['meta_keywords']);
             $preparedContentEventBean->dispatch();
         } catch (\Throwable $th) {
             \Cake\Log\Log::debug('Zapier share exception: ' . print_r($th->getMessage(), true));
             $value['Error'] = true;
             $value['Message'] = print_r($th->getMessage(), true);
-            // $value['Message'] = true;
+            // $value['Message'] = true
             return $value;
         }
 
