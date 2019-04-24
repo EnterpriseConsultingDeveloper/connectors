@@ -810,14 +810,15 @@ class FacebookConnector extends Connector implements IConnector {
 
     private function getUserExtraData($userId, ConnectorUserBean $ub) {
         try {
-            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale');
+
+						$request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture,locale');
             $response = $this->fb->getClient()->sendRequest($request);
             $extraData = $response->getDecodedBody();
 
             $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
             $ub->setLastname($this->blankForEmpty($extraData['last_name']));
             $ub->setGender($this->blankForEmpty($extraData['gender']));
-            $ub->setCoverimage($this->blankForEmpty($extraData['cover']['source']));
+						$ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
             $ub->setLocale($this->blankForEmpty($extraData['locale']));
             $ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
