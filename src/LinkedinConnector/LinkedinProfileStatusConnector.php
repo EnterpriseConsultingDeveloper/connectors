@@ -33,13 +33,11 @@ class LinkedinProfileStatusConnector extends LinkedinConnector
             $share = $this->li->post(
                 'people/~/shares',
                 [
-                    //'comment' => strip_tags($content['content']['body']),
                     'comment' => strip_tags($content['content']['abstract']),
-                    //'comment' => "My third WhiteRabbit App Post " . date('Y-m-d H:i:s'),
                     'content' => [
                         'title' => $content['content']['title'],
-                        'description' => '',
-                        'submitted-url' => "https://enterprise-dev.whiterabbit.online",
+                        'description' => $content['content']['meta_description'],
+                        'submitted-url' => $content['content']['main_url'],
                         'submitted-image-url' => $content['content']['main_image'],
                     ],
                     'visibility' => [
@@ -50,9 +48,9 @@ class LinkedinProfileStatusConnector extends LinkedinConnector
         } catch (\Throwable $th) {
             \Cake\Log\Log::debug('Likedin share exception: ' . print_r($th->getMessage(), true));
             $value['Error'] = true;
-            $value['Message'] = print_r($th->getMessage(), true) ;
-           // $value['Message'] = true;
+            $value['Message'] = 'Likedin share exception: ' . print_r($th->getMessage(), true);
             return $value;
+
         }
 
         if (isset($share['updateUrl'])) {
@@ -64,8 +62,9 @@ class LinkedinProfileStatusConnector extends LinkedinConnector
             return $info;
         }
         $value['Error'] = true;
-        $value['Message'] = print_r($share, true) ;
+        $value['Message'] = print_r($share, true);
         return $value;
+
     }
 
 
