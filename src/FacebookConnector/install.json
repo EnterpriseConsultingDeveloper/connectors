@@ -61,7 +61,7 @@
           "type": "social"
         },
         {
-          "name":"FB Page Status (only image)",
+          "name":"FB Page Status (image is mandatory)",
           "permitted_operations":"RPDU",
           "connection_string":"FacebookPageStatusConnector",
           "type": "social"
