@@ -167,7 +167,6 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         return true;
     }
 
-
     public function write($content)
     {
         /*$data = array(
@@ -178,27 +177,32 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             'orderTotal' => '100.10'
         );*/
 
-        \Cake\Log\Log::debug('Whiterabbit write function on '. $content['site_name']  .' by ' . $content['email'] . ' call: ' . print_r($content, true));
+        \Cake\Log\Log::debug('Whiterabbit write function on ' . $content['site_name'] . ' by ' . $content['email'] . ' call: ' . print_r($content, true));
 
         $customerId = $content['customer_id'];
         $content['email'] = strtolower($content['email']);
 
         if ($this->ceckCustomerEnabled($customerId) == false) {
-            \Cake\Log\Log::debug('Whiterabbit write function on '. $content['site_name']  .' by ' .  $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id']);
+            \Cake\Log\Log::debug('Whiterabbit write function on ' . $content['site_name'] . ' by ' . $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id']);
             return false;
         }
 
         if (empty($content['email'])) {
-            \Cake\Log\Log::debug('Whiterabbit write function on '. $content['site_name']  .' by empty email ' . print_r($content, true));
+            \Cake\Log\Log::debug('Whiterabbit write function on ' . $content['site_name'] . ' by empty email ' . print_r($content, true));
             return false;;
         }
 
+
         $data = [];
-        // \Cake\Log\Log::debug('Whiterabbit write $content call: ' . print_r($content, true));
 
         $products = array();
         if (!empty($content['productActivity'])) {
             $products = unserialize($content['productActivity']);
+        }
+
+        $tags = array();
+        if (!empty($content['tags'])) {
+            $tags = unserialize($content['tags']);
         }
 
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['source']));
@@ -206,7 +210,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $data['number'] = $this->notSetToEmptyString($content['number']);
 
         if (!empty($content['orderdate'])) {
-        $data['orderdate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderdate']))->toAtomString();
+            $data['orderdate'] = Time::createFromFormat('Y-m-d H:i:s', $this->notSetToEmptyString($content['orderdate']))->toAtomString();
         } else {
             \Cake\Log\Log::debug('Whiterabbit write orderdate null $content call: ' . print_r($content, true));
             $data['orderdate'] = Time::now()->toAtomString();
@@ -236,6 +240,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         /*new*/
         $data['description'] = $this->notSetToEmptyString($content['description']);
         $data['products'] = array();
+        $data['tags'] = array();
 
         foreach ($products as $id => $product) {
             $data['products'][$id]['product_id'] = $product['product_id'];
@@ -250,6 +255,15 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
             $data['products'][$id]['category'] = $this->notSetToEmptyString($product['category']);
             /*new*/
         }
+
+        foreach ($tags as $id => $tag) {
+            $data['tags']['name'][] = $tag;
+        }
+
+        /* $data['tags']['name'][] = "pippologo";
+         $data['tags']['name'][] = "plutologo";
+         $data['tags']['name'][] = "quiquologo";*/
+
 
        // \Cake\Log\Log::debug('Whiterabbit write ' . @$content['email'] . " - Order id " . @$content['number'] . " - Order Status " . $content['order_status'] . ' $data: ' . print_r($data, true));
 
@@ -271,6 +285,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
 
         return true;
     }
+
 
     public function read($objectId = null)
     {
