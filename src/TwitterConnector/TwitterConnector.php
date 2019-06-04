@@ -9,6 +9,7 @@
 namespace WR\Connector\TwitterConnector;
 require_once('Lib/TwitterAPIExchange.php');
 
+use Cake\Log\Log;
 use WR\Connector\Connector;
 use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
@@ -137,11 +138,11 @@ class TwitterConnector extends Connector implements IConnector
             $remaining = $limitStatus->remaining;
             $reset = $limitStatus->reset;
     
-            \Cake\Log\Log::info("-- TWITTER /statuses/user_timeline - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+            Log::info("-- TWITTER /statuses/user_timeline - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
     
             if ($remaining == 0) {
                 $time = Time::createFromTimestamp($reset);
-                \Cake\Log\Log::info('-- TWITTER STOP /statuses/user_timeline - next exec '.$time->format('Y-m-d H:i:s'));
+                Log::info('-- TWITTER STOP /statuses/user_timeline - next exec '.$time->format('Y-m-d H:i:s'));
                 return;
             }
 
@@ -549,11 +550,11 @@ class TwitterConnector extends Connector implements IConnector
         $remaining = $limitStatus->remaining;
         $reset = $limitStatus->reset;
 
-        \Cake\Log\Log::info("-- TWITTER /followers/list - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+        Log::info("-- TWITTER /followers/list - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
 
         if ($remaining == 0) {
             $time = Time::createFromTimestamp($reset);
-            \Cake\Log\Log::info('-- TWITTER STOP /followers/list - next exec '.$time->format('Y-m-d H:i:s'));
+            Log::info('-- TWITTER STOP /followers/list - next exec '.$time->format('Y-m-d H:i:s'));
             return;
         }
 
@@ -582,7 +583,7 @@ class TwitterConnector extends Connector implements IConnector
 
         } while ($cursor != 0);
 
-        \Cake\Log\Log::info("-- TWITTER followers/list - found ".@count($myRow));
+        Log::info("-- TWITTER followers/list - found ".@count($myRow));
 
         return $myRow;
 
@@ -607,11 +608,11 @@ class TwitterConnector extends Connector implements IConnector
         $remaining = $limitStatus->remaining;
         $reset = $limitStatus->reset;
 
-        \Cake\Log\Log::info("-- TWITTER /statuses/mentions_timeline - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+        Log::info("-- TWITTER /statuses/mentions_timeline - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
 
         if ($remaining == 0) {
             $time = Time::createFromTimestamp($reset);
-            \Cake\Log\Log::info('-- TWITTER STOP /statuses/mentions_timeline - next exec '.$time->format('Y-m-d H:i:s'));
+            Log::info('-- TWITTER STOP /statuses/mentions_timeline - next exec '.$time->format('Y-m-d H:i:s'));
             return;
         }
 
@@ -627,7 +628,7 @@ class TwitterConnector extends Connector implements IConnector
             }
         }
 
-        \Cake\Log\Log::info("-- TWITTER statuses/mentions_timeline - found ".@count($myRow));
+        Log::info("-- TWITTER statuses/mentions_timeline - found ".@count($myRow));
 
         return $myRow;
 
@@ -650,11 +651,11 @@ class TwitterConnector extends Connector implements IConnector
         $remaining = $limitStatus->remaining;
         $reset = $limitStatus->reset;
 
-        \Cake\Log\Log::info("-- TWITTER /statuses/retweets_of_me - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+        Log::info("-- TWITTER /statuses/retweets_of_me - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
 
         if ($remaining == 0) {
             $time = Time::createFromTimestamp($reset);
-            \Cake\Log\Log::info('-- TWITTER STOP /statuses/retweets_of_me - next exec '.$time->format('Y-m-d H:i:s'));
+            Log::info('-- TWITTER STOP /statuses/retweets_of_me - next exec '.$time->format('Y-m-d H:i:s'));
             return;
         }
 
@@ -670,7 +671,7 @@ class TwitterConnector extends Connector implements IConnector
             }
         }
 
-        \Cake\Log\Log::info("-- TWITTER statuses/retweets_of_me - found ".@count($myRow));
+        Log::info("-- TWITTER statuses/retweets_of_me - found ".@count($myRow));
 
         return $myRow;
 
@@ -734,11 +735,11 @@ class TwitterConnector extends Connector implements IConnector
         $remaining = $limitStatus->remaining;
         $reset = $limitStatus->reset;
 
-        \Cake\Log\Log::info("-- TWITTER /statuses/show - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
+        Log::info("-- TWITTER /statuses/show - ".$objectId.' - limit '.$limitStatus->limit.' remaining '.$remaining);
 
         if ($remaining == 0) {
             $time = Time::createFromTimestamp($reset);
-            \Cake\Log\Log::info('-- TWITTER STOP /statuses/show - next exec '.$time->format('Y-m-d H:i:s'));
+            Log::info('-- TWITTER STOP /statuses/show - next exec '.$time->format('Y-m-d H:i:s'));
             return;
         }
 
@@ -750,7 +751,7 @@ class TwitterConnector extends Connector implements IConnector
             $myRow = get_object_vars($data);
             $myRow['user'] = get_object_vars($data->user);
 
-            \Cake\Log\Log::info("-- TWITTER statuses/show - found ");
+            Log::info("-- TWITTER statuses/show - found ");
 
             return $myRow;
 
