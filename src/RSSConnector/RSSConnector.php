@@ -9,6 +9,7 @@
 namespace WR\Connector\RSSConnector;
 
 
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
@@ -18,9 +19,6 @@ use WR\Connector\ConnectorBean;
 class RSSConnector extends Connector implements IConnector
 {
     protected $_http;
-
-    private $objectId;
-    private $mage;
 
     function __construct($params)
     {
@@ -41,16 +39,29 @@ class RSSConnector extends Connector implements IConnector
 
         sleep(1); // fix per google, troppe richeste ravvicinate bloccano il recupero
 
-        //debug($objectId); die;
         $rssArray = [];
         if($objectId != null) {
-            $content = file_get_contents($objectId); // Feed url
+            //$content = file_get_contents($objectId); // Feed url
+            /** @var \Cake\Http\Client\Response $response */
+            $response = $this->_http->get($objectId, [], [
+                'timeout' => 10,
+                'redirect' => 3
+            ]);
+
+            // error: return empty result
+            if (!$response->isOk()) {
+                Log::error('RSS "'.$objectId.'" error '.$response->getStatusCode().': '.$response->getReasonPhrase());
+                return $rssArray;
+            }
+
             try {
-                $x = new \SimpleXMLElement($content);
-                if(isset($x->channel->item))
+                $x = $response->xml;
+
+                if(isset($x->channel->item)) {
                     $elementArray = $x->channel->item;
-                else
+                } else {
                     $elementArray = $x->entry;
+                }
 
                 foreach($elementArray as $entry) {
                     try {
