@@ -8,6 +8,12 @@
 
 namespace WR\Connector\ShopifyConnector;
 
+use App\Controller\Component\UtilitiesComponent;
+use App\Controller\MultiSchemaTrait;
+use App\Lib\ActionsManager\ActionsManager;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use Cake\I18n\Time;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
@@ -15,58 +21,98 @@ use App\Lib\CRM\CRMManager;
 
 class ShopifyOrderConnector extends ShopifyConnector
 {
+	use MultiSchemaTrait;
 
-    function __construct($params)
-    {
-        parent::__construct($params);
-    }
-
-
-    /**
-     * @param null $objectId
-     * @return array
-     */
-    public function read($customerId = null)
-    {
-        $orders = $this->shopify->Order->get();
-
-        foreach($orders as $order) {
-            $data = [];
-            $data['orderIdExt'] = $this->notSetToEmptyString($order['id']);
-            $data['sourceId'] = $this->notSetToEmptyString($this->shopUrl);
-            $data['orderNum'] = $this->notSetToEmptyString($order['order_number']);
-            $data['orderDate'] = $this->notSetToEmptyString($order['created_at']);
-            $data['orderTotal'] =  $this->notSetToEmptyString($order['total_price']);
-            $data['email'] =  $this->notSetToEmptyString($order['email']);
-            $data['orderState'] =  $this->notSetToEmptyString($order['confirmed']);
-            $data['orderNote'] =  $this->notSetToEmptyString($order['note']);
-            $data['site_name'] = $this->notSetToEmptyString($this->shopUrl);
-
-            $productActivity = null;
-            foreach ($order['line_items'] as $key => $item) {
-                $productActivity[$key]['product_id'] = $item['id'];
-                $productActivity[$key]['qty'] = $item['quantity'];
-                $productActivity[$key]['name'] = $item['title'];
-                $productActivity[$key]['price'] = $item['price'];
-                $productActivity[$key]['discount'] = $item['total_discount'];
-            }
-
-            $data['productActivity'] = $productActivity;
-            try {
-                $crmManager = new CRMManager();
-                $crmManager->setCustomer($customerId);
-                $cmrRes = $crmManager->pushOrderToCrm($customerId, $data);
-
-            } catch (\PDOException $e) {
-                // Log error
-            }
-        }
-
-    }
+	function __construct($params)
+	{
+		parent::__construct($params);
+	}
 
 
-    private function notSetToEmptyString (&$myString) {
-        return (!isset($myString)) ? '' : $myString;
-    }
+	/**
+	 * @param null $objectId
+	 * @return array
+	 */
+	public function read($customerId = null)
+	{
+
+		$orders = $this->shopify->Order->get();
+
+		foreach($orders as $order) {
+			debug($order);
+
+			$data = [];
+			$data['source'] = $this->shopUrl;
+			$data['email'] = $this->notSetToEmptyString($order['email']);
+			$data['number'] = $this->notSetToEmptyString($order['order_number']);
+			$data['orderdate'] = $order['created_at'];
+			$data['order_status'] = $this->notSetToEmptyString($order['financial_status']);
+			$data['total'] = $this->notSetToEmptyString($order['total_price']);
+			$data['currency'] = $this->notSetToEmptyString($order['currency']);
+			$data['tax_total'] = $this->notSetToEmptyString($order['total_tax']);
+			$data['subtotal'] = $this->notSetToEmptyString($order['subtotal_price']);
+			$data['cart_discount'] = $this->notSetToEmptyString($order['total_discounts']);
+
+//          $data['shipping_total'] = $this->notSetToEmptyString($content['shipping_total']);
+			$data['shipping_firstname'] = $this->notSetToEmptyString($order['shipping_address']['shipping_firstname']);
+			$data['shipping_lastname'] = $this->notSetToEmptyString($order['shipping_address']['last_name']);
+			$data['shipping_address'] = $this->notSetToEmptyString($order['shipping_address']['address1']);
+			$data['shipping_postalcode'] = $this->notSetToEmptyString($order['shipping_address']['zip']);
+			$data['shipping_city'] = $this->notSetToEmptyString($order['shipping_address']['city']);
+			$data['shipping_country'] = $this->notSetToEmptyString($order['shipping_address']['country']);
+			$data['shipping_phone'] = $this->notSetToEmptyString($order['shipping_address']['phone']);
+//          $data['shipping_tax'] = $this->notSetToEmptyString($order['shipping_address']['address1']);
+
+			$data['payment_method'] = $this->notSetToEmptyString($order['gateway']);
+//          $data['shipping_method'] = $this->notSetToEmptyString($content['shipping_method']);
+			/*new*/
+			$data['description'] = $this->notSetToEmptyString($order['note']);
+			$data['products'] = array();
+			$data['tags'] = array();
+
+			foreach ($order['line_items'] as $id => $product) {
+//            debug($product);
+				$data['products'][$id]['product_id'] = $product['id'];
+				$data['products'][$id]['name'] = $product['title'];
+				$data['products'][$id]['qty'] = $product['quantity'];
+				$data['products'][$id]['price'] = $product['price'];
+				$data['products'][$id]['discount'] = $product['total_discount'];
+				/*new*/
+				$data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
+				$data['products'][$id]['description'] = $this->notSetToEmptyString($product['name']);
+				$data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax_lines'][0]['price']);
+//            $data['products'][$id]['category'] = $this->notSetToEmptyString($product['category']);
+				/*new*/
+			}
+
+//          foreach ($tags as $id => $tag) {
+//            $data['tags']['name'][] = $tag;
+//          }
+
+			try {
+
+
+				$this->createCrmConnection($customerId);
+
+				$changeStatusBean = new ActivityEcommerceChangeStatusBean();
+				$changeStatusBean->setCustomer($customerId)
+					->setSource($this->shopUrl)
+					->setToken($this->shopUrl)
+					->setDataRaw($data);
+
+				ActionsManager::pushOrder($changeStatusBean);
+
+			} catch (\Exception $e) {
+				// Log error
+			}
+
+		}
+
+	}
+
+
+	private function notSetToEmptyString (&$myString) {
+		return (!isset($myString)) ? '' : $myString;
+	}
 
 }

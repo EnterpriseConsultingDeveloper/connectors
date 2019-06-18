@@ -19,140 +19,144 @@ use PHPShopify;
 
 class ShopifyConnector extends Connector implements IConnector
 {
-    //protected $tw;
-    protected $app_key;
-    protected $app_secret;
+	//protected $tw;
+	protected $app_key;
+	protected $app_secret;
 
-    private $feedLimit;
-    private $objectId;
-    protected $shopify;
-    protected $shopUrl;
+	private $feedLimit;
+	private $objectId;
+	protected $shopify;
+	protected $shopUrl;
 
-    function __construct($params)
-    {
-        $config = json_decode(file_get_contents('appdata.cfg', true), true);
-        //debug($config); debug($params); die;
-        $config = array(
-            'ShopUrl' => $params['shop_url'], //'whiterabbittest.myshopify.com',
-            'AccessToken' => $params['access_token'], //'6e3e5605965b925764e0c67ffd3f1a0e',
-            'SharedSecret' => $config['SharedSecret']
-        );
-
-        $this->shopify = new PHPShopify\ShopifySDK($config);
-        $this->shopUrl = $params['shop_url'];
-    }
-
-    public function connect($config)
-    {
-        return "connect";
-    }
+	function __construct($params)
+	{
 
 
-    /**
-     * @param null $objectId
-     * @return array
-     */
-    public function read($objectId = null)
-    {
+		$config = json_decode(file_get_contents('appdata.cfg', true), true);
 
-    }
+		//debug($config); debug($params); die;
+		$config = array(
+			'ShopUrl' => isset($params['shop_url']) ? $params['shop_url'] : null, //'whiterabbittest.myshopify.com',
+			'AccessToken' => isset($params['access_token']) ? $params['access_token'] : null, //'6e3e5605965b925764e0c67ffd3f1a0e',
+			'SharedSecret' => $config['SharedSecret']
+		);
 
-    /**
-     * @param null $objectId
-     * @return array
-     */
-    public function readPublicPage($objectId = null)
-    {
+		$this->shopify = new PHPShopify\ShopifySDK($config);
+		$this->shopUrl = isset($params['shop_url']) ? $params['shop_url'] : null;
 
-    }
+	}
 
-
-    /**
-     * @return array
-     */
-    public function write($content)
-    {
-
-    }
-
-    public function update($content, $objectId)
-    {
-    }
-
-    /**
-     * @param null $objectId
-     * @return \Shopify\ShopifyResponse
-     */
-    public function delete($objectId = null)
-    {
-    }
-
-    /**
-     * @param $data
-     * @return mixed
-     */
-    public function mapFormData($data) {
-        return $data;
-    }
-
-    public function stats($objectId)
-    {
-
-    }
-
-    /**
-     * @param $objectId
-     * @param string $operation
-     * @param null $content
-     * @return array|mixed|string
-     */
-    public function comments($objectId, $operation = 'r', $content = null)
-    {
-    }
-
-    public function commentFromDate($objectId, $fromDate) {
-
-    }
+	public function connect($config)
+	{
+		return "connect";
+	}
 
 
-    public function user($objectId)
-    {
+	/**
+	 * @param null $objectId
+	 * @return array
+	 */
+	public function read($objectId = null)
+	{
 
-    }
+	}
 
-    public function add_user($content)
-    {
+	/**
+	 * @param null $objectId
+	 * @return array
+	 */
+	public function readPublicPage($objectId = null)
+	{
 
-    }
-
-    public function update_categories($content)
-    {
-
-    }
-
-    public function captureFan($objectId = null)
-    {
-
-    }
+	}
 
 
-    /**
-     * @return bool
-     */
-    public function isLogged()
-    {
+	/**
+	 * @return array
+	 */
+	public function write($content)
+	{
 
-    }
+	}
 
-    public function callback($params) {
-    }
+	public function update($content, $objectId)
+	{
+	}
 
-    public function configData() {
-        return json_decode(file_get_contents('appdata.cfg', true), true);
-    }
+	/**
+	 * @param null $objectId
+	 * @return \Shopify\ShopifyResponse
+	 */
+	public function delete($objectId = null)
+	{
+	}
 
-    public function setError($message) {
+	/**
+	 * @param $data
+	 * @return mixed
+	 */
+	public function mapFormData($data) {
+		return $data;
+	}
 
-    }
+	public function stats($objectId)
+	{
+
+	}
+
+	/**
+	 * @param $objectId
+	 * @param string $operation
+	 * @param null $content
+	 * @return array|mixed|string
+	 */
+	public function comments($objectId, $operation = 'r', $content = null)
+	{
+	}
+
+	public function commentFromDate($objectId, $fromDate) {
+
+	}
+
+
+	public function user($objectId)
+	{
+
+	}
+
+	public function add_user($content)
+	{
+
+	}
+
+	public function update_categories($content)
+	{
+
+	}
+
+	public function captureFan($objectId = null)
+	{
+
+	}
+
+
+	/**
+	 * @return bool
+	 */
+	public function isLogged()
+	{
+
+	}
+
+	public function callback($params) {
+	}
+
+	public function configData() {
+		return json_decode(file_get_contents('appdata.cfg', true), true);
+	}
+
+	public function setError($message) {
+
+	}
 
 }
