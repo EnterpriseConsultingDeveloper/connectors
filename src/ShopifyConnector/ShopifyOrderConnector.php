@@ -39,7 +39,6 @@ class ShopifyOrderConnector extends ShopifyConnector
 		$orders = $this->shopify->Order->get();
 
 		foreach($orders as $order) {
-			debug($order);
 
 			$data = [];
 			$data['source'] = $this->shopUrl;
