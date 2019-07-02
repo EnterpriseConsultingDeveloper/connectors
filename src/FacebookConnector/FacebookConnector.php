@@ -9,6 +9,7 @@
 
 namespace WR\Connector\FacebookConnector;
 
+use Cake\I18n\Time;
 use Facebook\Facebook;
 use Facebook\FacebookRequest;
 use WR\Connector\Connector;
@@ -719,7 +720,7 @@ class FacebookConnector extends Connector implements IConnector {
                         $ub->setContentId($d['id']);
                         $ub->setText('');
 
-                        $ub->setDate($d['created_time']);
+                        $ub->setDate(Time::now()->toAtomString());
 
                         $ub->setAncestorBody($ancestor_body);
 
