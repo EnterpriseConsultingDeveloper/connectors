@@ -66,12 +66,15 @@ class LinkedinConnector extends Connector implements IConnector
 
         $this->li->setRedirectUrl($redirect_uri);
 
-        $scopes = [
-            Scope::READ_BASIC_PROFILE,
-            Scope::READ_EMAIL_ADDRESS,
-            //Scope::MANAGE_COMPANY,
-            Scope::SHARING,
-        ];
+        /* $scopes = [
+             Scope::READ_BASIC_PROFILE,
+             Scope::READ_EMAIL_ADDRESS,
+             //Scope::MANAGE_COMPANY,
+             Scope::SHARING,
+         ];*/
+
+        $scopes = explode(",", $this->config['scopes']);
+
         $loginUrl = $this->li->getLoginUrl($scopes); // get url on LinkedIn to start linking
 
         return $loginUrl;
@@ -97,6 +100,7 @@ class LinkedinConnector extends Connector implements IConnector
             'redirect_uri' => $params['redirect_uri'],
             'grant_type' => 'authorization_code'
         ];
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -115,19 +119,25 @@ class LinkedinConnector extends Connector implements IConnector
         if (!empty($data->access_token)) {
             $access_token = $data->access_token;
             $this->li->setAccessToken($access_token);
-            $profile = $this->li->get(
+            /*$profile = $this->li->get(
                 'people/~:(id,email-address,first-name,last-name)'
+            );*/
+
+            $profile = $this->li->apiV2(
+                'me'
             );
+
             $result['error'] = false;
             $result['access_token'] = $access_token;
             $result['token_expires_in'] = $data->expires_in;
-            $result['linkedin_user_name'] = $profile['firstName'] . " " . $profile['lastName'];
-            $result['linkedin_emailAddress'] = $profile['emailAddress'];
+            $result['linkedin_user_name'] = $profile['localizedFirstName'] . " " . $profile['localizedLastName'];
+            $result['linkedin_emailAddress'] = '';
             $result['code'] = $code;
         } else {
             $result['error'] = true;
             $result['message'] = $data->error_description;
         }
+
         return $result;
 
     }
