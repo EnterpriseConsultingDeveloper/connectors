@@ -782,6 +782,11 @@ class FacebookConnector extends Connector implements IConnector {
      */
     private function format_result($posts) {
         $beans = array();
+        if(empty($posts['posts']['data'])|| empty($posts['posts'])){
+            Log::error('FacebookConnector format_result "'. print_r($posts,true));
+            return $beans;
+        }
+
         foreach ($posts['posts']['data'] as $post) {
             $element = new ConnectorBean();
             if (!empty($post['message']))
