@@ -8,3 +8,10 @@
 .idea/misc.xml
 .idea/modules.xml
 .idea/copyright/profiles_settings.xml
+/src/FacebookConnector/appdata.cfg
+/src/FacebookConnector/appdata_dev.cfg
+/src/InstagramConnector/appdata.cfg
+/src/LinkedinConnector/appdata.cfg
+/src/ShopifyConnector/appdata.cfg
+/src/TwitterConnector/appdata_dev.cfg
+/src/TwitterConnector/appdata.cfg
