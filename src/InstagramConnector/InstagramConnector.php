@@ -163,6 +163,8 @@ class InstagramConnector extends Connector implements IConnector
 		$objectId = $this->cleanObjectId($objectId);
 		//$url = $this->insta . 'v1/users/' . $objectId . '/media/recent/?access_token=' . $this->token;
 
+		//https://api.instagram.com/v1/tags/dino/media/recent?access_token=3561573774.cab61f6.3475cbbc097c4ab1b1dcc4deb69aace6
+		//$this->token = '3561573774.cab61f6.3475cbbc097c4ab1b1dcc4deb69aace6';
 		$url = $this->insta . 'v1/users/self/media/recent/?access_token=' . $this->token;
 
 		$ch = curl_init();
