@@ -119,6 +119,11 @@ class WhiterabbitContactConnector extends WhiterabbitConnector
             }
         }
 
+        if (!empty($contact['birthdaydate'])) {
+            $contact['birthdaydate'] .= " 00:00:00";
+            $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
+        }
+
         $properties = array();
 
         $properties['url '] = $contact['url'];
