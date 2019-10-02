@@ -1,13 +1,11 @@
 <?php
 
 /**
- * Created by Dino Fratelli.
- * User: user
- * Date: 24/02/2016
- * Time: 15:31
+ * Created by Leandro Cesinaro
+ * User: user business
  */
 
-namespace WR\Connector\FacebookConnector;
+namespace WR\Connector\InstagramBusinessConnector;
 
 use Cake\I18n\Time;
 use Facebook\Facebook;
@@ -35,12 +33,13 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     protected $connectorUsersSettingsID;
     private $feedLimit;
     private $objectId;
+    private $objectIgId;
     private $since;
     private $until;
     var $error = false;
 
     function __construct($params) {
-        $config = json_decode(file_get_contents('appdata.cfg', true), true);
+        $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
 
         $this->fb = new Facebook([
             'http_client_handler' => 'stream', // do not use Guzzle 5.*, prefer PHP streams
@@ -64,6 +63,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
             $this->objectFbId = isset($params['pageid']) ? $params['pageid'] : '';
+            $this->objectIgId = isset($params['igbusinessid']) ? $params['igbusinessid'] : '';
 
             $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
             $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
@@ -102,7 +102,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
         // Vecchi permessi
         // $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
-        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email']; // Optional permissions
+        $permissions = ['business_management', 'manage_pages', 'publish_pages', 'instagram_basic', 'instagram_manage_comments', 'instagram_manage_insights']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
@@ -137,7 +137,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
         try {
             // Returns a `Facebook\FacebookResponse` object
-            $response = $this->fb->get('/me?fields=accounts.limit(255)', $this->longLivedAccessToken);
+            $response = $this->fb->get('/me?fields=accounts.limit(255){instagram_business_account,name,access_token}', $this->longLivedAccessToken);
             $logged = true;
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
             $logged = false;
@@ -172,6 +172,36 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         }
 
         return $response->getDecodedBody();
+    }
+
+    /**
+     * @param null $objectId
+     * @return array
+     */
+    public function getIGAccount($objectId = null) {
+      // Read instagram business account connected to the Fb page
+      if ($objectId == null)
+        $objectId = $this->objectId;
+
+      if ($objectId == null) {
+        return [];
+      }
+
+      try {
+        // Returns a `Facebook\FacebookResponse` object
+        $response = $this->fb->get('/'.$objectId.'?fields=instagram_business_account', $this->longLivedAccessToken);
+        $logged = true;
+      } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+        $logged = false;
+  //        echo 'Graph returned an error: ' . $e->getMessage();
+  //        exit;
+      } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+        $logged = false;
+  //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
+  //        exit;
+      }
+
+      return $response->getDecodedBody();
     }
 
     /**
@@ -604,7 +634,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
     public function callback($params) {
 
-        $config = json_decode(file_get_contents('appdata.cfg', true), true);
+        $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
         $data = array();
 
         $helper = $this->fb->getRedirectLoginHelper();
@@ -783,7 +813,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     private function format_result($posts) {
         $beans = array();
         if(empty($posts['posts']['data'])|| empty($posts['posts'])){
-            Log::error('FacebookConnector format_result "'. print_r($posts,true));
+            Log::error('InstagramBusinessConnector format_result "'. print_r($posts,true));
             return $beans;
         }
 

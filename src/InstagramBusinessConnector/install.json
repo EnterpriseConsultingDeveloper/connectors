@@ -1,69 +1,29 @@
 {
-  "name":"FacebookConnector",
-  "description":"Facebook connector for WhiteRabbit suite",
-  "icon":"fa-facebook-square",
+  "name":"InstagramBusinessConnector",
+  "description":"Instagram Business connector for WhiteRabbit suite",
+  "icon":"fa-instagram",
   "install":"internal",
   "channels":[
-    {
-      "name":"Profile",
-      "default_channel":"0",
-      "streams":[
-        {
-          "name":"FB Pr Photo",
-          "permitted_operations":"RP",
-          "connection_string":"FacebookProfilePhotoConnector",
-          "type": "social"
-        },
-        {
-          "name":"FB Pr Video",
-          "permitted_operations":"RP",
-          "connection_string":"FacebookProfileVideoConnector",
-          "type": "social"
-        },
-        {
-          "name":"FB Pr Status",
-          "permitted_operations":"RPDU",
-          "connection_string":"FacebookProfileStatusConnector",
-          "type": "social"
-        }
-      ],
-      "settings":[
-        {
-          "name":"key",
-          "type":"string",
-          "is_editable":"1",
-          "is_mandatory":"1",
-          "access_level":"admin"
-        },
-        {
-          "name":"longlivetoken",
-          "type":"string",
-          "is_editable":"1",
-          "is_mandatory":"1",
-          "access_level":"admin"
-        }
-      ]
-    },
     {
       "name":"Page",
       "default_channel":"1",
       "streams":[
         {
-          "name":"FB Page Photo (text + image)",
+          "name":"IG Page Photo (text + image)",
           "permitted_operations":"RP",
-          "connection_string":"FacebookPagePhotoConnector",
+          "connection_string":"InstagramBusinessPhotoConnector",
           "type": "social"
         },
         {
-          "name":"FB Page Video (video is mandatory)",
+          "name":"IG Page Video (video is mandatory)",
           "permitted_operations":"RP",
-          "connection_string":"FacebookPageVideoConnector",
+          "connection_string":"InstagramBusinessVideoConnector",
           "type": "social"
         },
         {
-          "name":"FB Page Status (image is mandatory)",
+          "name":"IG Page Status (image is mandatory)",
           "permitted_operations":"RPDU",
-          "connection_string":"FacebookPageStatusConnector",
+          "connection_string":"InstagramBusinessStatusConnector",
           "type": "social"
         }
       ],
@@ -84,6 +44,13 @@
         },
         {
           "name":"pageid",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"igbusinessid",
           "type":"string",
           "is_editable":"0",
           "is_mandatory":"1",
