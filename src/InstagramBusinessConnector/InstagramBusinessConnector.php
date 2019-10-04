@@ -210,13 +210,13 @@ class InstagramBusinessConnector extends Connector implements IConnector {
      * @param null $objectId
      * @return array
      */
-    public function read($objectId = null) {
+    public function read($objectIgId = null) {
 
         // Read complete page feed
-        if ($objectId == null)
-            $objectId = $this->objectId;
+        if ($objectIgId == null)
+            $objectIgId = $this->objectIgId;
 
-        if ($objectId == null) {
+        if ($objectIgId == null) {
             return [];
         }
 
@@ -224,64 +224,54 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         if (!empty($this->since) && !empty($this->until)) {
             $limitString = '&since=' . $this->since . '&until=' . $this->until;
         }
-        $streamToRead = '/' . $objectId . '/feed/'
-            . '?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},'
-            . 'reactions.limit(5).summary(true),'
-            . 'shares,'
-            . 'comments.limit(10).summary(true){from{name,picture,link},created_time,message,like_count,comments},'
-            . 'from{name,picture}' . $limitString;
+
+        $streamToRead = '/' . $objectIgId . '?fields=media' . $limitString;
         try {
+          $response = $this->fb->get($streamToRead);
+
+          $result = [];
+          foreach ($response->getGraphNode()->getField('media') as $key => $media_obj) {
+            $streamToRead = '/' . $media_obj['id']
+              . '?fields=caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,'
+              . 'comments.limit(10){user,username,timestamp,text,like_count,id}'
+              . $limitString;
+
             $response = $this->fb->get($streamToRead);
 
-            $result = [];
-            foreach ($response->getGraphEdge() as $v) {
-                $row = [];
-                $row['id'] = $v->getField('id');
-                $row['type'] = $v->getField('type');
-                $row['created_time'] = $v->getField('created_time')->format('Y-m-d H:i:s');
-                $row['message'] = $v->getField('message');
-                $row['picture'] = $v->getField('picture');
-                $row['full_picture'] = $v->getField('full_picture');
-                $row['link'] = $v->getField('link');
-                $row['attachments'] = $v->getField('attachments') == null ? [] : $v->getField('attachments')->asArray();
-                $row['from'] = $v->getField('from') == null ? [] : $v->getField('from')->asArray();
-                $row['reactions'] = $v->getField('reactions') == null ? [] : $v->getField('reactions')->asArray();
-                $row['comments'] = $v->getField('comments') == null ? [] : $v->getField('comments')->asArray();
-                $row['reactions_total'] = $v->getField('reactions') == null ? 0 : $v->getField('reactions')->getMetaData()['summary']['total_count'];
-                $row['comments_total'] = $v->getField('comments') == null ? 0 : $v->getField('comments')->getMetaData()['summary']['total_count'];
-                $row['shares_total'] = $v->getField('shares') == null ? 0 : $v->getField('shares')->getField('count');
-                if ($row['shares_total'] == null)
-                    $row['shares_total'] = 0;
-                $result[] = $row;
+            $row = [];
+            $row['id'] = $response->getGraphNode()->getField('id');
+            $row['media_type'] = $response->getGraphNode()->getField('media_type');
+            $row['timestamp'] = new Time($response->getGraphNode()->getField('timestamp'));
+            $row['caption'] = $response->getGraphNode()->getField('caption');
+            $row['thumbnail_url'] = $response->getGraphNode()->getField('thumbnail_url') == null ? null : $response->getGraphNode()->getField('thumbnail_url');
+            $row['media_url'] = $response->getGraphNode()->getField('media_url');
+            $row['permalink'] = $response->getGraphNode()->getField('permalink');
+            if($response->getGraphNode()->getField('owner')->getField('id') == $objectIgId ){
+              $owner = $this->fb->get('/' . $objectIgId . '?fields=name,username,profile_picture_url');
+              $row['owner'] = $owner->getGraphNode()->asArray();
+            }else{
+              $row['owner'] = $response->getGraphNode()->getField('owner');
             }
+            $row['comments'] = $response->getGraphNode()->getField('comments') == null ? [] : $response->getGraphNode()->getField('comments')->asArray();
+            $row['comments_count'] = $response->getGraphNode()->getField('comments_count');
+            $row['like_count'] = $response->getGraphNode()->getField('like_count');
+            $result[] = $row;
 
-            foreach ($result as $id => $value) {
-                $val = Hash::extract($result, $id . '.from.picture');
-                $result = Hash::remove($result, $id . '.from.picture');
-                $result = Hash::insert($result, $id . '.from.picture.data', $val);
+          }
 
-                if (Hash::extract($result, $id . '.reactions') != null) {
-                    $val = Hash::extract($result, $id . '.reactions');
-                    $result = Hash::remove($result, $id . '.reactions');
-                    $result = Hash::insert($result, $id . '.reactions.data', $val);
-                }
-
-                if (Hash::extract($result, $id . '.comments') != null) {
-                    $val = Hash::extract($result, $id . '.comments');
-                    $result = Hash::remove($result, $id . '.comments');
-                    $result = Hash::insert($result, $id . '.comments.data', $val);
-                    foreach ($result[$id]['comments']['data'] as $id2 => $value2) {
-                        $val = Hash::extract($result, $id . '.comments.data.' . $id2 . '.from.picture');
-                        $result = Hash::remove($result, $id . '.comments.data.' . $id2 . '.from.picture');
-                        $result = Hash::insert($result, $id . '.comments.data.' . $id2 . '.from.picture.data', $val);
-                    }
-                }
-            }
-
-            $result['social_users'] = [];
+          $result['social_users'] = [];
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            $result = [];
-            $result['error'] = $e->getMessage();
+          $result = [];
+          $result['error'] = $e->getMessage();
+        }
+
+        //formattato per visualizzazione in comments.ctp
+        foreach ($result as $id => $value) {
+            if (Hash::extract($result, $id . '.comments') != null) {
+                $val = Hash::extract($result, $id . '.comments');
+                $result = Hash::remove($result, $id . '.comments');
+                $result = Hash::insert($result, $id . '.comments.igdata', $val);
+            }
         }
 
         return $result;
@@ -307,7 +297,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
         if (isset($data['error']))
           return [];
-        Log::error('FacebookConnector readPublicPage urlToRead"'. print_r($urlToRead,true));
+        Log::error('InstagramBusinessConnector readPublicPage urlToRead"'. print_r($urlToRead,true));
         $formattedResult = $this->format_result($data);
         return ($formattedResult);
     }
@@ -465,16 +455,16 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     }
 
     /**
-     * @param $objectId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
+     * @param $objectIgId The object where you want to read from or write to the comments. More information https://developers.facebook.com/docs/graph-api/reference/v2.9/object/comments
      * @param $operation The operation requested, 'r' stand for read, 'w' stand for write
      * @param $content
      * @return array
      */
-    public function comments($objectId, $operation = 'r', $content = null) {
-        if ($objectId == null)
-            $objectId = $this->objectId;
+    public function comments($objectIgId, $operation = 'r', $content = null) {
+        if ($objectIgId == null)
+          $objectIgId = $this->objectIgId;
 
-        if ($objectId == null) {
+        if ($objectIgId == null) {
             return [];
         }
 
@@ -502,8 +492,9 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         }
 
 
-        // In case of update first write comment than read the comment
+        // Update operation not supported (we can only hide/show comments)
         if ($operation === 'u' && !empty($content)) {
+          /*
             try {
                 $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
                 $url = '/' . $objectId;
@@ -522,6 +513,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
                 Log::write('debug', $e);
                 return [];
             }
+          */
         }
 
 
@@ -529,7 +521,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         if ($operation === 'd') {
             try {
                 $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-                $url = '/' . $objectId;
+                $url = '/' . $objectIgId;
 
                 $request = $this->fb->request('DELETE', $url);
                 $this->fb->getClient()->sendRequest($request);
@@ -541,7 +533,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         }
 
         try {
-            $statRequest = '/' . $objectId . '/comments';
+            $statRequest = '/' . $objectIgId . '/comments';
 
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
