@@ -233,7 +233,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
           foreach ($response->getGraphNode()->getField('media') as $key => $media_obj) {
             $streamToRead = '/' . $media_obj['id']
               . '?fields=caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,'
-              . 'comments.limit(10){user,username,timestamp,text,like_count,id}'
+              . 'comments.limit(10){user,username,timestamp,text,like_count,id,replies{user,username,timestamp,text,like_count,id}}'
               . $limitString;
 
             $response = $this->fb->get($streamToRead);
@@ -253,6 +253,20 @@ class InstagramBusinessConnector extends Connector implements IConnector {
               $row['owner'] = $response->getGraphNode()->getField('owner');
             }
             $row['comments'] = $response->getGraphNode()->getField('comments') == null ? [] : $response->getGraphNode()->getField('comments')->asArray();
+
+            //get picture and name of commentator
+            if(count($row['comments']) > 0) {
+              foreach ($row['comments'] as $id => $comments) {
+                  $extra_data = $this->getBusinessDiscovery($objectIgId, $comments['username']);
+                  if($extra_data != null){
+                    $row['comments'][$id] += ['extra' => $extra_data];
+                  }
+              }
+            }
+
+            if(count($row['comments']) > 0 && $response->getGraphNode()->getField('replies') != null) {
+              array_push($row['comments'],$response->getGraphNode()->getField('replies')->asArray());
+            }
             $row['comments_count'] = $response->getGraphNode()->getField('comments_count');
             $row['like_count'] = $response->getGraphNode()->getField('like_count');
             $result[] = $row;
@@ -491,31 +505,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             }
         }
 
-
         // Update operation not supported (we can only hide/show comments)
-        if ($operation === 'u' && !empty($content)) {
-          /*
-            try {
-                $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-                $url = '/' . $objectId;
-
-                $data = [
-                    'message' => strip_tags($content['comment']),
-                ];
-                $this->fb->post($url, $data);
-
-                $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
-                $request = $this->fb->request('GET', $url);
-                $response = $this->fb->getClient()->sendRequest($request);
-                Log::write('debug', $url);
-                return $response->getDecodedBody();
-            } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-                Log::write('debug', $e);
-                return [];
-            }
-          */
-        }
-
 
         // In case of delete
         if ($operation === 'd') {
@@ -533,7 +523,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         }
 
         try {
-            $statRequest = '/' . $objectIgId . '/comments';
+            $statRequest = '/' . $objectIgId ;
 
             $request = $this->fb->request('GET', $statRequest);
             $response = $this->fb->getClient()->sendRequest($request);
@@ -851,12 +841,40 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             $ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            
+
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-            
+
         }
 
         return $ub;
+    }
+
+    private function getBusinessDiscovery($objectIgId, $username) {
+
+      // Read other IG Business accounts
+      if ($objectIgId == null)
+        $objectIgId = $this->objectIgId;
+
+      if ($objectIgId == null) {
+        return [];
+      }
+
+      $result = null;
+
+      try {
+
+        $request = '/' . $objectIgId . '/?fields=business_discovery.username('. $username .'){name,profile_picture_url,id}';
+        $response = $this->fb->get($request);
+
+        $result = $response->getGraphNode()->getField('business_discovery')->asArray();
+
+      } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+
+      } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+
+      }
+
+      return $result;
     }
 
     private function blankForEmpty(&$var) {
