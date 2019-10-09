@@ -255,6 +255,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             $row['comments'] = $response->getGraphNode()->getField('comments') == null ? [] : $response->getGraphNode()->getField('comments')->asArray();
 
             //get picture and name of commentator
+            /* rallenta il caricamento
             if(count($row['comments']) > 0) {
               foreach ($row['comments'] as $id => $comments) {
                   $extra_data = $this->getBusinessDiscovery($objectIgId, $comments['username']);
@@ -262,7 +263,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
                     $row['comments'][$id] += ['extra' => $extra_data];
                   }
               }
-            }
+            }*/
 
             if(count($row['comments']) > 0 && $response->getGraphNode()->getField('replies') != null) {
               array_push($row['comments'],$response->getGraphNode()->getField('replies')->asArray());
@@ -486,19 +487,19 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         if ($operation === 'w' && !empty($content)) {
             try {
                 $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-                $url = '/' . $objectId . '/comments';
+                $url = ($content['type'] == "firstLevel") ? '/' . $objectIgId . '/comments?message=' : '/' . $objectIgId . '/replies?message=';
                 $data = [
-                    'message' => strip_tags($content['comment']),
+                  'message' => strip_tags($content['comment']),
                 ];
                 $response = $this->fb->post($url, $data);
 
                 $commentId = $response->getDecodedBody()['id'];
-                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture,link}';
 
-                $request = $this->fb->request('GET', $commentRequest);
-                $response = $this->fb->getClient()->sendRequest($request);
+                $commentRequest =  '/' . $commentId . '?fields=user,username,timestamp,text,like_count,id';
 
-                return $response->getDecodedBody();
+                $response = $this->fb->get($commentRequest);
+
+                return $response->getGraphNode()->asArray();
             } catch (\Facebook\Exceptions\FacebookResponseException $e) {
                 Log::write('debug', $e);
                 return [];
