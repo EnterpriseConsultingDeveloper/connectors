@@ -207,7 +207,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     /**
      * Read a Facebook entity
      *
-     * @param null $objectId
+     * @param null $objectIgId
      * @return array
      */
     public function read($objectIgId = null) {
@@ -296,6 +296,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
      * @param null $objectId
      * @return array
      */
+    //TODO: for ContentMachine e LibSocial
     public function readPublicPage($objectId = null) {
         // Read complete public page feed
         if ($objectId == null)
@@ -320,26 +321,8 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     /**
      * @return array
      */
-    public function write($content) {
-        // Di default inserisco sul feed
-        $post = strip_tags($content['content']['body']);
-        if ($content['content']['link'] != null) {
-            $post .= " " . $content['content']['link'];
-        }
-
-        $data = [
-            'title' => $content['content']['title'],
-            'message' => $post,
-        ];
-
-        $response = $this->fb->post('me/feed', $data);
-
-        $nodeId = $response->getGraphNode()->getField('id');
-
-        $info['id'] = $nodeId;
-        $info['url'] = 'http://www.facebook.com/' . $nodeId;
-
-        return $info;
+    public function write($content)
+    {
     }
 
     public function update($content, $objectId) {
@@ -351,20 +334,8 @@ class InstagramBusinessConnector extends Connector implements IConnector {
      * @return \Facebook\FacebookResponse
      */
     public function delete($objectId = null) {
-
-        if ($objectId == null) {
-            return;
-        }
-
-        //'/'.$graphNode['id'] ,array(), $facebook_access_token // esempio
-
-        try {
-            $response = $this->fb->delete($objectId);
-        } catch (\Facebook\Exceptions\FacebookApiException $e) {
-            $response = false;
-        }
-
-        return $response;
+        //$response = $this->fb->delete($objectId);
+        return null;
     }
 
     /**
@@ -372,64 +343,30 @@ class InstagramBusinessConnector extends Connector implements IConnector {
      * @return mixed
      */
     public function mapFormData($data) {
-
-        // Necessary only if are authenticating a page, not a profile
-//    if(isset($data['token'])) {
-//      $client = $this->fb->getOAuth2Client();
-//
-//      try {
-//        // Returns a long-lived access token
-//        $accessToken = $client->getLongLivedAccessToken($data['token']);
-//      } catch(FacebookSDKException $e) {
-//        // There was an error communicating with Graph
-//        echo $e->getMessage();
-//        exit;
-//      }
-//
-//      $data['longlivetoken'] = $accessToken->getValue();
-//    }
-
         return $data;
     }
 
     /**
-     * @param $objectId
+     * @param $objectIgId
      * @return array
      * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
      */
-    public function stats($objectId) {
-        if ($objectId == null)
-            $objectId = $this->objectId;
+    public function stats($objectIgId) {
+        if ($objectIgId == null)
+          $objectIgId = $this->objectIgId;
 
-        if ($objectId == null)
+        if ($objectIgId == null)
             return [];
 
-        $stats['sharedposts'] = [];
         try {
-            $statRequest = '/' . $objectId . '/?fields=sharedposts';
-            $response = $this->fb->get($statRequest);
-            $ge = $response->getGraphNode()->getField('sharedposts');
-            while ($ge != null) {
-                $stats['sharedposts'] = array_merge($stats['sharedposts'], $ge->asArray());
-                $ge = $this->fb->next($ge);
-            }
-        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            $stats['sharedposts'] = 0;
-            echo 'Facebook SDK returned an error: ' . $e->getMessage();
-        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage();
-        }
-        try {
-            $statRequest = '/' . $objectId . '?fields=shares,likes.limit(0).summary(true),comments.limit(0).summary(true)';
+            $statRequest = '/' . $objectIgId . '?fields=like_count,comments_count';
             $response = $this->fb->get($statRequest);
 
-            $stats['sharedposts_number'] = $response->getGraphNode()->getField('shares')['count'];
-            $stats['likes_number'] = $response->getGraphNode()->getField('likes')->getMetaData()['summary']['total_count'];
-            $stats['comment_number'] = $response->getGraphNode()->getField('comments')->getMetaData()['summary']['total_count'];
+            $stats['likes_number'] = $response->getGraphNode()->getField('like_count');
+            $stats['comment_number'] = $response->getGraphNode()->getField('comments_count');
 
             $stats['insights'] = [];
-            $statRequest = '/' . $objectId
+            $statRequest = '/' . $objectIgId
                 . '/?fields=insights.metric('
                 . 'post_engaged_users'
                 . ',post_engaged_fan'
@@ -578,9 +515,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         if ($objectId == null) {
             return [];
         }
-        //1165594993
-        //email,about,age_range,birthday,currency,education,favorite_athletes,favorite_teams,hometown,about,birthday,inspirational_people,interested_in,languages,location,meeting_for,political,quotes,relationship_status,religion,significant_other,sports,website,work
-        //id,name,first_name,last_name,middle_name,gender,cover,currency,devices,link,locale,name_format,timezone
+
         try {
             // Returns a `Facebook\FacebookResponse` object
             $objectId = '/' . $objectId;
