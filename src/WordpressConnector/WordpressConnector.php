@@ -43,7 +43,7 @@ class WordpressConnector extends Connector implements IConnector
             'suitetoken' => $this->_suitetoken,
         ]);
 
-        $this->_wptoken = json_decode($response->body)->token;
+        $this->_wptoken = json_decode($this->prepareJSON($response->body()))->token;
 
     }
 
@@ -242,6 +242,15 @@ class WordpressConnector extends Connector implements IConnector
         $result = preg_replace($re, $subst, $str, 1);
         return $result;
 
+    }
+
+    function prepareJSON($input)
+    {
+        //Remove UTF-8 BOM if present, json_decode() does not like it.
+        if (substr($input, 0, 3) == pack("CCC", 0xEF, 0xBB, 0xBF))
+          $input = substr($input, 3);
+
+        return $input;
     }
 
 }
