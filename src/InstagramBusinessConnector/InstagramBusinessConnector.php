@@ -368,17 +368,10 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             $stats['insights'] = [];
             $statRequest = '/' . $objectIgId
                 . '/?fields=insights.metric('
-                . 'post_engaged_users'
-                . ',post_engaged_fan'
-                . ',post_negative_feedback'
-                . ',post_negative_feedback_unique'
-                . ',post_impressions'
-                . ',post_impressions_organic'
-                . ',post_impressions_unique'
-                . ',post_impressions_paid'
-                . ',post_clicks'
-                . ',post_clicks_unique'
-                . ',post_reactions_by_type_total'
+                . 'engagement'
+                . ',impressions'
+                . ',reach'
+                . ',saved'
                 . '){values,name}';
             $response = $this->fb->get($statRequest);
             $ge = $response->getGraphNode()->getField('insights');
@@ -387,11 +380,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             $myInsights = [];
             foreach ($insights as $key => $value) {
                 if (isset($value['values']) && isset($value['values'][0]['value'])) {
-                    if ($value['name'] == 'post_reactions_by_type_total') {
-                        foreach ($value['values'][0]['value'] as $rname => $rvalue)
-                            $myInsights[$rname] = $rvalue;
-                    } else
-                        $myInsights[$value['name']] = $value['values'][0]['value'];
+                    $myInsights[$value['name']] = $value['values'][0]['value'];
                 }
             }
 
