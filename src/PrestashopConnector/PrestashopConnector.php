@@ -26,6 +26,8 @@ class PrestashopConnector extends Connector implements IConnector
     //protected $_pspass;
     protected $_pstoken;
     protected $_pswsauthkey;
+    private $objectId;
+    private $ps;
 
     function __construct($params)
     {
