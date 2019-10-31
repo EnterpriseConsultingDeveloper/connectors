@@ -10,6 +10,7 @@ namespace WR\Connector\PrestashopConnector;
 
 
 use Cake\ORM\TableRegistry;
+use http\Message;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use App\Lib\WhiteRabbit\WRClient;
@@ -21,12 +22,10 @@ class PrestashopConnector extends Connector implements IConnector
 {
     protected $_http;
     protected $_psapipath;
-    protected $_psuser;
-    protected $_pspass;
+    //protected $_psuser;
+    //protected $_pspass;
     protected $_pstoken;
-
-    private $objectId;
-    private $ps;
+    protected $_pswsauthkey;
 
     function __construct($params)
     {
@@ -34,17 +33,22 @@ class PrestashopConnector extends Connector implements IConnector
 
         $this->_http = new WRClient();
         $this->_psapipath = $params['apipath'];
-        $this->_psuser = $params['username'];
-        $this->_pspass = $params['password'];
-
+        $this->_pswsauthkey = $params['ps_ws_auth_key'];
+       // $this->_suitetoken = $params['token'];
+        //$this->_psuser = $params['username'];
+        //$this->_pspass = $params['password'];
         $connectPath = $this->_psapipath . 'connect';
-
+        try {
         $response = $this->_http->post($connectPath, [
-            'username' => $this->_psuser,
-            'password' => $this->_pspass
+                'ps_ws_auth_key' => $this->_pswsauthkey,
         ]);
-
         $this->_pstoken = json_decode($response->body)->token;
+        } catch (\PDOException $e) {
+            $this->_pstoken = '';
+            \Cake\Log\Log::debug('PrestashopConnector __construct error  : ' . print_r($e, true));
+        }
+
+
     }
 
     public function connect($config)
@@ -148,7 +152,8 @@ class PrestashopConnector extends Connector implements IConnector
 
     }
 
-    public function setError($message) {
+    public function setError($message)
+    {
 
     }
 
