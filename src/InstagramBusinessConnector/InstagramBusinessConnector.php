@@ -626,76 +626,67 @@ class InstagramBusinessConnector extends Connector implements IConnector {
      * @param null $objectId
      * @return array
      */
-    public function captureFan($objectId = null) {
+    public function captureFan($objectIgId = null) {
         // Read complete page feed
-        if ($objectId == null)
-            $objectId = $this->objectId;
+        if ($objectIgId == null)
+            $objectIgId = $this->objectIgId;
 
-        if ($objectId == null) {
+        if ($objectIgId == null) {
             return [];
         }
 
+        $limitString = '&limit=' . $this->feedLimit;
+        if (!empty($this->since) && !empty($this->until)) {
+            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+        }
+
+        $streamToRead = '/' . $objectIgId . '?fields=media' . $limitString;
+
+        // Append users that have taken an action on the page
+        $social_users = array();
+
         try {
+            $response = $this->fb->get($streamToRead);
 
-            $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
-            $response = $this->fb->sendRequest('GET', $streamToRead);
+            foreach ($response->getGraphNode()->getField('media') as $key => $media_obj) {
+                $streamToRead = '/' . $media_obj['id']
+                    . '?fields=caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,'
+                    . 'comments.limit(10){user,username,timestamp,text,like_count,id,replies{user,username,timestamp,text,like_count,id}}'
+                    . $limitString;
 
-            $data = $response->getDecodedBody()['data'];
+                $response = $this->fb->get($streamToRead);
 
-            // Append users that have taken an action on the page
-            $social_users = array();
+                $ancestor_body = ($response->getGraphNode()->getField('caption') != null) ? $response->getGraphNode()->getField('caption') : '';
 
-            foreach ($data as $d) {
-                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
-
-                if (isset($d['reactions'])) {
-                    foreach ($d['reactions']['data'] as $social_user) {
+                if ($response->getGraphNode()->getField('comments') != null && count($response->getGraphNode()->getField('comments')->asArray()) > 0) {
+                    foreach ($response->getGraphNode()->getField('comments')->asArray() as $social_user) {
                         $ub = new ConnectorUserBean();
-                        $ub->setName($social_user['name']);
+                        $ub->setName($social_user['username']);
                         $ub->setId($social_user['id']);
-                        $ub->setAction($social_user['type']);
-                        $ub->setContentId($d['id']);
-                        $ub->setText('');
-
-                        $ub->setDate(Time::now()->toAtomString());
-
-                        $ub->setAncestorBody($ancestor_body);
-
-                        $ub = $this->getUserExtraData($social_user['id'], $ub);
-
-                        $social_users[] = $ub;
-                    }
-                }
-
-                if (isset($d['comments'])) {
-                    foreach ($d['comments']['data'] as $social_user) {
-                        $ub = new ConnectorUserBean();
-                        $ub->setName($social_user['from']['name']);
-                        $ub->setId($social_user['from']['id']);
                         $ub->setAction('COMMENT');
-                        $ub->setContentId($d['id']);
-                        $ub->setDate($social_user['created_time']);
-                        $ub->setText($social_user['message']);
+                        $ub->setContentId($media_obj['id']);
+                        $ub->setDate($social_user['timestamp']);
+                        $ub->setText($social_user['text']);
 
                         $ub->setAncestorBody($ancestor_body);
 
-                        $ub = $this->getUserExtraData($social_user['id'], $ub);
+                        $ub = $this->getUserExtraData($social_user['username'], $ub);
 
                         $social_users[] = $ub;
 
-                        if (isset($social_user['comments'])) {
-                            foreach ($social_user['comments']['data'] as $sub_comment) {
+                        if($response->getGraphNode()->getField('replies') != null) {
+                            foreach ($response->getGraphNode()->getField('replies')->asArray() as $sub_comment) {
                                 $ub = new ConnectorUserBean();
-                                $ub->setName($sub_comment['from']['name']);
-                                $ub->setId($sub_comment['from']['id']);
+                                $ub->setName($sub_comment['username']);
+                                $ub->setId($sub_comment['id']);
                                 $ub->setAction('COMMENT');
-                                $ub->setContentId($d['id']);
-                                $ub->setDate($sub_comment['created_time']);
-                                $ub->setText($sub_comment['message']);
+                                $ub->setContentId($media_obj['id']);
+                                $ub->setDate($sub_comment['timestamp']);
+                                $ub->setText($sub_comment['text']);
 
-                                $ub->setAncestorBody($social_user['message']);
+                                $ub->setAncestorBody($social_user['text']);
 
-                                $ub = $this->getUserExtraData($social_user['id'], $ub);
+                                $ub = $this->getUserExtraData($social_user['username'], $ub);
 
                                 $social_users[] = $ub;
                             }
@@ -751,20 +742,18 @@ class InstagramBusinessConnector extends Connector implements IConnector {
         return $beans;
     }
 
-    private function getUserExtraData($userId, ConnectorUserBean $ub) {
+    private function getUserExtraData($username, ConnectorUserBean $ub) {
+
+        if ($this->objectIgId == null) {
+            return [];
+        }
+
         try {
 
-						$request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture,locale');
-            $response = $this->fb->getClient()->sendRequest($request);
-            $extraData = $response->getDecodedBody();
+            $extraData = $this->getBusinessDiscovery($this->objectIgId, $username);
 
-            $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
-            $ub->setLastname($this->blankForEmpty($extraData['last_name']));
-            $ub->setGender($this->blankForEmpty($extraData['gender']));
-						$ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
-            $ub->setLocale($this->blankForEmpty($extraData['locale']));
-            $ub->setCurrency($this->blankForEmpty($extraData['currency']));
-            //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
+            $ub->setFirstname($this->blankForEmpty($extraData['name']));
+            $ub->setCoverimage($this->blankForEmpty($extraData['profile_picture_url']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
 
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
