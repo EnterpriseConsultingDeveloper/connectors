@@ -656,13 +656,14 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
                 $response = $this->fb->get($streamToRead);
 
-                $ancestor_body = ($response->getGraphNode()->getField('caption') != null) ? $response->getGraphNode()->getField('caption') : '';
+                $d = $response->getDecodedBody();
 
-                if ($response->getGraphNode()->getField('comments') != null && count($response->getGraphNode()->getField('comments')->asArray()) > 0) {
-                    foreach ($response->getGraphNode()->getField('comments')->asArray() as $social_user) {
+                $ancestor_body = (isset($d['caption'])) ? $d['caption'] : '';
+
+                if (isset($d['comments'])) {
+                    foreach ($d['comments']['data'] as $key => $social_user) {
                         $ub = new ConnectorUserBean();
                         $ub->setName($social_user['username']);
-                        $ub->setId($social_user['id']);
                         $ub->setAction('COMMENT');
                         $ub->setContentId($media_obj['id']);
                         $ub->setDate($social_user['timestamp']);
@@ -672,13 +673,17 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
                         $ub = $this->getUserExtraData($social_user['username'], $ub);
 
+                        if($ub->getId() != null) {
+                            $d['comments']['data'][$key]['userid'] = $ub->getId();
+                            $d['comments']['data'][$key]['profile_picture_url'] = $ub->getCoverimage();
+                        }
+
                         $social_users[] = $ub;
 
-                        if($response->getGraphNode()->getField('replies') != null) {
-                            foreach ($response->getGraphNode()->getField('replies')->asArray() as $sub_comment) {
+                        if (isset($d['replies'])) {
+                            foreach ($d['replies']['data'] as $sub_comment) {
                                 $ub = new ConnectorUserBean();
                                 $ub->setName($sub_comment['username']);
-                                $ub->setId($sub_comment['id']);
                                 $ub->setAction('COMMENT');
                                 $ub->setContentId($media_obj['id']);
                                 $ub->setDate($sub_comment['timestamp']);
@@ -686,13 +691,14 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
                                 $ub->setAncestorBody($social_user['text']);
 
-                                $ub = $this->getUserExtraData($social_user['username'], $ub);
+                                $ub = $this->getUserExtraData($sub_comment['username'], $ub);
 
                                 $social_users[] = $ub;
                             }
                         }
                     }
                 }
+                $data['data'][] = $d;
             }
 
             $data['social_users'] = $social_users;
@@ -752,6 +758,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
             $extraData = $this->getBusinessDiscovery($this->objectIgId, $username);
 
+            $ub->setId($this->blankForEmpty($extraData['id']));
             $ub->setFirstname($this->blankForEmpty($extraData['name']));
             $ub->setCoverimage($this->blankForEmpty($extraData['profile_picture_url']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
