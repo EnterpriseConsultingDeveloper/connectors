@@ -15,6 +15,7 @@ use App\Lib\CRM\CRMManager;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceCartBean;
 use App\Controller\MultiSchemaTrait;
 use Cake\I18n\Time;
 use App\Controller\Component\UtilitiesComponent;
@@ -179,26 +180,43 @@ class PrestashopEcommerceConnector extends PrestashopConnector
     public function write_cart($content)
     {
         $data = [];
+        $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
         $data['cartIdExt'] = $this->notSetToEmptyString($content['cartIdExt']);
+        $data['currency'] = $this->notSetToEmptyString($content['currency']);
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
         $data['cartNum'] = $this->notSetToEmptyString($content['cartNum']);
         $data['cartDate'] = $this->notSetToEmptyString($content['cartDate']);
         $data['cartTotal'] = $this->notSetToEmptyString($content['cartTotal']);
         $data['email'] = $this->notSetToEmptyString($content['email']);
-        $data['cartNote'] = $this->notSetToEmptyString($content['cartNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
-        $data['productActivity'] = (unserialize($content['productActivity']));
-        $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
-        try {
-            $crmManager = new CRMManager();
-            $crmManager->setCustomer($content['customer_id']);
-            // $cmrRes = $crmManager->pushOrderToCrm($content['customer_id'], $data);
-            $cmrRes = $crmManager->pushCartToCrm($content['customer_id'], $data);
+        $data['productActivity'] = unserialize($content['productActivity']) ;
+        $data['description'] = $this->notSetToEmptyString($content['cartNote']);
+        //\Cake\Log\Log::debug('Prestashop write_cart function on '. print_r($data,true));
 
-            return $cmrRes;
+        try {
+            $cartBean = new ActivityEcommerceCartBean();
+            $this->createCrmConnection($content['customer_id']);
+            $cartBean->setCustomer($content['customer_id'])
+                ->setSource($data['source'])
+                ->setToken($data['source'])// identificatore univoco della fonte del dato
+                ->setDataRaw($data);
+
+            $cartBean->setSiteName($data['site_name']);
+            $cartBean->setEmail($data['email']);
+            $cartBean->setCartdate($data['cartDate']);
+            //  $cartBean->setCurrency($data['currency']);
+            //$cartBean->setDescription($data['description']);
+            $cartBean->setNumber($data['cartNum']);
+            $cartBean->setTotal($data['cartTotal']);
+            $cartBean->setCurrency($data['currency']);
+            $cartBean->setProducts($data['productActivity']);
+            ActionsManager::pushCart($cartBean);
+
         } catch (\PDOException $e) {
             return false;
         }
+
+        return true;
     }
 
     /**
