@@ -293,20 +293,20 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     }
 
     /**
-     * @param null $objectId
+     * @param null $objectIgId
      * @return array
      */
     //TODO: for ContentMachine e LibSocial
-    public function readPublicPage($objectId = null) {
+    public function readPublicPage($objectIgId = null) {
         // Read complete public page feed
-        if ($objectId == null)
-            $objectId = $this->objectId;
+        if ($objectIgId == null)
+            $objectIgId = $this->objectIgId;
 
-        if ($objectId == null) {
+        if ($objectIgId == null) {
             return [];
         }
 
-        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
+        $urlToRead = "https://graph.facebook.com/" . $objectIgId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
         $http = new Client();
         $response = $http->get($urlToRead);
         $data = $response->json;
@@ -623,7 +623,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     /**
      * Get fan from the stream
      *
-     * @param null $objectId
+     * @param null $objectIgId
      * @return array
      */
     public function captureFan($objectIgId = null) {
