@@ -205,7 +205,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     }
 
     /**
-     * Read a Facebook entity
+     * Read a Instagram entity
      *
      * @param null $objectIgId
      * @return array
@@ -220,39 +220,43 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             return [];
         }
 
-        $limitString = '&limit=' . $this->feedLimit;
+        $limitString = '.limit(' . $this->feedLimit.")";
         if (!empty($this->since) && !empty($this->until)) {
-            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+            /*da finire*/
+            $limitString = '.since(' . $this->since . ').until(' . $this->until.")";
         }
 
-        $streamToRead = '/' . $objectIgId . '?fields=media' . $limitString;
+        $streamToRead = '/' . $objectIgId . '?fields=media'.$limitString.'{caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,comments.limit(10){user,username,timestamp,text,like_count,id,replies{user,username,timestamp,text,like_count,id}}}' ;
         try {
           $response = $this->fb->get($streamToRead);
-
           $result = [];
+          $ownerInfo =  [];
           foreach ($response->getGraphNode()->getField('media') as $key => $media_obj) {
-            $streamToRead = '/' . $media_obj['id']
+
+            /*$streamToRead = '/' . $media_obj['id']
               . '?fields=caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,'
               . 'comments.limit(10){user,username,timestamp,text,like_count,id,replies{user,username,timestamp,text,like_count,id}}'
               . $limitString;
 
-            $response = $this->fb->get($streamToRead);
-
+            $response = $this->fb->get($streamToRead);*/
             $row = [];
-            $row['id'] = $response->getGraphNode()->getField('id');
-            $row['media_type'] = $response->getGraphNode()->getField('media_type');
-            $row['timestamp'] = new Time($response->getGraphNode()->getField('timestamp'));
-            $row['caption'] = $response->getGraphNode()->getField('caption');
-            $row['thumbnail_url'] = $response->getGraphNode()->getField('thumbnail_url') == null ? null : $response->getGraphNode()->getField('thumbnail_url');
-            $row['media_url'] = $response->getGraphNode()->getField('media_url');
-            $row['permalink'] = $response->getGraphNode()->getField('permalink');
-            if($response->getGraphNode()->getField('owner')->getField('id') == $objectIgId ){
+            $row['id'] = $media_obj->getField('id');
+            $row['media_type'] = $media_obj->getField('media_type');
+            $row['timestamp'] = new Time($media_obj->getField('timestamp'));
+            $row['caption'] = $media_obj->getField('caption');
+            $row['thumbnail_url'] = $media_obj->getField('thumbnail_url') == null ? null : $media_obj->getField('thumbnail_url');
+            $row['media_url'] = $media_obj->getField('media_url');
+            $row['permalink'] = $media_obj->getField('permalink');
+
+            if($media_obj->getField('owner')->getField('id') == $objectIgId && empty($ownerInfo) ){
               $owner = $this->fb->get('/' . $objectIgId . '?fields=name,username,profile_picture_url');
               $row['owner'] = $owner->getGraphNode()->asArray();
+              $ownerInfo =  $row['owner'];
             }else{
-              $row['owner'] = $response->getGraphNode()->getField('owner');
+              $row['owner'] = $ownerInfo;
             }
-            $row['comments'] = $response->getGraphNode()->getField('comments') == null ? [] : $response->getGraphNode()->getField('comments')->asArray();
+
+            $row['comments'] = $media_obj->getField('comments') == null ? [] : $media_obj->getField('comments')->asArray();
 
             //get picture and name of commentator
             /* rallenta il caricamento
@@ -265,11 +269,11 @@ class InstagramBusinessConnector extends Connector implements IConnector {
               }
             }*/
 
-            if(count($row['comments']) > 0 && $response->getGraphNode()->getField('replies') != null) {
-              array_push($row['comments'],$response->getGraphNode()->getField('replies')->asArray());
+            if(count($row['comments']) > 0 && $media_obj->getField('replies') != null) {
+              array_push($row['comments'],$media_obj->getField('replies')->asArray());
             }
-            $row['comments_count'] = $response->getGraphNode()->getField('comments_count');
-            $row['like_count'] = $response->getGraphNode()->getField('like_count');
+            $row['comments_count'] = $media_obj->getField('comments_count');
+            $row['like_count'] = $media_obj->getField('like_count');
             $result[] = $row;
 
           }
