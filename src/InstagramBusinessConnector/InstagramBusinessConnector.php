@@ -639,36 +639,30 @@ class InstagramBusinessConnector extends Connector implements IConnector {
             return [];
         }
 
-        $limitString = '&limit=' . $this->feedLimit;
+        $limitString = '.limit(' . $this->feedLimit.")";
         if (!empty($this->since) && !empty($this->until)) {
-            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+            /*da finire*/
+            $limitString = '.since(' . $this->since . ').until(' . $this->until.")";
         }
 
-        $streamToRead = '/' . $objectIgId . '?fields=media' . $limitString;
+        $streamToRead = '/' . $objectIgId . '?fields=media'.$limitString.'{caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,comments.limit(10){user,username,timestamp,text,like_count,id,replies{user,username,timestamp,text,like_count,id}}}' ;
 
         // Append users that have taken an action on the page
         $social_users = array();
 
         try {
             $response = $this->fb->get($streamToRead);
+            $data = $response->getDecodedBody()['media']['data'];
 
-            foreach ($response->getGraphNode()->getField('media') as $key => $media_obj) {
-                $streamToRead = '/' . $media_obj['id']
-                    . '?fields=caption,like_count,media_type,media_url,owner,permalink,thumbnail_url,timestamp,comments_count,'
-                    . 'comments.limit(10){user,username,timestamp,text,like_count,id,replies{user,username,timestamp,text,like_count,id}}'
-                    . $limitString;
+            foreach ($data as $key => $media_obj) {
 
-                $response = $this->fb->get($streamToRead);
+                $ancestor_body = (isset($media_obj['caption'])) ? $media_obj['caption'] : '';
 
-                $d = $response->getDecodedBody();
-
-                $ancestor_body = (isset($d['caption'])) ? $d['caption'] : '';
-
-                if (isset($d['comments'])) {
-                    foreach ($d['comments']['data'] as $key => $social_user) {
+                if (isset($media_obj['comments'])) {
+                    foreach ($media_obj['comments']['data'] as $key => $social_user) {
                         $ub = new ConnectorUserBean();
                         $ub->setName($social_user['username']);
-                        $ub->setAction('COMMENT');
+                        $ub->setAction('comment');
                         $ub->setContentId($media_obj['id']);
                         $ub->setDate($social_user['timestamp']);
                         $ub->setText($social_user['text']);
@@ -678,17 +672,18 @@ class InstagramBusinessConnector extends Connector implements IConnector {
                         $ub = $this->getUserExtraData($social_user['username'], $ub);
 
                         if($ub->getId() != null) {
-                            $d['comments']['data'][$key]['userid'] = $ub->getId();
-                            $d['comments']['data'][$key]['profile_picture_url'] = $ub->getCoverimage();
+                            $media_obj['comments']['data'][$key]['userid'] = $ub->getId();
+                            $media_obj['comments']['data'][$key]['firstname'] = $ub->getFirstname();
+                            $media_obj['comments']['data'][$key]['profile_picture_url'] = $ub->getCoverimage();
                         }
 
                         $social_users[] = $ub;
 
-                        if (isset($d['replies'])) {
-                            foreach ($d['replies']['data'] as $sub_comment) {
+                        if (isset($media_obj['replies'])) {
+                            foreach ($media_obj['replies']['data'] as $sub_comment) {
                                 $ub = new ConnectorUserBean();
                                 $ub->setName($sub_comment['username']);
-                                $ub->setAction('COMMENT');
+                                $ub->setAction('comment');
                                 $ub->setContentId($media_obj['id']);
                                 $ub->setDate($sub_comment['timestamp']);
                                 $ub->setText($sub_comment['text']);
@@ -702,7 +697,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
                         }
                     }
                 }
-                $data['data'][] = $d;
+                $data['data'][] = $media_obj;
             }
 
             $data['social_users'] = $social_users;
