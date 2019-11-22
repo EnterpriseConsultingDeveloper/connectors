@@ -664,6 +664,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
                         $ub->setName($social_user['username']);
                         $ub->setAction('comment');
                         $ub->setContentId($media_obj['id']);
+                        $ub->setLink($media_obj['permalink']);
                         $ub->setDate($social_user['timestamp']);
                         $ub->setText($social_user['text']);
 
@@ -685,6 +686,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
                                 $ub->setName($sub_comment['username']);
                                 $ub->setAction('comment');
                                 $ub->setContentId($media_obj['id']);
+                                $ub->setLink($media_obj['permalink']);
                                 $ub->setDate($sub_comment['timestamp']);
                                 $ub->setText($sub_comment['text']);
 
