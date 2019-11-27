@@ -27,6 +27,7 @@ class ConnectorUserBean extends Bean
     private $_locale = '';
     private $_currency = '';
     private $_devices = '';
+    private $_link = '';
 
     private $_ancestor_body = '';
 
@@ -156,6 +157,22 @@ class ConnectorUserBean extends Bean
     public function setDevices($devices)
     {
         $this->_devices = $devices;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLink()
+    {
+        return $this->_link;
+    }
+
+    /**
+     * @param string $link
+     */
+    public function setLink($link)
+    {
+        $this->_link = $link;
     }
 
 

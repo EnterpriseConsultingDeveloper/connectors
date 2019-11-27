@@ -1,0 +1,62 @@
+{
+  "name":"InstagramBusinessConnector",
+  "description":"Instagram Business connector for WhiteRabbit suite",
+  "icon":"fa-instagram",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"Page",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"IG Page Photo (text + image)",
+          "permitted_operations":"RP",
+          "connection_string":"InstagramBusinessPhotoConnector",
+          "type": "social"
+        },
+        {
+          "name":"IG Page Video (video is mandatory)",
+          "permitted_operations":"RP",
+          "connection_string":"InstagramBusinessVideoConnector",
+          "type": "social"
+        },
+        {
+          "name":"IG Page Status (image is mandatory)",
+          "permitted_operations":"RPDU",
+          "connection_string":"InstagramBusinessStatusConnector",
+          "type": "social"
+        }
+      ],
+      "settings":[
+        {
+          "name":"token",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"longlivetoken",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"pageid",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"igbusinessid",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        }
+      ]
+    }
+  ]
+}
