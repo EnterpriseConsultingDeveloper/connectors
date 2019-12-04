@@ -39,7 +39,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     var $error = false;
 
     function __construct($params) {
-        $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
 
         $this->fb = new Facebook([
             'http_client_handler' => 'stream', // do not use Guzzle 5.*, prefer PHP streams
@@ -545,7 +545,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
     public function callback($params) {
 
-        $config = json_decode(file_get_contents('appdata_dev.cfg', true), true);
+        $config = json_decode(file_get_contents('appdata.cfg', true), true);
         $data = array();
 
         $helper = $this->fb->getRedirectLoginHelper();
