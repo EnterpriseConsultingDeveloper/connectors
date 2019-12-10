@@ -36,16 +36,28 @@ class PrestashopConnector extends Connector implements IConnector
 
         $this->_http = new WRClient();
         $this->_psapipath = $params['apipath'];
-        $this->_pswsauthkey = $params['ps_ws_auth_key'];
-       // $this->_suitetoken = $params['token'];
+
+        if (!empty($params['ps_ws_auth_key'])) {
+            $this->_pswsauthkey = $params['ps_ws_auth_key'];
+            $this->_psuser = null;
+            $this->_pspass = null;
+        } else {
+            $this->_pswsauthkey = null;
+            $this->_psuser = $params['username'];
+            $this->_pspass = $params['password'];
+        }
+
+        // $this->_suitetoken = $params['token'];
         //$this->_psuser = $params['username'];
         //$this->_pspass = $params['password'];
         $connectPath = $this->_psapipath . 'connect';
         try {
-        $response = $this->_http->post($connectPath, [
+            $response = $this->_http->post($connectPath, [
                 'ps_ws_auth_key' => $this->_pswsauthkey,
-        ]);
-        $this->_pstoken = json_decode($response->body)->token;
+                'username' => $this->_psuser,
+                'password' => $this->_pspass
+            ]);
+            $this->_pstoken = json_decode($response->body)->token;
         } catch (\PDOException $e) {
             $this->_pstoken = '';
             \Cake\Log\Log::debug('PrestashopConnector __construct error  : ' . print_r($e, true));
