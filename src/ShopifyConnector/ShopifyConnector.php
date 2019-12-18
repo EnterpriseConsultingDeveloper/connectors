@@ -27,6 +27,7 @@ class ShopifyConnector extends Connector implements IConnector
 	private $objectId;
 	protected $shopify;
 	protected $shopUrl;
+    protected $limitCall;
 
 	function __construct($params)
 	{
@@ -43,6 +44,7 @@ class ShopifyConnector extends Connector implements IConnector
 
 		$this->shopify = new PHPShopify\ShopifySDK($config);
 		$this->shopUrl = isset($params['shop_url']) ? $params['shop_url'] : null;
+        $this->limitCall = 250;
 
 	}
 
@@ -56,7 +58,7 @@ class ShopifyConnector extends Connector implements IConnector
 	 * @param null $objectId
 	 * @return array
 	 */
-	public function read($objectId = null)
+    public function read($objectId = null, $params = null)
 	{
 
 	}
@@ -95,7 +97,8 @@ class ShopifyConnector extends Connector implements IConnector
 	 * @param $data
 	 * @return mixed
 	 */
-	public function mapFormData($data) {
+    public function mapFormData($data)
+    {
 		return $data;
 	}
 
@@ -114,7 +117,8 @@ class ShopifyConnector extends Connector implements IConnector
 	{
 	}
 
-	public function commentFromDate($objectId, $fromDate) {
+    public function commentFromDate($objectId, $fromDate)
+    {
 
 	}
 
@@ -148,14 +152,17 @@ class ShopifyConnector extends Connector implements IConnector
 
 	}
 
-	public function callback($params) {
+    public function callback($params)
+    {
 	}
 
-	public function configData() {
+    public function configData()
+    {
 		return json_decode(file_get_contents('appdata.cfg', true), true);
 	}
 
-	public function setError($message) {
+    public function setError($message)
+    {
 
 	}
 

@@ -214,6 +214,22 @@ class ConnectorManager
     return $classInstance->read($objectId);
   }
 
+    /**
+     * @param $params
+     * @param $objectId
+     * @return mixed
+     */
+    public function get_content_filter_data($params, $objectId)
+    {
+        $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
+        $classInstance = new $className($params);
+
+        //debug($params);debug($className);debug($classInstance); die;
+        return $classInstance->read($objectId,$params);
+    }
+
+
+
   public function callback($params) {
     $className = 'WR\\Connector\\' . $this->myConnector . '\\' . ucfirst($this->myClass);
     //debug($params); debug($className); die;
