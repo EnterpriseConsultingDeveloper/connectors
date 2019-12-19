@@ -21,27 +21,29 @@ use App\Lib\CRM\CRMManager;
 
 class ShopifyOrderConnector extends ShopifyConnector
 {
-	use MultiSchemaTrait;
+    use MultiSchemaTrait;
 
-	function __construct($params)
-	{
-		parent::__construct($params);
-	}
+    function __construct($params)
+    {
+        parent::__construct($params);
+    }
 
 
-	/**
-	 * @param null $objectId
-	 * @return array
-	 */
+    /**
+     * @param null $objectId
+     * @return array
+     */
     public function read($customerId = null, $params = null)
     {
         $params_call = array();
+        $params_call['status'] = "any";
         if (!empty($params['date'])) {
             $params_call['created_at_min'] = $params['date'];
         }
-        \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' params '  .  print_r($params_call,true));
+
+        \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' params ' . print_r(json_encode($params_call), true));
         $count_order_db = $this->shopify->Order->count($params_call);
-        \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' scount_order_db '  .  $count_order_db);
+        \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' count_order_db ' . $count_order_db);
         $exit = 0;
         $count_order_crm = 0;
         $page = 0;
@@ -50,9 +52,8 @@ class ShopifyOrderConnector extends ShopifyConnector
             $params_call['limit'] = $this->limitCall;
             $params_call['page'] = $page;
             $orders = $this->shopify->Order->get($params_call);
-            \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' on params '. print_r($params_call,true));
-
             foreach ($orders as $order) {
+                \Cake\Log\Log::debug('Shopify ShopifyOrderConnector import order_number ' . $order['order_number']);
                 $data = [];
                 $data['source'] = $this->shopUrl;
                 $data['email'] = $this->notSetToEmptyString($order['email']);
@@ -115,87 +116,86 @@ class ShopifyOrderConnector extends ShopifyConnector
         return true;
     }
 
-
     public function Oldread($customerId = null)
-	{
+    {
 
-		$orders = $this->shopify->Order->get();
+        $orders = $this->shopify->Order->get();
 
-		foreach($orders as $order) {
+        foreach ($orders as $order) {
 
-			$data = [];
-			$data['source'] = $this->shopUrl;
-			$data['email'] = $this->notSetToEmptyString($order['email']);
-			$data['number'] = $this->notSetToEmptyString($order['order_number']);
-			$data['orderdate'] = $order['created_at'];
-			$data['order_status'] = $this->notSetToEmptyString($order['financial_status']);
-			$data['total'] = $this->notSetToEmptyString($order['total_price']);
-			$data['currency'] = $this->notSetToEmptyString($order['currency']);
-			$data['tax_total'] = $this->notSetToEmptyString($order['total_tax']);
-			$data['subtotal'] = $this->notSetToEmptyString($order['subtotal_price']);
-			$data['cart_discount'] = $this->notSetToEmptyString($order['total_discounts']);
+            $data = [];
+            $data['source'] = $this->shopUrl;
+            $data['email'] = $this->notSetToEmptyString($order['email']);
+            $data['number'] = $this->notSetToEmptyString($order['order_number']);
+            $data['orderdate'] = $order['created_at'];
+            $data['order_status'] = $this->notSetToEmptyString($order['financial_status']);
+            $data['total'] = $this->notSetToEmptyString($order['total_price']);
+            $data['currency'] = $this->notSetToEmptyString($order['currency']);
+            $data['tax_total'] = $this->notSetToEmptyString($order['total_tax']);
+            $data['subtotal'] = $this->notSetToEmptyString($order['subtotal_price']);
+            $data['cart_discount'] = $this->notSetToEmptyString($order['total_discounts']);
 
 //          $data['shipping_total'] = $this->notSetToEmptyString($content['shipping_total']);
-			$data['shipping_firstname'] = $this->notSetToEmptyString($order['shipping_address']['shipping_firstname']);
-			$data['shipping_lastname'] = $this->notSetToEmptyString($order['shipping_address']['last_name']);
-			$data['shipping_address'] = $this->notSetToEmptyString($order['shipping_address']['address1']);
-			$data['shipping_postalcode'] = $this->notSetToEmptyString($order['shipping_address']['zip']);
-			$data['shipping_city'] = $this->notSetToEmptyString($order['shipping_address']['city']);
-			$data['shipping_country'] = $this->notSetToEmptyString($order['shipping_address']['country']);
-			$data['shipping_phone'] = $this->notSetToEmptyString($order['shipping_address']['phone']);
+            $data['shipping_firstname'] = $this->notSetToEmptyString($order['shipping_address']['shipping_firstname']);
+            $data['shipping_lastname'] = $this->notSetToEmptyString($order['shipping_address']['last_name']);
+            $data['shipping_address'] = $this->notSetToEmptyString($order['shipping_address']['address1']);
+            $data['shipping_postalcode'] = $this->notSetToEmptyString($order['shipping_address']['zip']);
+            $data['shipping_city'] = $this->notSetToEmptyString($order['shipping_address']['city']);
+            $data['shipping_country'] = $this->notSetToEmptyString($order['shipping_address']['country']);
+            $data['shipping_phone'] = $this->notSetToEmptyString($order['shipping_address']['phone']);
 //          $data['shipping_tax'] = $this->notSetToEmptyString($order['shipping_address']['address1']);
 
-			$data['payment_method'] = $this->notSetToEmptyString($order['gateway']);
+            $data['payment_method'] = $this->notSetToEmptyString($order['gateway']);
 //          $data['shipping_method'] = $this->notSetToEmptyString($content['shipping_method']);
-			/*new*/
-			$data['description'] = $this->notSetToEmptyString($order['note']);
-			$data['products'] = array();
-			$data['tags'] = array();
+            /*new*/
+            $data['description'] = $this->notSetToEmptyString($order['note']);
+            $data['products'] = array();
+            $data['tags'] = array();
 
-			foreach ($order['line_items'] as $id => $product) {
+            foreach ($order['line_items'] as $id => $product) {
 //            debug($product);
-				$data['products'][$id]['product_id'] = $product['id'];
-				$data['products'][$id]['name'] = $product['title'];
-				$data['products'][$id]['qty'] = $product['quantity'];
-				$data['products'][$id]['price'] = $product['price'];
-				$data['products'][$id]['discount'] = $product['total_discount'];
-				/*new*/
-				$data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
-				$data['products'][$id]['description'] = $this->notSetToEmptyString($product['name']);
-				$data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax_lines'][0]['price']);
+                $data['products'][$id]['product_id'] = $product['id'];
+                $data['products'][$id]['name'] = $product['title'];
+                $data['products'][$id]['qty'] = $product['quantity'];
+                $data['products'][$id]['price'] = $product['price'];
+                $data['products'][$id]['discount'] = $product['total_discount'];
+                /*new*/
+                $data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
+                $data['products'][$id]['description'] = $this->notSetToEmptyString($product['name']);
+                $data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax_lines'][0]['price']);
 //            $data['products'][$id]['category'] = $this->notSetToEmptyString($product['category']);
-				/*new*/
-			}
+                /*new*/
+            }
 
 //          foreach ($tags as $id => $tag) {
 //            $data['tags']['name'][] = $tag;
 //          }
 
-			try {
+            try {
 
 
-				$this->createCrmConnection($customerId);
+                $this->createCrmConnection($customerId);
 
-				$changeStatusBean = new ActivityEcommerceChangeStatusBean();
-				$changeStatusBean->setCustomer($customerId)
-					->setSource($this->shopUrl)
-					->setToken($this->shopUrl)
-					->setDataRaw($data);
+                $changeStatusBean = new ActivityEcommerceChangeStatusBean();
+                $changeStatusBean->setCustomer($customerId)
+                    ->setSource($this->shopUrl)
+                    ->setToken($this->shopUrl)
+                    ->setDataRaw($data);
 
-				ActionsManager::pushOrder($changeStatusBean);
+                ActionsManager::pushOrder($changeStatusBean);
 
-			} catch (\Exception $e) {
-				// Log error
-			}
+            } catch (\Exception $e) {
+                // Log error
+            }
 
-		}
+        }
 
-	}
+    }
 
 
     private function notSetToEmptyString(&$myString)
     {
-		return (!isset($myString)) ? '' : $myString;
-	}
+        return (!isset($myString)) ? '' : $myString;
+    }
 
 }
