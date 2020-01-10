@@ -106,7 +106,7 @@ class FacebookConnector extends Connector implements IConnector {
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
-        
+
     }
 
     /**
@@ -190,29 +190,31 @@ class FacebookConnector extends Connector implements IConnector {
             return [];
         }
 
-        $limitString = '&limit=' . $this->feedLimit;
+        $limitString = '.limit(' . $this->feedLimit.")";
         if (!empty($this->since) && !empty($this->until)) {
-            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+            /*da finire*/
+            $limitString = '.since(' . $this->since . ').until(' . $this->until.")";
         }
-        $streamToRead = '/' . $objectId . '/feed/'
-            . '?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},'
-            . 'reactions.limit(5).summary(true),'
+        $streamToRead = '/' . $objectId . '?fields=feed' . $limitString
+            . '{id,created_time,message,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url,media{image}},'
+            . 'reactions.summary(total_count).limit(5),'
             . 'shares,'
-            . 'comments.limit(10).summary(true){from{name,picture,link},created_time,message,like_count,comments},'
-            . 'from{name,picture}' . $limitString;
+            . 'comments.summary(total_count).limit(10){from{name,picture},created_time,message,like_count,comments},'
+            . 'from{name,picture}}';
         try {
             $response = $this->fb->get($streamToRead);
 
             $result = [];
-            foreach ($response->getGraphEdge() as $v) {
+            foreach ($response->getGraphNode()->getField('feed') as $v) {
                 $row = [];
                 $row['id'] = $v->getField('id');
-                $row['type'] = $v->getField('type');
-                $row['created_time'] = $v->getField('created_time')->format('Y-m-d H:i:s');
+                $row['type'] = $v->getField('attachments')[0]->getField('media_type');
+                $row['title'] = $v->getField('attachments')[0]->getField('title');
+                $row['created_time'] = new Time($v->getField('created_time'));
                 $row['message'] = $v->getField('message');
                 $row['picture'] = $v->getField('picture');
-                $row['full_picture'] = $v->getField('full_picture');
-                $row['link'] = $v->getField('link');
+                $row['full_picture'] = ($v->getField('attachments')[0]->getField('media_type') != "link") ? $v->getField('full_picture') : $v->getField('attachments')[0]->getField('media')->getField('image')->getField('src');
+                $row['link'] = $v->getField('permalink_url');
                 $row['attachments'] = $v->getField('attachments') == null ? [] : $v->getField('attachments')->asArray();
                 $row['from'] = $v->getField('from') == null ? [] : $v->getField('from')->asArray();
                 $row['reactions'] = $v->getField('reactions') == null ? [] : $v->getField('reactions')->asArray();
@@ -592,7 +594,7 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $content
      */
     public function add_user($content) {
-        
+
     }
 
     /**
@@ -817,14 +819,14 @@ class FacebookConnector extends Connector implements IConnector {
     private function getUserExtraData($userId, ConnectorUserBean $ub) {
         try {
 
-						$request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture,locale');
+            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture,locale');
             $response = $this->fb->getClient()->sendRequest($request);
             $extraData = $response->getDecodedBody();
 
             $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
             $ub->setLastname($this->blankForEmpty($extraData['last_name']));
             $ub->setGender($this->blankForEmpty($extraData['gender']));
-						$ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
+            $ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
             $ub->setLocale($this->blankForEmpty($extraData['locale']));
             $ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
