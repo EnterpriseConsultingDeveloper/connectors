@@ -272,7 +272,7 @@ class FacebookConnector extends Connector implements IConnector {
             return [];
         }
 
-        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
+        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts.limit(" . $this->feedLimit . ")&access_token=" . $this->accessToken . "|" . $this->appSecret;
         $http = new Client();
         $response = $http->get($urlToRead);
         $data = $response->json;
@@ -461,7 +461,7 @@ class FacebookConnector extends Connector implements IConnector {
                 $response = $this->fb->post($url, $data);
 
                 $commentId = $response->getDecodedBody()['id'];
-                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture,link}';
+                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture}';
 
                 $request = $this->fb->request('GET', $commentRequest);
                 $response = $this->fb->getClient()->sendRequest($request);
@@ -485,7 +485,7 @@ class FacebookConnector extends Connector implements IConnector {
                 ];
                 $this->fb->post($url, $data);
 
-                $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
+                $url .= '?fields=message,created_time,like_count,from{name,picture}';
                 $request = $this->fb->request('GET', $url);
                 $response = $this->fb->getClient()->sendRequest($request);
                 Log::write('debug', $url);
@@ -793,12 +793,12 @@ class FacebookConnector extends Connector implements IConnector {
             $element = new ConnectorBean();
             if (!empty($post['message']))
                 $element->setBody($post['message']);
-            elseif (!empty($post['story'])) {
+            /*elseif (!empty($post['story'])) {
                 $element->setBody($post['story']);
             }
 
             if (!empty($post['story']))
-                $element->setTitle($post['story']);
+                $element->setTitle($post['story']);*/
 
             $element->setIsContentMeaningful(1);
             $element->setCreationDate($post['created_time']);
