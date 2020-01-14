@@ -702,7 +702,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         try {
 
-            $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+            $streamToRead = '/' . $objectId . '/feed/?fields=id,created_time,message,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url},reactions,shares,comments{from{name,picture},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
             $response = $this->fb->sendRequest('GET', $streamToRead);
 
             $data = $response->getDecodedBody()['data'];
@@ -711,7 +711,7 @@ class FacebookConnector extends Connector implements IConnector {
             $social_users = array();
 
             foreach ($data as $d) {
-                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
+                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['attachments']['data'][0]['title']) ? $d['attachments']['data'][0]['title'] : '');
 
                 if (isset($d['reactions'])) {
                     foreach ($d['reactions']['data'] as $social_user) {
@@ -819,7 +819,7 @@ class FacebookConnector extends Connector implements IConnector {
     private function getUserExtraData($userId, ConnectorUserBean $ub) {
         try {
 
-            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture,locale');
+            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture');
             $response = $this->fb->getClient()->sendRequest($request);
             $extraData = $response->getDecodedBody();
 
@@ -827,8 +827,8 @@ class FacebookConnector extends Connector implements IConnector {
             $ub->setLastname($this->blankForEmpty($extraData['last_name']));
             $ub->setGender($this->blankForEmpty($extraData['gender']));
             $ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
-            $ub->setLocale($this->blankForEmpty($extraData['locale']));
-            $ub->setCurrency($this->blankForEmpty($extraData['currency']));
+            //$ub->setLocale($this->blankForEmpty($extraData['locale']));
+            //$ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
             
