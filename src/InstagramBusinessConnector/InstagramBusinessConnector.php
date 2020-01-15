@@ -353,7 +353,6 @@ class InstagramBusinessConnector extends Connector implements IConnector {
     /**
      * @param $objectIgId
      * @return array
-     * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
      */
     public function stats($objectIgId) {
         if ($objectIgId == null)

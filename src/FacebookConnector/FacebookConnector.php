@@ -362,7 +362,7 @@ class FacebookConnector extends Connector implements IConnector {
     /**
      * @param $objectId
      * @return array
-     * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
+     * @link https://developers.facebook.com/docs/graph-api/reference/v5.0/insights facebook api insights
      */
     public function stats($objectId) {
         if ($objectId == null)
@@ -388,7 +388,7 @@ class FacebookConnector extends Connector implements IConnector {
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
         }
         try {
-            $statRequest = '/' . $objectId . '?fields=shares,likes.limit(0).summary(true),comments.limit(0).summary(true)';
+            $statRequest = '/' . $objectId . '?fields=shares,likes.limit(0).summary(total_count),comments.limit(0).summary(total_count)';
             $response = $this->fb->get($statRequest);
 
             $stats['sharedposts_number'] = $response->getGraphNode()->getField('shares')['count'];
