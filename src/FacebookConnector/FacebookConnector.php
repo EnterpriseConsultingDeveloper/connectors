@@ -727,7 +727,7 @@ class FacebookConnector extends Connector implements IConnector {
                         $ub->setContentId($d['id']);
                         $ub->setText('');
 
-                        $ub->setDate(Time::now()->toAtomString());
+                        $ub->setDate($d['created_time']);
 
                         $ub->setAncestorBody($ancestor_body);
 
