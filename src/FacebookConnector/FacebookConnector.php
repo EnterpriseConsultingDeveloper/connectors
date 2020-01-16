@@ -196,7 +196,7 @@ class FacebookConnector extends Connector implements IConnector {
             $limitString = '.since(' . $this->since . ').until(' . $this->until.")";
         }
         $streamToRead = '/' . $objectId . '?fields=feed' . $limitString
-            . '{id,created_time,message,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url,media{image}},'
+            . '{id,created_time,message,story,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url,media{image}},'
             . 'reactions.summary(total_count).limit(5),'
             . 'shares,'
             . 'comments.summary(total_count).limit(10){from{name,picture},created_time,message,like_count,comments},'
@@ -206,12 +206,17 @@ class FacebookConnector extends Connector implements IConnector {
 
             $result = [];
             foreach ($response->getGraphNode()->getField('feed') as $v) {
+
+                if($v->getField('attachments') == null){
+                    continue;
+                }
+
                 $row = [];
                 $row['id'] = $v->getField('id');
                 $row['type'] = $v->getField('attachments')[0]->getField('media_type');
                 $row['title'] = $v->getField('attachments')[0]->getField('title');
                 $row['created_time'] = new Time($v->getField('created_time'));
-                $row['message'] = $v->getField('message');
+                $row['message'] = $v->getField('message') == null ? ($v->getField('story') == null ? $v->getField('attachments')[0]->getField('title') : $v->getField('story')) : $v->getField('message');
                 $row['picture'] = $v->getField('picture');
                 $row['full_picture'] = ($v->getField('attachments')[0]->getField('media_type') != "link") ? $v->getField('full_picture') : $v->getField('attachments')[0]->getField('media')->getField('image')->getField('src');
                 $row['link'] = $v->getField('permalink_url');
@@ -702,7 +707,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         try {
 
-            $streamToRead = '/' . $objectId . '/feed/?fields=id,created_time,message,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url},reactions,shares,comments{from{name,picture},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+            $streamToRead = '/' . $objectId . '/feed/?fields=id,created_time,message,story,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url},reactions,shares,comments{from{name,picture},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
             $response = $this->fb->sendRequest('GET', $streamToRead);
 
             $data = $response->getDecodedBody()['data'];
@@ -711,7 +716,7 @@ class FacebookConnector extends Connector implements IConnector {
             $social_users = array();
 
             foreach ($data as $d) {
-                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['attachments']['data'][0]['title']) ? $d['attachments']['data'][0]['title'] : '');
+                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : (isset($d['attachments']['data'][0]['title']) ? $d['attachments']['data'][0]['title'] : ''));
 
                 if (isset($d['reactions'])) {
                     foreach ($d['reactions']['data'] as $social_user) {
@@ -793,12 +798,12 @@ class FacebookConnector extends Connector implements IConnector {
             $element = new ConnectorBean();
             if (!empty($post['message']))
                 $element->setBody($post['message']);
-            /*elseif (!empty($post['story'])) {
+            elseif (!empty($post['story'])) {
                 $element->setBody($post['story']);
             }
 
             if (!empty($post['story']))
-                $element->setTitle($post['story']);*/
+                $element->setTitle($post['story']);
 
             $element->setIsContentMeaningful(1);
             $element->setCreationDate($post['created_time']);
