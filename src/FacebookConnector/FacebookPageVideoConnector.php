@@ -32,6 +32,11 @@ class FacebookPageVideoConnector extends FacebookConnector
             $post .= " " . $content['content']['main_url'];
         }
 
+        if ($content['content']['main_video'] == null) {
+            $error = ['Error' => 500, 'Message' => 'require video'];
+            return $error;
+        }
+
         $data = [
             'title' => $content['content']['title'],
             'message' => $post,
