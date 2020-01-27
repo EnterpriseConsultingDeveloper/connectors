@@ -106,7 +106,7 @@ class FacebookConnector extends Connector implements IConnector {
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
-        
+
     }
 
     /**
@@ -190,29 +190,36 @@ class FacebookConnector extends Connector implements IConnector {
             return [];
         }
 
-        $limitString = '&limit=' . $this->feedLimit;
+        $limitString = '.limit(' . $this->feedLimit.")";
         if (!empty($this->since) && !empty($this->until)) {
-            $limitString = '&since=' . $this->since . '&until=' . $this->until;
+            /*da finire*/
+            $limitString = '.since(' . $this->since . ').until(' . $this->until.")";
         }
-        $streamToRead = '/' . $objectId . '/feed/'
-            . '?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},'
-            . 'reactions.limit(5).summary(true),'
+        $streamToRead = '/' . $objectId . '?fields=feed' . $limitString
+            . '{id,created_time,message,story,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url,media{image}},'
+            . 'reactions.summary(total_count).limit(5),'
             . 'shares,'
-            . 'comments.limit(10).summary(true){from{name,picture,link},created_time,message,like_count,comments},'
-            . 'from{name,picture}' . $limitString;
+            . 'comments.summary(total_count).limit(10){from{name,picture},created_time,message,like_count,comments},'
+            . 'from{name,picture}}';
         try {
             $response = $this->fb->get($streamToRead);
 
             $result = [];
-            foreach ($response->getGraphEdge() as $v) {
+            foreach ($response->getGraphNode()->getField('feed') as $v) {
+
+                if($v->getField('attachments') == null){
+                    continue;
+                }
+
                 $row = [];
                 $row['id'] = $v->getField('id');
-                $row['type'] = $v->getField('type');
-                $row['created_time'] = $v->getField('created_time')->format('Y-m-d H:i:s');
-                $row['message'] = $v->getField('message');
+                $row['type'] = $v->getField('attachments')[0]->getField('media_type');
+                $row['title'] = $v->getField('attachments')[0]->getField('title');
+                $row['created_time'] = new Time($v->getField('created_time'));
+                $row['message'] = $v->getField('message') == null ? ($v->getField('story') == null ? $v->getField('attachments')[0]->getField('title') : $v->getField('story')) : $v->getField('message');
                 $row['picture'] = $v->getField('picture');
-                $row['full_picture'] = $v->getField('full_picture');
-                $row['link'] = $v->getField('link');
+                $row['full_picture'] = ($v->getField('attachments')[0]->getField('media_type') != "link") ? $v->getField('full_picture') : $v->getField('attachments')[0]->getField('media')->getField('image')->getField('src');
+                $row['link'] = $v->getField('permalink_url');
                 $row['attachments'] = $v->getField('attachments') == null ? [] : $v->getField('attachments')->asArray();
                 $row['from'] = $v->getField('from') == null ? [] : $v->getField('from')->asArray();
                 $row['reactions'] = $v->getField('reactions') == null ? [] : $v->getField('reactions')->asArray();
@@ -270,7 +277,7 @@ class FacebookConnector extends Connector implements IConnector {
             return [];
         }
 
-        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts&limit=" . $this->feedLimit . "&access_token=" . $this->accessToken . "|" . $this->appSecret;
+        $urlToRead = "https://graph.facebook.com/" . $objectId . "?fields=posts.limit(" . $this->feedLimit . ")&access_token=" . $this->accessToken . "|" . $this->appSecret;
         $http = new Client();
         $response = $http->get($urlToRead);
         $data = $response->json;
@@ -360,7 +367,7 @@ class FacebookConnector extends Connector implements IConnector {
     /**
      * @param $objectId
      * @return array
-     * @link https://developers.facebook.com/docs/graph-api/reference/v3.0/insights facebook api insights
+     * @link https://developers.facebook.com/docs/graph-api/reference/v5.0/insights facebook api insights
      */
     public function stats($objectId) {
         if ($objectId == null)
@@ -386,7 +393,7 @@ class FacebookConnector extends Connector implements IConnector {
             echo 'Facebook SDK returned an error: ' . $e->getMessage();
         }
         try {
-            $statRequest = '/' . $objectId . '?fields=shares,likes.limit(0).summary(true),comments.limit(0).summary(true)';
+            $statRequest = '/' . $objectId . '?fields=shares,likes.limit(0).summary(total_count),comments.limit(0).summary(total_count)';
             $response = $this->fb->get($statRequest);
 
             $stats['sharedposts_number'] = $response->getGraphNode()->getField('shares')['count'];
@@ -459,7 +466,7 @@ class FacebookConnector extends Connector implements IConnector {
                 $response = $this->fb->post($url, $data);
 
                 $commentId = $response->getDecodedBody()['id'];
-                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture,link}';
+                $commentRequest = '/' . $commentId . '?fields=message,created_time,like_count,from{name,picture}';
 
                 $request = $this->fb->request('GET', $commentRequest);
                 $response = $this->fb->getClient()->sendRequest($request);
@@ -483,7 +490,7 @@ class FacebookConnector extends Connector implements IConnector {
                 ];
                 $this->fb->post($url, $data);
 
-                $url .= '?fields=message,created_time,like_count,from{name,picture,link}';
+                $url .= '?fields=message,created_time,like_count,from{name,picture}';
                 $request = $this->fb->request('GET', $url);
                 $response = $this->fb->getClient()->sendRequest($request);
                 Log::write('debug', $url);
@@ -592,7 +599,7 @@ class FacebookConnector extends Connector implements IConnector {
      * @param $content
      */
     public function add_user($content) {
-        
+
     }
 
     /**
@@ -700,7 +707,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         try {
 
-            $streamToRead = '/' . $objectId . '/feed/?fields=id,type,created_time,message,story,picture,full_picture,link,attachments{url,type},reactions,shares,comments{from{name,picture,link},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
+            $streamToRead = '/' . $objectId . '/feed/?fields=id,created_time,message,story,picture,full_picture,permalink_url,attachments{title,media_type,unshimmed_url},reactions,shares,comments{from{name,picture},created_time,message,like_count,comments},from{name,picture}&limit=' . $this->feedLimit;
             $response = $this->fb->sendRequest('GET', $streamToRead);
 
             $data = $response->getDecodedBody()['data'];
@@ -709,7 +716,7 @@ class FacebookConnector extends Connector implements IConnector {
             $social_users = array();
 
             foreach ($data as $d) {
-                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : '');
+                $ancestor_body = isset($d['message']) ? $d['message'] : (isset($d['story']) ? $d['story'] : (isset($d['attachments']['data'][0]['title']) ? $d['attachments']['data'][0]['title'] : ''));
 
                 if (isset($d['reactions'])) {
                     foreach ($d['reactions']['data'] as $social_user) {
@@ -720,7 +727,7 @@ class FacebookConnector extends Connector implements IConnector {
                         $ub->setContentId($d['id']);
                         $ub->setText('');
 
-                        $ub->setDate(Time::now()->toAtomString());
+                        $ub->setDate($d['created_time']);
 
                         $ub->setAncestorBody($ancestor_body);
 
@@ -817,16 +824,16 @@ class FacebookConnector extends Connector implements IConnector {
     private function getUserExtraData($userId, ConnectorUserBean $ub) {
         try {
 
-						$request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture,locale');
+            $request = $this->fb->request('GET', '/' . $userId . '/?fields=id,name,first_name,last_name,gender,picture');
             $response = $this->fb->getClient()->sendRequest($request);
             $extraData = $response->getDecodedBody();
 
             $ub->setFirstname($this->blankForEmpty($extraData['first_name']));
             $ub->setLastname($this->blankForEmpty($extraData['last_name']));
             $ub->setGender($this->blankForEmpty($extraData['gender']));
-						$ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
-            $ub->setLocale($this->blankForEmpty($extraData['locale']));
-            $ub->setCurrency($this->blankForEmpty($extraData['currency']));
+            $ub->setCoverimage($this->blankForEmpty($extraData['picture']['data']['url']));
+            //$ub->setLocale($this->blankForEmpty($extraData['locale']));
+            //$ub->setCurrency($this->blankForEmpty($extraData['currency']));
             //$ub->setDevices($this->blankForNotSet($extraData['first_name']));
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
             
