@@ -3,7 +3,7 @@
     "description": "Connectors plugin for CakePHP",
     "type": "cakephp-plugin",
     "require": {
-        "php": "7.1.*",
+        "php": "7.2.*",
         "cakephp/cakephp": "3.6.*"
     },
     "require-dev": {
