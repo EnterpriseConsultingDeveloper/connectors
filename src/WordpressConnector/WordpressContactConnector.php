@@ -87,6 +87,11 @@ class WordpressContactConnector extends WordpressConnector
             $contact['date'] = $contact['date_add'];
         }
 
+        if (!empty($contact['birthdaydate'])) {
+            $contact['birthdaydate'] .= " 00:00:00";
+            $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
+        }
+
         //\Cake\Log\Log::debug('Wordpress function site_submitform on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
 
 
