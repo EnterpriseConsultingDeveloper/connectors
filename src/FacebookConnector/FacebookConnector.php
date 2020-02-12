@@ -207,7 +207,7 @@ class FacebookConnector extends Connector implements IConnector {
             $result = [];
             foreach ($response->getGraphNode()->getField('feed') as $v) {
 
-                if($v->getField('attachments') == null){
+                if($v->getField('attachments') == null || $v->getField('full_picture') == null){
                     continue;
                 }
 
