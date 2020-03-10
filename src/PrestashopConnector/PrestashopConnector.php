@@ -57,7 +57,15 @@ class PrestashopConnector extends Connector implements IConnector
                 'username' => $this->_psuser,
                 'password' => $this->_pspass
             ]);
-            $this->_pstoken = json_decode($response->body)->token;
+
+            \Cake\Log\Log::debug('PrestashopConnector __construct _pstoken $response->body  : ' . print_r($response->body, true));
+
+            if(empty(json_decode($response->body))){
+                $this->_pstoken = '';
+            }else{
+                $this->_pstoken = json_decode($response->body)->token;
+            }
+
         } catch (\PDOException $e) {
             $this->_pstoken = '';
             \Cake\Log\Log::debug('PrestashopConnector __construct error  : ' . print_r($e, true));
