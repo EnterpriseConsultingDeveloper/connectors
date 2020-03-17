@@ -325,7 +325,15 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             $contact['date'] = $contact['date_add'];
         }
 
-        //\Cake\Log\Log::debug('Prestashop add_user function on '. $contact['site_name']  .' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
+
+        if (!empty($contact['tags'])) {
+            foreach ($contact['tags'] as $id => $tag) {
+                $contact['tags']['name'][] = $tag;
+            }
+        }
+
+
+        \Cake\Log\Log::debug('Prestashop add_user function on ' . $contact['site_name'] . ' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
 

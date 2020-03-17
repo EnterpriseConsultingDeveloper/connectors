@@ -393,10 +393,12 @@ class ConnectorManager
       if(isset($content['directory_id']))
         $connectorLog->directory_id = $content['directory_id'];
 
-      if(is_array($content))
+      /*if(is_array($content))
         $connectorLog->mydata = implode(",", $content);
       else
-        $connectorLog->mydata = $content;
+        $connectorLog->mydata = $content;*/
+
+     $connectorLog->mydata = json_encode($content);
 
       $connectorLogs->save($connectorLog);
     } catch (Exception $e) {
