@@ -1,0 +1,43 @@
+{
+  "name":"AdsConnector",
+  "description":"Ads connector for WhiteRabbit suite",
+  "icon":"fa-bullhorn",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"Facebook",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"FB Ads",
+          "permitted_operations":"RP",
+          "connection_string":"FacebookAdsConnector",
+          "type": "ads"
+        }
+      ],
+      "settings":[
+        {
+          "name":"token",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"longlivetoken",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"adaccountid",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        }
+      ]
+    }
+  ]
+}

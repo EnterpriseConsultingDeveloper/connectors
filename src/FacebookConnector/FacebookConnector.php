@@ -9,6 +9,7 @@
 
 namespace WR\Connector\FacebookConnector;
 
+use App\Controller\Component\UtilitiesComponent;
 use Cake\I18n\Time;
 use Facebook\Facebook;
 use Facebook\FacebookRequest;
@@ -32,6 +33,7 @@ class FacebookConnector extends Connector implements IConnector {
     protected $accessToken;
     protected $appSecret;
     protected $objectFbId;
+    protected $objectAdsId;
     protected $connectorUsersSettingsID;
     private $feedLimit;
     private $objectId;
@@ -64,6 +66,7 @@ class FacebookConnector extends Connector implements IConnector {
 
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
             $this->objectFbId = isset($params['pageid']) ? $params['pageid'] : '';
+            $this->objectAdsId = isset($params['adaccountid']) ? $params['adaccountid'] : '';
 
             $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
             $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
@@ -102,7 +105,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         // Vecchi permessi
         // $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
-        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email']; // Optional permissions
+        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email', 'ads_management', 'leads_retrieval']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
@@ -128,6 +131,28 @@ class FacebookConnector extends Connector implements IConnector {
         }
 //    $user = $response->getGraphUser();
         return $logged;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAdsAccounts() {
+
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $response = $this->fb->get('/me?fields=adaccounts.limit(255){id,name}', $this->longLivedAccessToken);
+            $logged = true;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $logged = false;
+//        echo 'Graph returned an error: ' . $e->getMessage();
+//        exit;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            $logged = false;
+//        echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//        exit;
+        }
+
+        return $response->getDecodedBody();
     }
 
     /**
@@ -287,6 +312,88 @@ class FacebookConnector extends Connector implements IConnector {
         Log::error('FacebookConnector readPublicPage urlToRead"'. print_r($urlToRead,true));
         $formattedResult = $this->format_result($data);
         return ($formattedResult);
+    }
+
+    /**
+     * @param null $objectId
+     * @return array
+     */
+    public function readLeadGen($objectId = null) {
+        // Read complete lead gen
+        if ($objectId == null)
+            $objectId = $this->objectAdsId;
+
+        if ($objectId == null) {
+            return [];
+        }
+
+        $forms_lang = null;
+        foreach (glob(__DIR__ . "/lang/*.js", GLOB_ERR) as $files){
+            $forms_lang[] = basename($files,".js");
+        }
+
+        try {
+
+            $streamToRead = '/' . $objectId . '?fields=campaigns{adsets{ads{status,leads{field_data,form_id,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,created_time}},status}},account_status';
+            $response = $this->fb->sendRequest('GET', $streamToRead);
+
+            $data = $response->getDecodedBody()['campaigns'];
+
+            // Append users that have taken lead gen
+            $social_users = array();
+            $form_ids = array();
+
+            foreach ($data['data'] as $d) {
+                if (isset($d['adsets'])) {
+                    foreach ($d['adsets']['data'] as $ad_set) {
+                        if (isset($ad_set['ads'])) {
+                            foreach ($ad_set['ads']['data'] as $ads) {
+                                if (isset($ads['leads'])) {
+                                    foreach ($ads['leads']['data'] as $key => $leads) {
+                                        if (!in_array($leads['form_id'],array_keys($form_ids))) {
+                                            //GET locale of Forms
+                                            $streamToRead = '/' . $leads['form_id'] . '?fields=locale';
+                                            $response = $this->fb->sendRequest('GET', $streamToRead);
+                                            //check if exist lang on folder
+                                            if(!isset($forms_lang) || !in_array($response->getDecodedBody()['locale'],$forms_lang)){
+                                                continue;
+                                            }
+                                            $fields_lang = json_decode(file_get_contents('lang/' . $response->getDecodedBody()['locale'].'.js', true), true);
+
+                                            $form_ids[$leads['form_id']]['locale'] = $response->getDecodedBody()['locale'];
+                                            $form_ids[$leads['form_id']]['field_maps'] = $fields_lang;
+                                        }
+
+                                        foreach ($leads['field_data'] as $form_field){
+                                            $social_users[$form_field['name']] = $form_field['values'][0];
+                                        }
+
+                                        //Mapping Field Form and CRM for all Lang
+                                        $dataCrm[$key] = UtilitiesComponent::remap($social_users, $form_ids[$leads['form_id']]['field_maps'], false);
+                                        $dataCrm[$key] += [
+                                            "date_add" => $leads['created_time'],
+                                            "action" => "lead",
+                                            "contentId" => $leads['ad_id'],
+                                            "platform" => $leads['platform'],
+                                            "ad_name" => $leads['ad_name'],
+                                            "id" => $leads['id'],
+                                            "adset_name" => $leads['adset_name'],
+                                            "campaign_name" => $leads['campaign_name'],
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            $data['social_users'] = $dataCrm;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $data = [];
+            $data['error'] = $e->getMessage();
+        }
+
+        return ($data);
     }
 
     /**
