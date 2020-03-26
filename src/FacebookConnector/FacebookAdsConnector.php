@@ -8,6 +8,8 @@ use Facebook\Facebook;
 use WR\Connector\Connector;
 use WR\Connector\FacebookConnector\FacebookConnector;
 use WR\Connector\IConnector;
+use Noodlehaus\Config;
+use Noodlehaus\Parser\Json;
 
 class FacebookAdsConnector extends FacebookConnector
 {
@@ -53,9 +55,8 @@ class FacebookAdsConnector extends FacebookConnector
         }
 
         $forms_lang = null;
-        foreach (glob(__DIR__ . "/lang/*.js", GLOB_ERR) as $files){
-            $forms_lang[] = basename($files,".js");
-        }
+        $forms_lang = Config::load( __DIR__ . '/lang', new Json)->all();
+        $iso_lang = array_keys($forms_lang);
 
         try {
 
@@ -81,10 +82,10 @@ class FacebookAdsConnector extends FacebookConnector
                                             $streamToRead = '/' . $leads['form_id'] . '?fields=locale';
                                             $response = $this->fb->sendRequest('GET', $streamToRead);
                                             //check if exist lang on folder
-                                            if(!isset($forms_lang) || !in_array($response->getDecodedBody()['locale'],$forms_lang)){
+                                            if(!isset($forms_lang) || !in_array($response->getDecodedBody()['locale'],$iso_lang)){
                                                 continue;
                                             }
-                                            $fields_lang = json_decode(file_get_contents('lang/' . $response->getDecodedBody()['locale'].'.js', true), true);
+                                            $fields_lang = $forms_lang[$response->getDecodedBody()['locale']];
 
                                             $form_ids[$leads['form_id']]['locale'] = $response->getDecodedBody()['locale'];
                                             $form_ids[$leads['form_id']]['field_maps'] = $fields_lang;
