@@ -2,6 +2,7 @@
 .vscode/*
 .idea/vcs.xml
 .idea/.name
+.idea/php.xml
 .idea/connectors.iml
 .idea/deployment.xml
 .idea/encodings.xml
