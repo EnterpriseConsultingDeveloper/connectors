@@ -85,7 +85,7 @@ class WordpressEcommerceConnector extends WordpressConnector
         //\Cake\Log\Log::debug('Wordpress write function on '. $content['site_name']  .' by ' . $content['email'] . ' call: ' . print_r($content, true));
 
         $customerId = $content['customer_id'];
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Wordpress function write on ' . $content['site_name'] . ' by ' . $content['email'] . ' by customer disabled. customer_id ' . $customerId);
             return false;
         }
@@ -272,7 +272,7 @@ class WordpressEcommerceConnector extends WordpressConnector
 
         $customerId = $contact['customer_id'];
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Wordpress function add_user ' . $contact['email'] . ' by customer disabled. customer_id ' . $customerId);
             return false;
         }

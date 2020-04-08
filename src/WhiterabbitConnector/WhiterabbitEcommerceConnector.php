@@ -84,7 +84,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
 
         $customerId = $contact['customer_id'];
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Whiterabbit function add_user customer disabled. customer_id ' . $customerId);
             return false;
         }
@@ -182,7 +182,7 @@ class WhiterabbitEcommerceConnector extends WhiterabbitConnector
         $customerId = $content['customer_id'];
         $content['email'] = strtolower($content['email']);
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Whiterabbit write function on ' . $content['site_name'] . ' by ' . $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id']);
             return false;
         }

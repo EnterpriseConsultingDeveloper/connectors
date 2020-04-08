@@ -158,7 +158,7 @@ class PrestashopContactConnector extends PrestashopConnector
 
         $customerId = $contact['customer_id'];
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Prestashop function add_user customer disabled. customer_id ' . $customerId);
             return false;
         }
@@ -232,7 +232,7 @@ class PrestashopContactConnector extends PrestashopConnector
 
         $customerId = $contact['customer_id'];
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Whiterabbit function site_submitform customer disabled. customer_id ' . $customerId);
             return;
         }

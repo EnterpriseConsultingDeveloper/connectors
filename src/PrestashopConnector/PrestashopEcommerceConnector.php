@@ -24,11 +24,6 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 {
     use MultiSchemaTrait;
 
-    public function __construct($params)
-    {
-        parent::__construct($params);
-    }
-
     /**
      * @param $content
      * @return bool
@@ -46,7 +41,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['orderNote'] = $this->notSetToEmptyString($content['orderNote']);
         $data['site_name'] = $this->notSetToEmptyString($content['site_name']);
         $data['productActivity'] = (unserialize($content['productActivity']));
-        $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
+        $data['crm_push_async'] = $content['crm_push_async'] ?? false;
 
         // \Cake\Log\Log::debug('Prestashop write $data: ' . print_r($data, true))
 
@@ -66,7 +61,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 
         $data = [];
       
-        if (!$this->ceckCustomerEnabled($content['customer_id'])) {
+        if (!$this->checkCustomerEnabled($content['customer_id'])) {
             //\Cake\Log\Log::debug('Prestashop write function on '. $content['site_name']  .' by ' .  $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id'])
             return false;
         }
@@ -260,7 +255,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $data['newsletter_subscription_ip'] = $this->notSetToEmptyString($content['newsletter_subscription_ip']);
         $data['typeid'] = $this->notSetToEmptyString($content['typeid']);
         $data['contact_typeid'] = $this->notSetToEmptyString($content['contact_typeid']);
-        $data['crm_push_async'] = ((isset($content['crm_push_async'])) ? $content['crm_push_async'] : false);
+        $data['crm_push_async'] = $content['crm_push_async'] ?? false;
 
         try {
             $crmManager = new CRMManager();
@@ -307,9 +302,9 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 
         $customerId = $contact['customer_id'];
 
-        if (!$this->ceckCustomerEnabled($customerId)) {
+        if (!$this->checkCustomerEnabled($customerId)) {
             \Cake\Log\Log::debug('Prestashop function add_user ' . $contact['email'] . ' by customer disabled. customer_id ' . $customerId);
-            return;
+            return false;
         }
 
         if (empty($contact['email'])) {
