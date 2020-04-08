@@ -140,7 +140,7 @@ abstract class Connector
         return $res;
     }
 
-    public function ceckCustomerEnabled($customer_id)
+    public function checkCustomerEnabled($customer_id)
     {
         $customersTable = \Cake\ORM\TableRegistry::get('Customers');
         $customer = $customersTable->find()

@@ -104,7 +104,7 @@ class WordpressContactConnector extends WordpressConnector
 
         $customerId = $contact['customer_id'];
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Wordpress function site_submitform customer disabled. customer_id ' . $customerId);
             return;
         }
@@ -209,7 +209,7 @@ class WordpressContactConnector extends WordpressConnector
 
         $customerId = $contact['customer_id'];
 
-        if ($this->ceckCustomerEnabled($customerId) == false) {
+        if ($this->checkCustomerEnabled($customerId) == false) {
             \Cake\Log\Log::debug('Wordpress function add_user customer disabled. customer_id ' . $customerId);
             return false;
         }
