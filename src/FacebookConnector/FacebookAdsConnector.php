@@ -4,6 +4,8 @@ namespace WR\Connector\FacebookConnector;
 
 
 use App\Controller\Component\UtilitiesComponent;
+use Cake\I18n\Time;
+use Cake\Utility\Hash;
 use Facebook\Facebook;
 use WR\Connector\Connector;
 use WR\Connector\FacebookConnector\FacebookConnector;
@@ -31,14 +33,72 @@ class FacebookAdsConnector extends FacebookConnector
 
     public function read($objectId = null)
     {
+        // Read only campaigns
+        if ($objectId == null)
+            $objectId = $this->objectAdsId;
+
         if ($objectId == null) {
             return [];
         }
 
-        $this->fb->setDefaultAccessToken($this->longLivedAccessToken);
-        $streamToRead = '/' . $objectId;
-        $response = $this->fb->get($streamToRead);
-        return ($response->getDecodedBody());
+        $streamToRead = '/' . $objectId . '?fields=campaigns{status,name,created_time},name,account_status';
+
+        try {
+            $request = $this->fb->request('GET', $streamToRead);
+            $graphNode = $this->fb->getClient()->sendRequest($request);
+            $graphEdge = $graphNode->getGraphNode()->getField('campaigns');
+
+            $accountName = $graphNode->getGraphNode()->getField('name');
+            $accountStatus = $graphNode->getGraphNode()->getField('account_status');
+            $accountId = $graphNode->getGraphNode()->getField('id');
+
+            $result = [];
+            $adsArray['account_id'] = $accountId;
+            $adsArray['account_name'] = $accountName;
+            $adsArray['account_status'] = $accountStatus;
+
+            //TODO: if isset campaigns
+            if ($this->fb->next($graphEdge)) {
+                $campaignsArray = $graphEdge->asArray();
+                $result += $campaignsArray;
+
+                while ($graphEdge = $this->fb->next($graphEdge)) {
+                    $campaignsArray = $graphEdge->asArray();
+                    $result = array_merge($result, $campaignsArray);
+                }
+
+            } else {
+                $campaignsArray = $graphEdge->asArray();
+                $result += $campaignsArray;
+            }
+
+
+            foreach($result as $key => $elem) {
+                $val = Hash::extract($result, $key. '.status');
+                $result = Hash::remove($result, $key.'.status');
+                $result = Hash::insert($result, $key.'.campaign_status', $val[0]);
+
+                $val = Hash::extract($result, $key.'.id');
+                $result = Hash::remove($result, $key.'.id');
+                $result = Hash::insert($result, $key.'.campaign_id', $val[0]);
+
+                $val = Hash::extract($result, $key.'.name');
+                $result = Hash::remove($result, $key.'.name');
+                $result = Hash::insert($result, $key.'.campaign_name', $val[0]);
+
+                $val = Hash::extract($result, $key.'.created_time');
+                $result = Hash::remove($result, $key.'.created_time');
+                $result = Hash::insert($result, $key.'.campaign_date', $val[0]);
+
+                $result[$key] += $adsArray;
+            }
+
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $result = [];
+            $result['error'] = $e->getMessage();
+        }
+
+        return $result;
     }
 
     /**
