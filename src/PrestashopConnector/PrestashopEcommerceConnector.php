@@ -48,7 +48,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         try {
             $crmManager = new CRMManager();
             $crmManager->setCustomer($content['customer_id']);
-            return  $crmManager->pushOrderToCrm($content['customer_id'], $data);
+            return $crmManager->pushOrderToCrm($content['customer_id'], $data);
 
         } catch (\PDOException $e) {
             return false;
@@ -60,7 +60,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
     {
 
         $data = [];
-      
+
         if (!$this->checkCustomerEnabled($content['customer_id'])) {
             //\Cake\Log\Log::debug('Prestashop write function on '. $content['site_name']  .' by ' .  $content['email'] . ' by customer disabled. customer_id ' . $content['customer_id'])
             return false;
@@ -276,10 +276,9 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         $contact['uniqueId'] = $contact['email'];
 
         if (!empty($contact['province'])) {
-            // $viewlocationTable = TableRegistry::getTableLocator()->get('Crm.ViewLocation')
-            //$contact['province'] = $viewlocationTable->getCriteriaId($contact['nation'], $contact['province'])
-            $contact['province'] = UtilitiesComponent::findCriteriaId($contact['province']);
-           // \Cake\Log\Log::debug('Prestashop add_user getCriteriaId ' . print_r( $contact['province'], true))
+            $viewlocationTable = TableRegistry::getTableLocator()->get('Crm.ViewLocation');
+            $contact['province'] = $viewlocationTable->getCriteriaId($contact['nation'], $contact['province']);
+            // \Cake\Log\Log::debug('Prestashop add_user getCriteriaId ' . print_r( $contact['province'], true))
         }
 
         if (!empty($contact['birthdaydate'])) {
