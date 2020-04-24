@@ -116,12 +116,6 @@ class FacebookAdsConnector extends FacebookConnector
         $forms_lang = Config::load( __DIR__ . '/lang', new Json)->all();
         $iso_lang = array_keys($forms_lang);
 
-        //TODO: time range between last cron executed
-        if (!empty($this->since) && !empty($this->until)) {
-            /*da finire*/
-            //$limitString = '.since(' . $this->since . ').until(' . $this->until.")";
-        }
-
         try {
 
             $streamToRead = '/' . $objectId . '?fields=adsets{ads{leads{field_data,form_id,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,created_time}}}';
@@ -194,11 +188,14 @@ class FacebookAdsConnector extends FacebookConnector
                                                     "date_add" => $leads->getField('created_time'),
                                                     "action" => "lead",
                                                     "contentId" => $leads->getField('ad_id'),
+                                                    "ad_id" => $leads->getField('ad_id'),
                                                     "platform" => $leads->getField('platform'),
                                                     "ad_name" => $leads->getField('ad_name'),
                                                     "id" => $lead_id,
                                                     "adset_name" => $leads->getField('adset_name'),
+                                                    "adset_id" => $leads->getField('adset_id'),
                                                     "campaign_name" => $leads->getField('campaign_name'),
+                                                    "campaign_id" => $leads->getField('campaign_id'),
                                                 ];
                                             }
                                         } while ($graphEdgeLead = $this->fb->next($graphEdgeLead));
