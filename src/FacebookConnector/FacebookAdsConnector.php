@@ -196,6 +196,7 @@ class FacebookAdsConnector extends FacebookConnector
                                                     "adset_id" => $leads->getField('adset_id'),
                                                     "campaign_name" => $leads->getField('campaign_name'),
                                                     "campaign_id" => $leads->getField('campaign_id'),
+                                                    "properties" => $leads->asArray(),
                                                 ];
                                             }
                                         } while ($graphEdgeLead = $this->fb->next($graphEdgeLead));
