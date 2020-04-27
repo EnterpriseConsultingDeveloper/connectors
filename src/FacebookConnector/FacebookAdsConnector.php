@@ -154,12 +154,6 @@ class FacebookAdsConnector extends FacebookConnector
 
                                                     $form_ids[$form_id]['locale'] = $response->getDecodedBody()['locale'];
                                                     $form_ids[$form_id]['field_maps'] = $fields_lang;
-                                                    $form_ids[$form_id]['error'] = false;
-                                                }
-
-                                                //form already mapped wrong
-                                                if ($form_ids[$form_id]['error']) {
-                                                    continue;
                                                 }
 
                                                 foreach ($leads->getField('field_data')->asArray() as $form_field) {
@@ -168,19 +162,6 @@ class FacebookAdsConnector extends FacebookConnector
 
                                                 $mapData = UtilitiesComponent::remap($social_users,
                                                     $form_ids[$form_id]['field_maps'], false);
-
-                                                //Custom Mapping Form from FB
-                                                if (empty($mapData)) {
-                                                    $fields_lang = $forms_lang['custom'];
-                                                    $form_ids[$form_id]['field_maps'] = $fields_lang;
-
-                                                    $mapData = UtilitiesComponent::remap($social_users,
-                                                        $form_ids[$form_id]['field_maps'], false);
-                                                    if (empty($mapData)) {
-                                                        $form_ids[$form_id]['error'] = true;
-                                                        continue;
-                                                    }
-                                                }
 
                                                 //Mapping Field Form and CRM for all Lang
                                                 $dataCrm[$lead_id] = $mapData;
@@ -217,4 +198,63 @@ class FacebookAdsConnector extends FacebookConnector
         return ($data);
     }
 
+    /**
+     * @param null $objectId
+     * @return array
+     */
+    public function readPublicPage($objectId = null) {
+        // Read public page forms
+        if ($objectId == null)
+            $objectId = $this->objectFbId;
+
+        if ($objectId == null) {
+            return [];
+        }
+
+        $streamToRead = '/' . $objectId . '/leadgen_forms?fields=questions{key,type,label},locale,id,name,status,created_time,page{name}';
+
+        try {
+            $request = $this->fb->request('GET', $streamToRead);
+            $graphNode = $this->fb->getClient()->sendRequest($request);
+            $graphEdge = $graphNode->getGraphEdge();
+            $result = [];
+
+            if (isset($graphEdge)) {
+                do {
+                    $formsArray = $graphEdge->asArray();
+                    $result = array_merge($result, $formsArray);
+                } while ($graphEdge = $this->fb->next($graphEdge));
+
+                foreach ($result as $key => $elem) {
+                    $val = Hash::extract($result, $key . '.status');
+                    $result = Hash::remove($result, $key . '.status');
+                    $result = Hash::insert($result, $key . '.form_status', $val[0]);
+
+                    $val = Hash::extract($result, $key . '.id');
+                    $result = Hash::remove($result, $key . '.id');
+                    $result = Hash::insert($result, $key . '.form_id', $val[0]);
+
+                    $val = Hash::extract($result, $key . '.name');
+                    $result = Hash::remove($result, $key . '.name');
+                    $result = Hash::insert($result, $key . '.form_name', $val[0]);
+
+                    $val = Hash::extract($result, $key . '.created_time');
+                    $result = Hash::remove($result, $key . '.created_time');
+                    $result = Hash::insert($result, $key . '.form_date', $val[0]);
+                }
+            }
+
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $result = [];
+            $result['error'] = $e->getMessage();
+        }
+
+        return $result;
+
+    }
+
+    public function setError($message) {
+
+        return $message;
+    }
 }

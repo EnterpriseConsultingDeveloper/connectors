@@ -302,21 +302,5 @@
     "f\u00f6delsedatum" : "birthDate",
     "telefonnummer_till_arbetet" : "telephone1",
     "land" : "country"
-  },
-  "custom": {
-    "wr_companyname" : "companyName",
-    "wr_firstname" : "firstName",
-    "wr_lastname" : "lastName",
-    "wr_email1" : "email1",
-    "wr_email2" : "email2",
-    "wr_mobilephone1" : "mobile1",
-    "wr_gender" : "gender",
-    "wr_address" : "address",
-    "wr_city" : "city",
-    "wr_postalcode" : "postalCode",
-    "wr_province" : "state",
-    "wr_birthdaydate" : "birthDate",
-    "wr_telephone1" : "telephone1",
-    "wr_nation" : "country"
   }
 }
