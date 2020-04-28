@@ -279,19 +279,22 @@ class FacebookAdsConnector extends FacebookConnector
 
             $request = $this->fb->request('GET', $statRequest);
             $graphNode = $this->fb->getClient()->sendRequest($request);
-            $graphEdge = $graphNode->getGraphEdge();
+            $graphEdge = $graphNode->getGraphEdge()->asArray();
 
             $stats['insights'] = [];
-
-            $insights = $graphEdge->asArray()[0];
             $myInsights = [];
-            foreach ($insights as $key => $value) {
-                if (isset($value) && !empty($insights)) {
-                    if ($key == 'unique_actions' || $key == 'video_play_actions') {
-                        $metrics = (new Collection($value))->combine('action_type', 'value')->toArray();
-                        $myInsights[$key] = $metrics;
-                    } else
-                        $myInsights[$key] = $value;
+
+            if(isset($graphEdge[0])) {
+                $insights = $graphEdge[0];
+                foreach ($insights as $key => $value) {
+                    if (isset($value) && !empty($insights)) {
+                        if ($key == 'unique_actions' || $key == 'video_play_actions' || $key == 'purchase_roas') {
+                            $metrics = (new Collection($value))->combine('action_type', 'value')->toArray();
+                            $myInsights[$key] = $metrics;
+                        } else {
+                            $myInsights[$key] = $value;
+                        }
+                    }
                 }
             }
 
