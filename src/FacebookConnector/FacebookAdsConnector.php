@@ -10,6 +10,7 @@ use Facebook\Facebook;
 use WR\Connector\Connector;
 use WR\Connector\FacebookConnector\FacebookConnector;
 use WR\Connector\IConnector;
+use Cake\ORM\TableRegistry;
 use Noodlehaus\Config;
 use Noodlehaus\Parser\Json;
 
@@ -116,6 +117,8 @@ class FacebookAdsConnector extends FacebookConnector
         $forms_lang = Config::load( __DIR__ . '/lang', new Json)->all();
         $iso_lang = array_keys($forms_lang);
 
+        $facebookFormTable = TableRegistry::getTableLocator()->get('FacebookForms');
+
         try {
 
             $streamToRead = '/' . $objectId . '?fields=adsets{ads{leads{field_data,form_id,platform,ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,created_time}}}';
@@ -142,18 +145,26 @@ class FacebookAdsConnector extends FacebookConnector
                                                 $form_id = $leads->getField('form_id');
                                                 $lead_id = $leads->getField('id');
                                                 if (!in_array($form_id, array_keys($form_ids))) {
-                                                    //GET locale of Forms
-                                                    $streamToRead = '/' . $form_id . '?fields=locale';
-                                                    $response = $this->fb->sendRequest('GET', $streamToRead);
-                                                    //check if exist lang on folder
-                                                    if (!isset($forms_lang) || !in_array($response->getDecodedBody()['locale'],
-                                                            $iso_lang)) {
-                                                        continue;
-                                                    }
-                                                    $fields_lang = $forms_lang[$response->getDecodedBody()['locale']];
+                                                    $form_table = $facebookFormTable->getFormFields($form_id);
+                                                    if($form_table){
+                                                        //revert array from Table
+                                                        $form_fields_table = array_flip(json_decode($form_table->fields,true));
+                                                        $form_ids[$form_id]['field_maps'] = $form_fields_table;
+                                                    }else {
+                                                        //GET locale of Forms
+                                                        $streamToRead = '/' . $form_id . '?fields=locale';
+                                                        $response = $this->fb->sendRequest('GET', $streamToRead);
+                                                        //check if exist lang on folder
+                                                        if (!isset($forms_lang) || !in_array($response->getDecodedBody()['locale'],
+                                                                $iso_lang)) {
+                                                            continue;
+                                                        }
+                                                        $fields_lang = $forms_lang[$response->getDecodedBody()['locale']];
 
-                                                    $form_ids[$form_id]['locale'] = $response->getDecodedBody()['locale'];
-                                                    $form_ids[$form_id]['field_maps'] = $fields_lang;
+                                                        $form_ids[$form_id]['locale'] = $response->getDecodedBody()['locale'];
+                                                        $form_ids[$form_id]['field_maps'] = $fields_lang;
+                                                    }
+
                                                 }
 
                                                 foreach ($leads->getField('field_data')->asArray() as $form_field) {
