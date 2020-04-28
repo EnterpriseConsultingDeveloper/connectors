@@ -105,7 +105,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         // Vecchi permessi
         // $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
-        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email', 'ads_management', 'leads_retrieval']; // Optional permissions
+        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email', 'ads_management', 'leads_retrieval', 'ads_read']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';

@@ -4,6 +4,7 @@ namespace WR\Connector\FacebookConnector;
 
 
 use App\Controller\Component\UtilitiesComponent;
+use Cake\Collection\Collection;
 use Cake\I18n\Time;
 use Cake\Utility\Hash;
 use Facebook\Facebook;
@@ -262,6 +263,47 @@ class FacebookAdsConnector extends FacebookConnector
 
         return $result;
 
+    }
+
+    /**
+     * @param $objectId
+     * @return array
+     * @link https://developers.facebook.com/docs/graph-api/reference/v5.0/insights facebook api insights
+     */
+    public function stats($objectId) {
+        if ($objectId == null)
+            return [];
+
+        try {
+            $statRequest = '/' . $objectId . '/insights?fields=spend,unique_clicks,unique_ctr,cpc,impressions,objective,video_play_actions,purchase_roas,frequency,unique_actions';
+
+            $request = $this->fb->request('GET', $statRequest);
+            $graphNode = $this->fb->getClient()->sendRequest($request);
+            $graphEdge = $graphNode->getGraphEdge();
+
+            $stats['insights'] = [];
+
+            $insights = $graphEdge->asArray()[0];
+            $myInsights = [];
+            foreach ($insights as $key => $value) {
+                if (isset($value) && !empty($insights)) {
+                    if ($key == 'unique_actions' || $key == 'video_play_actions') {
+                        $metrics = (new Collection($value))->combine('action_type', 'value')->toArray();
+                        $myInsights[$key] = $metrics;
+                    } else
+                        $myInsights[$key] = $value;
+                }
+            }
+
+            $stats['insights'] = $myInsights;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+        }
+
+        return $stats;
     }
 
     public function setError($message) {
