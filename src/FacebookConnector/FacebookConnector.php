@@ -9,6 +9,7 @@
 
 namespace WR\Connector\FacebookConnector;
 
+use App\Controller\Component\UtilitiesComponent;
 use Cake\I18n\Time;
 use Facebook\Facebook;
 use Facebook\FacebookRequest;
@@ -32,6 +33,7 @@ class FacebookConnector extends Connector implements IConnector {
     protected $accessToken;
     protected $appSecret;
     protected $objectFbId;
+    protected $objectAdsId;
     protected $connectorUsersSettingsID;
     private $feedLimit;
     private $objectId;
@@ -64,6 +66,7 @@ class FacebookConnector extends Connector implements IConnector {
 
             $this->objectId = isset($params['pageid']) ? $params['pageid'] : '';
             $this->objectFbId = isset($params['pageid']) ? $params['pageid'] : '';
+            $this->objectAdsId = isset($params['adaccountid']) ? $params['adaccountid'] : '';
 
             $this->feedLimit = isset($params['feedLimit']) && $params['feedLimit'] != null ? $params['feedLimit'] : 20;
             $this->since = isset($params['since']) ? $params['since'] : null; // Unix timestamp since
@@ -102,7 +105,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         // Vecchi permessi
         // $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
-        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email']; // Optional permissions
+        $permissions = ['read_insights', 'manage_pages', 'publish_pages', 'email', 'ads_management', 'leads_retrieval', 'ads_read']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
@@ -128,6 +131,28 @@ class FacebookConnector extends Connector implements IConnector {
         }
 //    $user = $response->getGraphUser();
         return $logged;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAdsAccounts() {
+
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $response = $this->fb->get('/me?fields=adaccounts.limit(255){id,name}', $this->longLivedAccessToken);
+            $logged = true;
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            $logged = false;
+//        echo 'Graph returned an error: ' . $e->getMessage();
+//        exit;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            $logged = false;
+//        echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//        exit;
+        }
+
+        return $response->getDecodedBody();
     }
 
     /**
