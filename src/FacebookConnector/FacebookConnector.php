@@ -748,7 +748,7 @@ class FacebookConnector extends Connector implements IConnector {
                         $ub = new ConnectorUserBean();
                         $ub->setName($social_user['name']);
                         $ub->setId($social_user['id']);
-                        $ub->setAction($social_user['type']);
+                        $ub->setAction(($social_user['type'] ?? 'LIKE'));
                         $ub->setContentId($d['id']);
                         $ub->setText('');
 
