@@ -1,0 +1,43 @@
+{
+  "name":"GoogleConnector",
+  "description":"Google connector for WhiteRabbit suite",
+  "icon":"fa-google-plus-square",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"Ads",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"Google Ads",
+          "permitted_operations":"RP",
+          "connection_string":"GoogleAdsConnector",
+          "type": "ads"
+        }
+      ],
+      "settings":[
+        {
+          "name":"token",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"refreshtoken",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        },
+        {
+          "name":"customerid",
+          "type":"string",
+          "is_editable":"0",
+          "is_mandatory":"1",
+          "access_level":"user"
+        }
+      ]
+    }
+  ]
+}
