@@ -11,6 +11,7 @@ namespace WR\Connector\LinkedinConnector;
 use WR\Connector\Connector;
 use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
+
 //use Cake\Network\Http\Client;
 use Cake\Collection\Collection;
 use App\Lib\Linkedin\Client;
@@ -142,6 +143,29 @@ class LinkedinConnector extends Connector implements IConnector
 
     }
 
+
+    /**
+     *
+     */
+    public function getMe()
+    {
+
+        try {
+            $me = $this->li->getV2(
+                '/v2/me'
+            );
+            $value['Error'] = false;
+            $value['id'] = $me['id'];
+        } catch (\Throwable $th) {
+            \Cake\Log\Log::debug('Linkedin me exception: ' . print_r($th->getMessage(), true));
+            $value['Error'] = true;
+            $value['Message'] = 'Linkedin me exception: ' . print_r($th->getMessage(), true);
+            return $value;
+        }
+
+        return $value;
+
+    }
 
     /**
      * @param null $objectId

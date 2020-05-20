@@ -11,6 +11,7 @@ namespace WR\Connector\LinkedinConnector;
 use WR\Connector\Connector;
 use WR\Connector\ConnectorBean;
 use WR\Connector\IConnector;
+
 //use Cake\Network\Http\Client;
 use Cake\Collection\Collection;
 use App\Lib\Linkedin\Client;
@@ -28,6 +29,66 @@ class LinkedinProfileStatusConnector extends LinkedinConnector
     }
 
     public function write($content)
+    {
+
+        $meAPICall = $this->getMe();
+
+        if ($meAPICall['Error'] === true) {
+            return $meAPICall;
+        } else {
+            $linkedin_id = $meAPICall['id'];
+        }
+
+        try {
+            $share = $this->li->postV2(
+                '/v2/shares',
+                [
+                    'content' => [
+                        'contentEntities' => [
+                            [
+                                'entityLocation' => $content['content']['main_url'],
+                                'thumbnails' => [
+                                    [
+                                        'resolvedUrl' => $content['content']['main_image']
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'title' => $content['content']['title']
+                    ],
+                    'distribution' => [
+                        'linkedInDistributionTarget' => new \stdClass()
+                    ],
+                    'owner' => 'urn:li:person:' . $linkedin_id,
+                    'subject' => $content['content']['title'],
+                    'text' => [
+                        'text' => $content['content']['abstract']
+                    ]
+
+                ]
+            );
+
+            $link = "https://www.linkedin.com/feed/update/" . $share['activity'];
+            $info['id'] = $share['id'];
+            $info['url'] = $link;
+
+            return $info;
+
+        } catch (\Throwable $th) {
+            \Cake\Log\Log::debug('Linkedin share exception: ' . print_r($th->getMessage(), true));
+            $value['Error'] = true;
+            $value['Message'] = 'Linkedin share exception: ' . print_r($th->getMessage(), true);
+
+            if ($th->getCode() === 409) {
+                $value['Message'] = __('This Post can\'t be shared on Linkedin. Reason: Duplicated Title');
+            }
+
+            return $value;
+
+        }
+    }
+
+    public function writeold($content)
     {
         try {
             $share = $this->li->post(
