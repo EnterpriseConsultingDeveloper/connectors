@@ -64,6 +64,7 @@ class WixOrderConnector extends WixConnector
             $orders = array_merge($orders, $orders_db->orders);
             $offset++;
         }
+        \Cake\Log\Log::debug('Wix WixOrderConnector START INSERT for ' . $this->shopUrl . ' Order num ' . count($orders) . " and updatedAt >" . $params['wixapi_lastdate_call']);
 
         foreach ($orders as $order) {
             \Cake\Log\Log::debug('Wix WixOrderConnector on ' . $this->shopUrl . ' import order_number ' . $order->number);
@@ -122,6 +123,7 @@ class WixOrderConnector extends WixConnector
                 return false;
             }
         }
+        \Cake\Log\Log::debug('Wix WixOrderConnector END INSERT for ' . $this->shopUrl . ' Order num ' . count($orders) . " and updatedAt >" . $params['wixapi_lastdate_call']);
 
         return true;
     }

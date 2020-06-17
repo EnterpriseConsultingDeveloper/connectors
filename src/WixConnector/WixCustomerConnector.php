@@ -68,6 +68,7 @@ class WixCustomerConnector extends WixConnector
             $hasMore = $customers_db->metadata->hasMore;
             $offset++;
         }
+        \Cake\Log\Log::debug('Wix WixCustomerConnector START INSERT for ' . $this->shopUrl . ' Customer num ' . count($customers) . " and updatedAt >" . $params['wixapi_lastdate_call']);
 
         foreach ($customers as $customer) {
             $data = [];
@@ -104,7 +105,7 @@ class WixCustomerConnector extends WixConnector
             }
 
         }
-        \Cake\Log\Log::debug('Wix WixCustomerConnector end insert for ' . $this->shopUrl . ' Customer num ' . count($customers) . " and updatedAt >" . $params['wixapi_lastdate_call']);
+        \Cake\Log\Log::debug('Wix WixCustomerConnector END INSERT for ' . $this->shopUrl . ' Customer num ' . count($customers) . " and updatedAt >" . $params['wixapi_lastdate_call']);
 
         return true;
     }
