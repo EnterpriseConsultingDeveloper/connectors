@@ -1,0 +1,56 @@
+{
+  "name":"WixConnector",
+  "description":"Wix connector for WhiteRabbit suite",
+  "icon":"fa-shopping-basket",
+  "install":"internal",
+  "channels":[
+    {
+      "name":"Wix",
+      "default_channel":"1",
+      "streams":[
+        {
+          "name":"WixCustomer",
+          "permitted_operations":"RPD",
+          "connection_string":"WixOrderConnector",
+          "type": "product"
+        },
+        {
+          "name":"WixOrder",
+          "permitted_operations":"RPD",
+          "connection_string":"WixOrderConnector",
+          "type": "product"
+        }
+      ],
+      "settings":[
+        {
+          "name":"access_token",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"refresh_token",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"shop_url",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        },
+        {
+          "name":"wixapi_lastdate_call",
+          "type":"string",
+          "is_editable":"1",
+          "is_mandatory":"1",
+          "access_level":"admin"
+        }
+      ]
+    }
+  ]
+}

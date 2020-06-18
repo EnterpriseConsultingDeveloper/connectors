@@ -283,7 +283,12 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 
         if (!empty($contact['birthdaydate'])) {
             $contact['birthdaydate'] .= " 00:00:00";
-            $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
+            try {
+                $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
+            } catch (\Exception $exp) {
+                \Cake\Log\Log::debug('Prestashop add_user function on ' . $contact['site_name'] . ' error  birthdaydate ' . print_r($contact['birthdaydate'], true));
+                $contact['birthdaydate'] = null;
+            }
         }
 
         if (!empty($contact['date_add'])) {

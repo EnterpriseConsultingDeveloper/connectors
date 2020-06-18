@@ -40,9 +40,12 @@ class ShopifyOrderConnector extends ShopifyConnector
         if (!empty($params['date'])) {
             $params_call['created_at_min'] = $params['date'];
         }
-
         \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' params ' . print_r(json_encode($params_call), true));
-        $count_order_db = $this->shopify->Order->count($params_call);
+        try {
+            $count_order_db = $this->shopify->Order->count($params_call);
+        } catch (Exception $e) {
+            $count_order_db = 0;
+        }
         \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' count_order_db ' . $count_order_db);
         $exit = 0;
         $count_order_crm = 0;
