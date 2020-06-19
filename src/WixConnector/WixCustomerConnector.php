@@ -86,8 +86,8 @@ class WixCustomerConnector extends WixConnector
             $data['nation'] = $this->notSetToEmptyString($customer->addresses[0]->countryCode);
             $data['postalcode'] = $this->notSetToEmptyString($customer->addresses[0]->postalCode);
             //  $data['province'] = $this->notSetToEmptyString($customer['addresses'][0]['province_code']);
-            //   $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer['accepts_marketing_updated_at']);
-            //  $data['gdpr']['gdpr_marketing']['value'] = ($customer['accepts_marketing'] == true) ? true : false;
+            $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer->metadata->createdAt);
+            $data['gdpr']['gdpr_marketing']['value'] = true;
             \Cake\Log\Log::debug('Wix WixCustomerConnector call ActivityEcommerceAddUserBean for customer ' . $data['email'] . ' into ' . $this->shopUrl);
 
             try {
