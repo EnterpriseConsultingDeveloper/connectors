@@ -109,7 +109,7 @@ class WixOrderConnector extends WixConnector
                 //  $data['products'][$id]['description'] = $this->notSetToEmptyString($product->discount);
                 $data['products'][$id]['tax'] = $this->notSetToEmptyString($product->tax);
             }
-            \Cake\Log\Log::debug('Wix WixOrderConnector ActivityEcommerceChangeStatusBean for customer ' . $data['email'] . ' source' . $this->shopUrl);
+            \Cake\Log\Log::debug('Wix WixOrderConnector ActivityEcommerceChangeStatusBean for customer ' . $data['email'] . ' source ' . $this->shopUrl);
 
             try {
                 $this->createCrmConnection($customerId);
