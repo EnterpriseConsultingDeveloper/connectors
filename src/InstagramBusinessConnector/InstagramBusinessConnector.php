@@ -102,7 +102,7 @@ class InstagramBusinessConnector extends Connector implements IConnector {
 
         // Vecchi permessi
         // $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
-        $permissions = ['business_management', 'manage_pages', 'publish_pages', 'instagram_basic', 'instagram_manage_comments', 'instagram_manage_insights']; // Optional permissions
+        $permissions = ['business_management', 'pages_manage_metadata', 'pages_read_engagement', 'pages_read_user_content', 'pages_manage_posts', 'pages_manage_engagement', 'instagram_basic', 'instagram_manage_comments', 'instagram_manage_insights']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
