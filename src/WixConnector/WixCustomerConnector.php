@@ -16,6 +16,7 @@ use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
+use Cake\I18n\Time;
 
 class WixCustomerConnector extends WixConnector
 {
