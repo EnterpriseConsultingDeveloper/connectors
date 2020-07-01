@@ -72,7 +72,8 @@ class WixCustomerConnector extends WixConnector
 
         foreach ($customers as $customer) {
             $data = [];
-            $data['date'] = date('Y-m-d H:i:s', strtotime($customer->metadata->createdAt));
+            $date_createdAt = date('Y-m-d H:i:s', strtotime($customer->metadata->createdAt));
+            $data['date'] = $date_createdAt;
             $data['externalid'] = $this->notSetToEmptyString($customer->id);
             $data['name'] = $this->notSetToEmptyString($customer->firstName);
             $data['surname'] = $this->notSetToEmptyString($customer->lastName);
@@ -86,7 +87,7 @@ class WixCustomerConnector extends WixConnector
             $data['nation'] = $this->notSetToEmptyString($customer->addresses[0]->countryCode);
             $data['postalcode'] = $this->notSetToEmptyString($customer->addresses[0]->postalCode);
             //  $data['province'] = $this->notSetToEmptyString($customer['addresses'][0]['province_code']);
-            $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer->metadata->createdAt);
+            $data['gdpr']['gdpr_marketing']['date'] = Time::createFromFormat('Y-m-d H:i:s', $date_createdAt)->toAtomString();
             $data['gdpr']['gdpr_marketing']['value'] = true;
             \Cake\Log\Log::debug('Wix WixCustomerConnector call ActivityEcommerceAddUserBean for customer ' . $data['email'] . ' into ' . $this->shopUrl);
 
