@@ -42,6 +42,11 @@ class WixCustomerConnector extends WixConnector
             \Cake\Log\Log::error('Wix WixCustomerConnector error for ' . $this->shopUrl . ' wixRefreshToken failed ');
             return false;
         }
+
+        if (empty($wix_token->access_token)) {
+            \Cake\Log\Log::error('Wix WixCustomerConnector error ' . $wix_token->errorCode . ' for ' . $this->shopUrl . ' payload ' . $wix_token->payload->message);
+            return false;
+        }
         $hasMore = true;
         $customers = array();
         $offset = 0;
