@@ -44,6 +44,12 @@ class WixOrderConnector extends WixConnector
             return false;
         }
 
+
+        if (empty($wix_token->access_token)) {
+            \Cake\Log\Log::error('Wix WixCustomerConnector error ' . $wix_token->errorCode . ' for ' . $this->shopUrl . ' payload ' . $wix_token->payload->message);
+            return false;
+        }
+
         $hasMore = true;
         $orders = array();
         $offset = 0;
