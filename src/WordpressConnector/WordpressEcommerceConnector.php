@@ -263,7 +263,7 @@ class WordpressEcommerceConnector extends WordpressConnector
             try{
                 $contact['birthdaydate'] = Time::createFromFormat('Y-m-d H:i:s', $contact['birthdaydate'])->toAtomString();
             } catch (\Exception $exp) {
-                \Cake\Log\Log::debug('Prestashop add_user function on ' . $contact['site_name'] . ' error  birthdaydate ' . print_r($contact['birthdaydate'], true));
+                \Cake\Log\Log::debug('Wordpress add_user function on ' . $contact['site_name'] . ' error  birthdaydate ' . print_r($contact['birthdaydate'], true));
                 $contact['birthdaydate'] = null;
             }
         }

@@ -43,7 +43,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
         \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call read on ' . $params['shop_url'] . ' params ' .  print_r(json_encode($params_call), true));
         try {
             $count_customer_db = $this->shopify->Customer->count($params_call);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $count_customer_db = 0;
         }
         $count_customer_crm = 0;
