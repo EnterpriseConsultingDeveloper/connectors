@@ -44,7 +44,8 @@ class ShopifyCustomerConnector extends ShopifyConnector
         try {
             $count_customer_db = $this->shopify->Customer->count($params_call);
         } catch (\Exception $e) {
-            $count_customer_db = 0;
+            \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector ERROR call count read on ' . $params['shop_url'] );
+            return false;
         }
         $count_customer_crm = 0;
         \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call read on ' . $params['shop_url'] . ' count_customer_db ' . $count_customer_db);
