@@ -45,9 +45,9 @@ class ShopifyOrderConnector extends ShopifyConnector
         try {
             $count_order_db = $this->shopify->Order->count($params_call);
         } catch (\Exception $e) {
-            $count_order_db = 0;
+            \Cake\Log\Log::debug('Shopify ShopifyOrderConnector ERROR call count read on ' . $params['shop_url'] );
+            return false;
         }
-
 
         \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call read on ' . $params['shop_url'] . ' count_order_db ' . $count_order_db);
         $orderResource = $this->shopify->Order();
