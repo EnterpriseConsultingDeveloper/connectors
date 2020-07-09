@@ -309,7 +309,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         if (isset($data['error']))
           return [];
-        Log::error('FacebookConnector readPublicPage urlToRead"'. print_r($urlToRead,true));
+        Log::debug('FacebookConnector readPublicPage urlToRead"'. print_r($urlToRead,true));
         $formattedResult = $this->format_result($data);
         return ($formattedResult);
     }
