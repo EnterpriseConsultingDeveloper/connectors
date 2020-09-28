@@ -50,6 +50,7 @@ class PrestashopConnector extends Connector implements IConnector
         // $this->_suitetoken = $params['token'];
         //$this->_psuser = $params['username'];
         //$this->_pspass = $params['password'];
+
         $connectPath = $this->_psapipath . 'connect';
         try {
             $response = $this->_http->post($connectPath, [
@@ -58,15 +59,19 @@ class PrestashopConnector extends Connector implements IConnector
                 'password' => $this->_pspass
             ]);
 
-            \Cake\Log\Log::debug('PrestashopConnector __construct _pstoken $response->body  : ' . print_r($response->body, true));
-
-            if(empty(json_decode($response->body))){
+            if (empty($response)) {
                 $this->_pstoken = '';
-            }else{
-                $this->_pstoken = json_decode($response->body)->token;
+                \Cake\Log\Log::debug('PrestashopConnector __construct _pstoken empty $response->body');
+            } else {
+                \Cake\Log\Log::debug('PrestashopConnector __construct _pstoken $response->body  : ' . print_r($response->body, true));
+                if (empty(json_decode($response->body))) {
+                    $this->_pstoken = '';
+                } else {
+                    $this->_pstoken = json_decode($response->body)->token;
+                }
             }
 
-        } catch (\PDOException $e) {
+        } catch (\Exception $e) {
             $this->_pstoken = '';
             \Cake\Log\Log::debug('PrestashopConnector __construct error  : ' . print_r($e, true));
         }
@@ -143,7 +148,6 @@ class PrestashopConnector extends Connector implements IConnector
     {
 
     }
-
 
 
     public function captureFan($objectId = null)
