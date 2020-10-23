@@ -83,6 +83,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
             $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer['accepts_marketing_updated_at']);
             $data['gdpr']['gdpr_marketing']['value'] = ($customer['accepts_marketing'] == true) ? true : false;
             debug($data);
+            echo "ciai";
             exit;
             try {
                 \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call ActivityEcommerceAddUserBean by ' . $data['email'] . ' on ' . $params['shop_url']);
