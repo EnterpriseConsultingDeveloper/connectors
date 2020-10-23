@@ -82,9 +82,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
             $data['province'] = $this->notSetToEmptyString($customer['addresses'][0]['province_code']);
             $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer['accepts_marketing_updated_at']);
             $data['gdpr']['gdpr_marketing']['value'] = ($customer['accepts_marketing'] == true) ? true : false;
-            debug($data);
-            echo "ciai";
-            exit;
+
             try {
                 \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call ActivityEcommerceAddUserBean by ' . $data['email'] . ' on ' . $params['shop_url']);
                 $this->createCrmConnection($customerId);
@@ -93,6 +91,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)
                     ->setDataRaw($data);
+								$contactBean->setTypeIdentities('email');
 
                 ActionsManager::pushActivity($contactBean);
 
@@ -140,6 +139,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)
                     ->setDataRaw($data);
+								$contactBean->setTypeIdentities('email');
 
                 ActionsManager::pushActivity($contactBean);
 

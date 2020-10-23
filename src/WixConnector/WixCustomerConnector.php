@@ -104,6 +104,7 @@ class WixCustomerConnector extends WixConnector
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)
                     ->setDataRaw($data);
+								$contactBean->setTypeIdentities('email');
 
                 ActionsManager::pushActivity($contactBean);
 

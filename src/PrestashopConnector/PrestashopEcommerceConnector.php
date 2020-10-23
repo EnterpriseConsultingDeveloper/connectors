@@ -136,6 +136,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
                 ->setSource($data['source'])
                 ->setToken($data['source'])// identificatore univoco della fonte del dato
                 ->setDataRaw($data);
+						$changeStatusBean->setTypeIdentities('email');
             ActionsManager::pushOrder($changeStatusBean);
 
 
@@ -179,6 +180,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
                 ->setSource($data['source'])
                 ->setToken($data['source'])// identificatore univoco della fonte del dato
                 ->setDataRaw($data);
+						$cartBean->setTypeIdentities('email');
 
             $cartBean->setSiteName($data['site_name']);
             $cartBean->setEmail($data['email']);
@@ -330,6 +332,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
                 ->setSource($contact['site_name'])
                 ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
                 ->setDataRaw($contact);
+						$contactBean->setTypeIdentities('email');
             //  \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true))
             ActionsManager::pushActivity($contactBean);
         } catch (\Throwable $th) {

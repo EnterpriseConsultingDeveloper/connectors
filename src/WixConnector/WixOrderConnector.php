@@ -124,6 +124,7 @@ class WixOrderConnector extends WixConnector
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)
                     ->setDataRaw($data);
+								$changeStatusBean->setTypeIdentities('email');
                 ActionsManager::pushOrder($changeStatusBean);
             } catch (\Exception $e) {
                 return false;
