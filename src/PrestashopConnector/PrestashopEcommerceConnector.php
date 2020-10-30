@@ -304,8 +304,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
             }
         }
 
-
-        \Cake\Log\Log::debug('Prestashop add_user function on ' . $contact['site_name'] . ' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
+//        \Cake\Log\Log::debug('Prestashop add_user function on ' . $contact['site_name'] . ' by ' . $contact['email'] . ' call: ' . print_r($contact, true));
 
         $customerId = $contact['customer_id'];
 
