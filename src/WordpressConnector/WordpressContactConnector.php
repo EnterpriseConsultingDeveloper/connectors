@@ -117,6 +117,7 @@ class WordpressContactConnector extends WordpressConnector
                 ->setSource($contact['site_name'])
                 ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
                 ->setDataRaw($contact);
+						$contactBean->setTypeIdentities('email');
             ActionsManager::pushActivity($contactBean);
         } catch (\Throwable $th) {
             \Cake\Log\Log::debug('site_submitform Wordpress contact exception: ' . print_r($th->getMessage(), true));
@@ -227,6 +228,7 @@ class WordpressContactConnector extends WordpressConnector
                 ->setSource($contact['site_name'])
                 ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
                 ->setDataRaw($contact);
+						$contactBean->setTypeIdentities('email');
             //       \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
             ActionsManager::pushActivity($contactBean);
         } catch (\Throwable $th) {

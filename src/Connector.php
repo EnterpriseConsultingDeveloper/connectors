@@ -134,6 +134,7 @@ abstract class Connector
             ->setSource($result['data']['ticket_id'])
             ->setDataRaw($data)
             ->setActionId('assign');
+				$aTicket->setTypeIdentities('email');
 
         $res = ActionsManager::pushActivity($aTicket);
 

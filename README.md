@@ -1,5 +1,4 @@
 # Connectors
-Version 1.1.1
-- Resolved a bug on Twitter Connector to get and return the right screen_name
+composer remove -vvv whiterabbit/connectors
 
-Version 1.1
+composer require -vvv whiterabbit/connectors:dev-feature/date_tags
