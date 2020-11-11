@@ -156,6 +156,7 @@ class WordpressEcommerceConnector extends WordpressConnector
                 ->setSource($data['source'])
                 ->setToken($data['source'])// identificatore univoco della fonte del dato
                 ->setDataRaw($data);
+						$changeStatusBean->setTypeIdentities('email');
             ActionsManager::pushOrder($changeStatusBean);
 
 
@@ -295,6 +296,7 @@ class WordpressEcommerceConnector extends WordpressConnector
                 ->setSource($contact['site_name'])
                 ->setToken($contact['site_name'])// identificatore univoco della fonte del dato
                 ->setDataRaw($contact);
+						$contactBean->setTypeIdentities('email');
             //       \Cake\Log\Log::debug('Prestashop $contactBean : ' . print_r($contactBean, true));
             ActionsManager::pushActivity($contactBean);
         } catch (\Throwable $th) {

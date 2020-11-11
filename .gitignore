@@ -16,4 +16,5 @@
 /src/ShopifyConnector/appdata.cfg
 /src/TwitterConnector/appdata_dev.cfg
 /src/TwitterConnector/appdata.cfg
-/.idea/*
+.idea/*
+.idea/php.xml
