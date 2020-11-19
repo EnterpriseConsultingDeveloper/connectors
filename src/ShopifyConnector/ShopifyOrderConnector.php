@@ -117,6 +117,7 @@ class ShopifyOrderConnector extends ShopifyConnector
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)
                     ->setDataRaw($data);
+								$changeStatusBean->setTypeIdentities('email');
                 ActionsManager::pushOrder($changeStatusBean);
             } catch (\Exception $e) {
                 // Log error
@@ -190,6 +191,7 @@ class ShopifyOrderConnector extends ShopifyConnector
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)
                     ->setDataRaw($data);
+								$changeStatusBean->setTypeIdentities('email');
 
                 ActionsManager::pushOrder($changeStatusBean);
 
