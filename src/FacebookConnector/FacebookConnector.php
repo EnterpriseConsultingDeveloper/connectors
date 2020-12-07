@@ -105,7 +105,7 @@ class FacebookConnector extends Connector implements IConnector {
 
         // Vecchi permessi
         // $permissions = ['publish_actions', 'read_insights', 'public_profile', 'email', 'user_friends', 'manage_pages', 'publish_pages']; // Optional permissions
-        $permissions = ['read_insights', 'pages_manage_ads', 'pages_manage_metadata', 'pages_read_engagement', 'pages_read_user_content', 'pages_manage_posts', 'pages_manage_engagement', 'email', 'ads_management', 'leads_retrieval', 'ads_read']; // Optional permissions
+        $permissions = ['read_insights', 'pages_messaging', 'pages_manage_ads', 'pages_manage_metadata', 'pages_read_engagement', 'pages_read_user_content', 'pages_manage_posts', 'pages_manage_engagement', 'email', 'ads_management', 'leads_retrieval', 'ads_read']; // Optional permissions
         $loginUrl = $helper->getLoginUrl(SUITE_SOCIAL_LOGIN_CALLBACK_URL, $permissions) . "&state=" . $config['query'];
 
         return '<a class="btn btn-block btn-social btn-facebook" href="' . htmlspecialchars($loginUrl) . '"><span class="fa fa-facebook"></span> Connect with Facebook</a>';
@@ -197,6 +197,42 @@ class FacebookConnector extends Connector implements IConnector {
         }
 
         return $response->getDecodedBody();
+    }
+
+    public function whitelistDomain($domain) {
+
+        try {
+            // Returns a `Facebook\FacebookResponse` object
+            $response = $this->fb->get('/me/messenger_profile?fields=whitelisted_domains', $this->longLivedAccessToken);
+
+            $result = $response->getDecodedBody()['data'];
+
+            $data = [
+                'whitelisted_domains' => [
+                    $domain . "/"
+                ]
+            ];
+
+            if(!empty($result)){
+                $data = array_merge_recursive($data, $result[0]);
+                $data['whitelisted_domains'] = array_unique($data['whitelisted_domains']);
+            }
+
+            $response = $this->fb->post('me/messenger_profile', $data);
+
+        } catch (\Facebook\Exceptions\FacebookResponseException $e) {
+            Log::write('debug', $e);
+            return false;
+//        echo 'Graph returned an error: ' . $e->getMessage();
+//        exit;
+        } catch (\Facebook\Exceptions\FacebookSDKException $e) {
+            Log::write('debug', $e);
+            return false;
+//        echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//        exit;
+        }
+
+        return true;
     }
 
     /**
