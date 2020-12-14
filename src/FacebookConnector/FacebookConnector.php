@@ -221,12 +221,12 @@ class FacebookConnector extends Connector implements IConnector {
             $response = $this->fb->post('me/messenger_profile', $data);
 
         } catch (\Facebook\Exceptions\FacebookResponseException $e) {
-            Log::write('debug', $e);
+            //Log::write('debug', $e);
             return false;
 //        echo 'Graph returned an error: ' . $e->getMessage();
 //        exit;
         } catch (\Facebook\Exceptions\FacebookSDKException $e) {
-            Log::write('debug', $e);
+            //Log::write('debug', $e);
             return false;
 //        echo 'Facebook SDK returned an error: ' . $e->getMessage();
 //        exit;
