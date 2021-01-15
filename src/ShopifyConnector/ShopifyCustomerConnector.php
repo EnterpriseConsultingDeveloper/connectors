@@ -75,7 +75,12 @@ class ShopifyCustomerConnector extends ShopifyConnector
             $data['note'] = $this->notSetToEmptyString($customer['note']);
             $data['site_name'] = $this->notSetToEmptyString($this->shopUrl);
             $data['telephone1'] = $this->notSetToEmptyString($customer['phone']);
-            $data['tags']['name'] = explode(',', $customer['tags']);
+            if (!empty($customer['tags'])) {
+                $dataTags = explode(',', $customer['tags']);
+                foreach ($dataTags as $tag) {
+                    $data['tags']['name'][] = $tag;
+                }
+            }
             $data['address'] = $this->notSetToEmptyString($customer['addresses'][0]['address1']);
             $data['city'] = $this->notSetToEmptyString($customer['addresses'][0]['city']);
             $data['nation'] = $this->notSetToEmptyString($customer['addresses'][0]['country_code']);
