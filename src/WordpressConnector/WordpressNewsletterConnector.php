@@ -123,9 +123,10 @@ class WordpressNewsletterConnector extends WordpressConnector
 
 
 
-
+    //this function is deprecated
     public function add_user($contact)
     {
+        return false;
         //\Cake\Log\Log::debug('Prestashop add_user pre $contact: ' . print_r($contact, true));
         $contact['uniqueId'] = $contact['email'];
 
