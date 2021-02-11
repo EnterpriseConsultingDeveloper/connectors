@@ -1,16 +1,11 @@
 <?php
-/**
- * Created by Dino Fratelli.
- * User: user
- * Date: 24/02/2016
- * Time: 15:31
- */
 
 namespace WR\Connector\ShopifyConnector;
 
 use App\Controller\MultiSchemaTrait;
 use App\Lib\ActionsManager\ActionsManager;
-use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceCartBean;
+use Cake\I18n\Time;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
@@ -29,9 +24,7 @@ class ShopifyCartConnector extends ShopifyConnector
     /**
      * @param $customerId
      * @param $params
-     * @return boll
-     * @add  28/11/2019  Fabio Mugnano <mugnano@enterprise-consulting.it>
-     * @copyright (c) 2019, WhiteRabbit srl
+     * @return bool
      */
     public function read($customerId = null, $params = null)
     {
@@ -41,127 +34,87 @@ class ShopifyCartConnector extends ShopifyConnector
         }
         $params_call['limit'] = $this->limitCall;
         \Cake\Log\Log::debug('Shopify ShopifyCartConnector call read on ' . $params['shop_url'] . ' params ' .  print_r(json_encode($params_call), true));
-      /*  try {
-            $count_customer_db = $this->shopify->Customer->count($params_call);
+        try {
+            $count_cart_db = $this->shopify->AbandonedCheckout->count($params_call);
         } catch (\Exception $e) {
             \Cake\Log\Log::debug('Shopify ShopifyCartConnector ERROR call count read on ' . $params['shop_url'] );
             return false;
         }
-        $count_customer_crm = 0;
-        \Cake\Log\Log::debug('Shopify ShopifyCartConnector call read on ' . $params['shop_url'] . ' count_customer_db ' . $count_customer_db);*/
-
-			$count_cart = $this->shopify->AbandonedCheckout->count($params_call);
-			debug($count_cart);
-
+        \Cake\Log\Log::debug('Shopify ShopifyCartConnector call read on ' . $params['shop_url'] . ' count_cart_db ' . $count_cart_db);
 
         $cartResource = $this->shopify->AbandonedCheckout();
-			$carts = $cartResource->get($params_call);
-			debug($params_call);
-			debug($params);
-			debug($carts);
-			die;
-        $customers = $customerResource->get($params_call);
-        $count_customer_crm += count($customers);
-        \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call customers count ' . $count_customer_crm . ' on ' . $params['shop_url']);
+        $carts = $cartResource->get($params_call);
+        $count_cart_crm = count($carts);
+        \Cake\Log\Log::debug('Shopify ShopifyCartConnector call carts count ' . $count_cart_crm . ' on ' . $params['shop_url']);
 
-        $nextPageCustomers = $customerResource->getNextPageParams();
-        $nextPageCustomersArray = [];
-        while ($nextPageCustomers) {
-            $nextPageCustomersArray = $customerResource->get($customerResource->getNextPageParams());
-            $count_customer_crm += count($nextPageCustomersArray);
-            \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call count_customer_crm count ' . $count_customer_crm . ' on ' . $params['shop_url']);
-            $customers = array_merge($customers, $nextPageCustomersArray);
-            $nextPageCustomers = $customerResource->getNextPageParams();
+        $nextPageCarts = $cartResource->getNextPageParams();
+        $nextPageCartsArray = [];
+        while ($nextPageCarts) {
+            $nextPageCartsArray = $cartResource->get($cartResource->getNextPageParams());
+            $count_cart_crm += count($nextPageCartsArray);
+            \Cake\Log\Log::debug('Shopify ShopifyCartConnector call count_cart_crm count ' . $count_cart_crm . ' on ' . $params['shop_url']);
+            $carts = array_merge($carts, $nextPageCartsArray);
+            $nextPageCartsArray = $cartResource->getNextPageParams();
         }
 
-        foreach ($customers as $customer) {
+        foreach ($carts as $cart) {
+            \Cake\Log\Log::debug('Shopify ShopifyCartConnector import cart_number ' . $cart['id']);
             $data = [];
-            $data['date'] = date('Y-m-d H:i:s', strtotime($customer['created_at']));
-            $data['externalid'] = $this->notSetToEmptyString($customer['id']);
-            $data['name'] = $this->notSetToEmptyString($customer['first_name']);
-            $data['surname'] = $this->notSetToEmptyString($customer['last_name']);
-            $data['email'] = $this->notSetToEmptyString($customer['email']);
-            $data['note'] = $this->notSetToEmptyString($customer['note']);
+            $data['source'] = $this->shopUrl;
+            $data['sourceId'] = $this->shopUrl;
+            $data['email'] = $this->notSetToEmptyString($cart['email']);
+            $data['cartNum'] = $this->notSetToEmptyString($cart['id']);
+            $data['cartIdExt'] = $this->notSetToEmptyString($cart['id']);
+            $data['cartDate'] = Time::createFromFormat(\DateTime::ATOM, $cart['updated_at'])->format('Y-m-d H:i:s');
+            $data['cartTotal'] = $this->notSetToEmptyString($cart['total_price']);
+            $data['currency'] = $this->notSetToEmptyString($cart['currency']);
+            $data['cartTax'] = $this->notSetToEmptyString($cart['total_tax']);
+            $data['cartDiscount'] = $this->notSetToEmptyString($cart['total_discounts']);
+            $data['description'] = $this->notSetToEmptyString($cart['note']);
             $data['site_name'] = $this->notSetToEmptyString($this->shopUrl);
-            $data['telephone1'] = $this->notSetToEmptyString($customer['phone']);
-            if (!empty($customer['tags'])) {
-                $dataTags = explode(',', $customer['tags']);
-                foreach ($dataTags as $tag) {
-                    $data['tags']['name'][] = $tag;
-                }
+            $data['products'] = array();
+
+            foreach ($cart['line_items'] as $id => $product) {
+                $data['products'][$id]['product_id'] = $product['product_id'];
+                $data['products'][$id]['name'] = $product['title'];
+                $data['products'][$id]['quantity'] = $product['quantity'];
+                $data['products'][$id]['price'] = $product['price'];
+                $data['products'][$id]['category'] = '';
+                $data['products'][$id]['discount'] = $this->notSetToEmptyString($product['total_discount']);
+                $data['products'][$id]['sku'] = $this->notSetToEmptyString($product['sku']);
+                $data['products'][$id]['description'] = $this->notSetToEmptyString($product['name']);
+                $data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax_lines'][0]['price']);
             }
-            $data['address'] = $this->notSetToEmptyString($customer['addresses'][0]['address1']);
-            $data['city'] = $this->notSetToEmptyString($customer['addresses'][0]['city']);
-            $data['nation'] = $this->notSetToEmptyString($customer['addresses'][0]['country_code']);
-            $data['province'] = $this->notSetToEmptyString($customer['addresses'][0]['province_code']);
-            $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer['accepts_marketing_updated_at']);
-            $data['gdpr']['gdpr_marketing']['value'] = ($customer['accepts_marketing'] == true) ? true : false;
 
             try {
-                \Cake\Log\Log::debug('Shopify ShopifyCustomerConnector call ActivityEcommerceAddUserBean by ' . $data['email'] . ' on ' . $params['shop_url']);
+                \Cake\Log\Log::debug('Shopify ShopifyCartConnector call ActivityEcommerceCartBean by ' . $data['email'] . ' on ' . $params['shop_url']);
+
+                $cartBean = new ActivityEcommerceCartBean();
                 $this->createCrmConnection($customerId);
-                $contactBean = new ActivityEcommerceAddUserBean();
-                $contactBean->setCustomer($customerId)
+                $cartBean->setCustomer($customerId)
                     ->setSource($this->shopUrl)
-                    ->setToken($this->shopUrl)
+                    ->setToken($this->shopUrl)// identificatore univoco della fonte del dato
                     ->setDataRaw($data);
-								$contactBean->setTypeIdentities('email');
+                $cartBean->setTypeIdentities('email');
 
-                ActionsManager::pushActivity($contactBean);
+                $cartBean->setSiteName($data['site_name']);
+                $cartBean->setEmail($data['email']);
+                $cartBean->setCartdate($data['cartDate']);
+                $cartBean->setCurrency($data['currency']);
+                $cartBean->setCartDiscount($data['cartDiscount']);
+                $cartBean->setTaxTotal($data['cartTax']);
+                $cartBean->setDescription($data['description']);
+                $cartBean->setNumber($data['cartNum']);
+                $cartBean->setTotal($data['cartTotal']);
+                $cartBean->setCurrency($data['currency']);
+                $cartBean->setProducts($data['products']);
+                ActionsManager::pushCart($cartBean);
 
-            } catch (\Exception $e) {
+            } catch (\PDOException $e) {
                 // Log error
             }
-
         }
         return true;
-    }
-
-    /**
-     * @param null $objectId
-     *
-     * @return array
-     */
-    public function Oldread($customerId = null)
-    {
-        $customers = $this->shopify->Customer->get();
-        foreach ($customers as $customer) {
-
-            $data = [];
-            $data['date'] = date('Y-m-d H:i:s', strtotime($customer['created_at']));
-            $data['externalid'] = $this->notSetToEmptyString($customer['id']);
-            $data['name'] = $this->notSetToEmptyString($customer['first_name']);
-            $data['surname'] = $this->notSetToEmptyString($customer['last_name']);
-            $data['email'] = $this->notSetToEmptyString($customer['email']);
-            $data['note'] = $this->notSetToEmptyString($customer['note']);
-            $data['site_name'] = $this->notSetToEmptyString($this->shopUrl);
-            $data['telephone1'] = $this->notSetToEmptyString($customer['phone']);
-            $data['tags']['name'] = explode(',', $customer['tags']);
-            $data['address'] = $this->notSetToEmptyString($customer['addresses'][0]['address1']);
-            $data['city'] = $this->notSetToEmptyString($customer['addresses'][0]['city']);
-            $data['nation'] = $this->notSetToEmptyString($customer['addresses'][0]['country_code']);
-            $data['province'] = $this->notSetToEmptyString($customer['addresses'][0]['province_code']);
-            $data['gdpr']['gdpr_marketing']['date'] = $this->notSetToEmptyString($customer['accepts_marketing_updated_at']);
-            $data['gdpr']['gdpr_marketing']['value'] = ($customer['accepts_marketing'] == true) ? true : false;
-
-            try {
-
-                $this->createCrmConnection($customerId);
-                $contactBean = new ActivityEcommerceAddUserBean();
-
-                $contactBean->setCustomer($customerId)
-                    ->setSource($this->shopUrl)
-                    ->setToken($this->shopUrl)
-                    ->setDataRaw($data);
-								$contactBean->setTypeIdentities('email');
-
-                ActionsManager::pushActivity($contactBean);
-
-            } catch (\Exception $e) {
-                // Log error
-            }
-
-        }
     }
 
     private function notSetToEmptyString(&$myString)
