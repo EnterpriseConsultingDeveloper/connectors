@@ -54,7 +54,7 @@ class ShopifyCartConnector extends ShopifyConnector
             $count_cart_crm += count($nextPageCartsArray);
             \Cake\Log\Log::debug('Shopify ShopifyCartConnector call count_cart_crm count ' . $count_cart_crm . ' on ' . $params['shop_url']);
             $carts = array_merge($carts, $nextPageCartsArray);
-            $nextPageCartsArray = $cartResource->getNextPageParams();
+            $nextPageCarts = $cartResource->getNextPageParams();
         }
 
         foreach ($carts as $cart) {
