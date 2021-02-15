@@ -3,6 +3,8 @@
 namespace WR\Connector\ShopifyConnector;
 
 use App\Controller\MultiSchemaTrait;
+use App\Controller\Component\UtilitiesComponent;
+use Cake\Controller\ComponentRegistry;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceCartBean;
 use Cake\I18n\Time;
@@ -57,15 +59,17 @@ class ShopifyCartConnector extends ShopifyConnector
             $nextPageCarts = $cartResource->getNextPageParams();
         }
 
+        $utilities = new UtilitiesComponent(new ComponentRegistry());
         foreach ($carts as $cart) {
             \Cake\Log\Log::debug('Shopify ShopifyCartConnector import cart_number ' . $cart['id']);
             $data = [];
             $data['source'] = $this->shopUrl;
             $data['sourceId'] = $this->shopUrl;
+            $data['actionId'] = (!empty($cart['completed_at'])) ? 'closeCart' : (($utilities->checkAbandonedCartTime($customerId, $cart['updated_at'])) ? 'abandonedCart' : (($cart['created_at'] == $cart['updated_at']) ? 'openCart' : 'changeCart'));
             $data['email'] = $this->notSetToEmptyString($cart['email']);
             $data['cartNum'] = $this->notSetToEmptyString($cart['id']);
             $data['cartIdExt'] = $this->notSetToEmptyString($cart['id']);
-            $data['cartDate'] = Time::createFromFormat(\DateTime::ATOM, $cart['updated_at'])->format('Y-m-d H:i:s');
+            $data['cartDate'] = ((!empty($cart['completed_at'])) ? $cart['completed_at'] : $cart['updated_at']);
             $data['cartTotal'] = $this->notSetToEmptyString($cart['total_price']);
             $data['currency'] = $this->notSetToEmptyString($cart['currency']);
             $data['cartTax'] = $this->notSetToEmptyString($cart['total_tax']);
@@ -94,7 +98,8 @@ class ShopifyCartConnector extends ShopifyConnector
                 $cartBean->setCustomer($customerId)
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)// identificatore univoco della fonte del dato
-                    ->setDataRaw($data);
+                    ->setDataRaw($data)
+                    ->setActionId($data['actionId']);
                 $cartBean->setTypeIdentities('email');
 
                 $cartBean->setSiteName($data['site_name']);
