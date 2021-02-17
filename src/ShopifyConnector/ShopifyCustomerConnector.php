@@ -68,7 +68,7 @@ class ShopifyCustomerConnector extends ShopifyConnector
         foreach ($customers as $customer) {
             $data = [];
             $data['date'] = date('Y-m-d H:i:s', strtotime($customer['created_at']));
-            $data['externalid'] = $this->notSetToEmptyString($customer['id']);
+            $data['contact_code'] = $this->notSetToEmptyString($customer['id']);
             $data['name'] = $this->notSetToEmptyString($customer['first_name']);
             $data['surname'] = $this->notSetToEmptyString($customer['last_name']);
             $data['email'] = $this->notSetToEmptyString($customer['email']);

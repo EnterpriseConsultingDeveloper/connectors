@@ -59,13 +59,12 @@ class ShopifyCartConnector extends ShopifyConnector
             $nextPageCarts = $cartResource->getNextPageParams();
         }
 
-        $utilities = new UtilitiesComponent(new ComponentRegistry());
         foreach ($carts as $cart) {
             \Cake\Log\Log::debug('Shopify ShopifyCartConnector import cart_number ' . $cart['id']);
             $data = [];
             $data['source'] = $this->shopUrl;
             $data['sourceId'] = $this->shopUrl;
-            $data['actionId'] = (!empty($cart['completed_at'])) ? 'closeCart' : (($utilities->checkAbandonedCartTime($customerId, $cart['updated_at'])) ? 'abandonedCart' : (($cart['created_at'] == $cart['updated_at']) ? 'openCart' : 'changeCart'));
+            $data['actionId'] = (!empty($cart['completed_at'])) ? 'closeCart' : ((UtilitiesComponent::checkAbandonedCartTime($customerId, $cart['updated_at'])) ? 'abandonedCart' : (($cart['created_at'] == $cart['updated_at']) ? 'openCart' : 'changeCart'));
             $data['email'] = $this->notSetToEmptyString($cart['email']);
             $data['cartNum'] = $this->notSetToEmptyString($cart['id']);
             $data['cartIdExt'] = $this->notSetToEmptyString($cart['id']);
