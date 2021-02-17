@@ -1,0 +1,50 @@
+{
+	"name": "SportrickConnector",
+	"description": "Sportrick connector for WhiteRabbit suite",
+	"icon": "fa-user",
+	"install": "internal",
+	"type": "social",
+	"img": "https://s3-eu-west-1.amazonaws.com/whiterabbitsuite.com/img/sportrick-logo.svg",
+	"channels": [
+		{
+			"name": "Sportrick",
+			"default_channel": "1",
+			"streams": [
+				{
+					"name": "SportrickCustomer",
+					"permitted_operations": "RPD",
+					"connection_string": "SportrickCustomerConnector",
+					"type": "product"
+				},
+				{
+					"name": "SportrickTag",
+					"permitted_operations": "RPD",
+					"connection_string": "SportrickTagConnector",
+					"type": "product"
+				},
+				{
+					"name": "SportrickOrder",
+					"permitted_operations": "RPD",
+					"connection_string": "SportrickOrderConnector",
+					"type": "product"
+				}
+			],
+			"settings": [
+				{
+					"name": "api_key",
+					"type": "string",
+					"is_editable": "1"
+					"is_mandatory": "1",
+					"access_level": "admin"
+				},
+				{
+					"name": "sportrickapi_lastdate_call",
+					"type": "string",
+					"is_editable": "1",
+					"is_mandatory": "1",
+					"access_level": "admin"
+				}
+			]
+		}
+	]
+}
