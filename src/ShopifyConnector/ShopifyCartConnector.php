@@ -64,7 +64,7 @@ class ShopifyCartConnector extends ShopifyConnector
             $data = [];
             $data['source'] = $this->shopUrl;
             $data['sourceId'] = $this->shopUrl;
-            $data['actionId'] = (!empty($cart['completed_at'])) ? 'closeCart' : ((UtilitiesComponent::checkAbandonedCartTime($customerId, $cart['updated_at'])) ? 'abandonedCart' : (($cart['created_at'] == $cart['updated_at']) ? 'openCart' : 'changeCart'));
+            $data['actionId'] = (!empty($cart['completed_at'])) ? 'closeCart' : (($cart['created_at'] == $cart['updated_at']) ? 'openCart' : 'changeCart');
             $data['email'] = $this->notSetToEmptyString($cart['email']);
             $data['cartNum'] = $this->notSetToEmptyString($cart['id']);
             $data['cartIdExt'] = $this->notSetToEmptyString($cart['id']);
@@ -75,6 +75,7 @@ class ShopifyCartConnector extends ShopifyConnector
             $data['cartDiscount'] = $this->notSetToEmptyString($cart['total_discounts']);
             $data['description'] = $this->notSetToEmptyString($cart['note']);
             $data['site_name'] = $this->notSetToEmptyString($this->shopUrl);
+            $data['cartClose'] = ($data['actionId'] == 'closeCart') ? true : false;
             $data['products'] = array();
 
             foreach ($cart['line_items'] as $id => $product) {
@@ -94,6 +95,11 @@ class ShopifyCartConnector extends ShopifyConnector
 
                 $cartBean = new ActivityEcommerceCartBean();
                 $this->createCrmConnection($customerId);
+                if(!$this->checkCartExist($cart['id'],$this->shopUrl)){
+                    $data['actionId'] = 'openCart';
+                    $data['cartDate'] = $cart['created_at'];
+                }
+
                 $cartBean->setCustomer($customerId)
                     ->setSource($this->shopUrl)
                     ->setToken($this->shopUrl)// identificatore univoco della fonte del dato
@@ -112,6 +118,7 @@ class ShopifyCartConnector extends ShopifyConnector
                 $cartBean->setTotal($data['cartTotal']);
                 $cartBean->setCurrency($data['currency']);
                 $cartBean->setProducts($data['products']);
+                $cartBean->setClosed($data['cartClose']);
                 ActionsManager::pushCart($cartBean);
 
             } catch (\PDOException $e) {

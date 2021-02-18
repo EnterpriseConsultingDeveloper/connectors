@@ -129,28 +129,31 @@ class ShopifyOrderConnector extends ShopifyConnector
 								$changeStatusBean->setTypeIdentities('email');
                 ActionsManager::pushOrder($changeStatusBean);
 
-                \Cake\Log\Log::debug('Shopify ShopifyCartConnector call ActivityEcommerceCartBean by ' . $data['email'] . ' on ' . $params['shop_url']);
+                if($this->checkCartExist($order['checkout_id'],$this->shopUrl)) {
+                    \Cake\Log\Log::debug('Shopify ShopifyCartConnector call ActivityEcommerceCartBean by ' . $data['email'] . ' on ' . $params['shop_url']);
 
-                $cartBean = new ActivityEcommerceCartBean();
-                $cartBean->setCustomer($customerId)
-                    ->setSource($this->shopUrl)
-                    ->setToken($this->shopUrl)// identificatore univoco della fonte del dato
-                    ->setDataRaw($cart_data)
-                    ->setActionId($cart_data['actionId']);
-                $cartBean->setTypeIdentities('email');
+                    $cartBean = new ActivityEcommerceCartBean();
+                    $cartBean->setCustomer($customerId)
+                        ->setSource($this->shopUrl)
+                        ->setToken($this->shopUrl)// identificatore univoco della fonte del dato
+                        ->setDataRaw($cart_data)
+                        ->setActionId($cart_data['actionId']);
+                    $cartBean->setTypeIdentities('email');
 
-                $cartBean->setSiteName($cart_data['site_name']);
-                $cartBean->setEmail($cart_data['email']);
-                $cartBean->setCartdate($cart_data['cartDate']);
-                $cartBean->setCurrency($cart_data['currency']);
-                $cartBean->setCartDiscount($cart_data['cartDiscount']);
-                $cartBean->setTaxTotal($cart_data['cartTax']);
-                $cartBean->setDescription($cart_data['description']);
-                $cartBean->setNumber($cart_data['cartNum']);
-                $cartBean->setTotal($cart_data['cartTotal']);
-                $cartBean->setCurrency($cart_data['currency']);
-                $cartBean->setProducts($cart_data['products']);
-                ActionsManager::pushCart($cartBean);
+                    $cartBean->setSiteName($cart_data['site_name']);
+                    $cartBean->setEmail($cart_data['email']);
+                    $cartBean->setCartdate($cart_data['cartDate']);
+                    $cartBean->setCurrency($cart_data['currency']);
+                    $cartBean->setCartDiscount($cart_data['cartDiscount']);
+                    $cartBean->setTaxTotal($cart_data['cartTax']);
+                    $cartBean->setDescription($cart_data['description']);
+                    $cartBean->setNumber($cart_data['cartNum']);
+                    $cartBean->setTotal($cart_data['cartTotal']);
+                    $cartBean->setCurrency($cart_data['currency']);
+                    $cartBean->setProducts($cart_data['products']);
+                    $cartBean->setClosed(true);
+                    ActionsManager::pushCart($cartBean);
+                }
 
             } catch (\Exception $e) {
                 // Log error

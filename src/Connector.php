@@ -171,4 +171,10 @@ abstract class Connector
     }
 
 
+    public function checkCartExist($cartNumber ,$sourceId)
+    {
+        $cartsTable = \Cake\ORM\TableRegistry::get('Crm.Carts');
+
+        return $cartsTable->checkCart($cartNumber,$sourceId);
+    }
 }
