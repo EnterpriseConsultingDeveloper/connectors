@@ -44,7 +44,10 @@ class SportrickCustomerConnector extends SportrickConnector
 			\Cake\Log\Log::error('Sportrick SportrickCustomerConnector error empty api_key');
 			return false;
 		}
+		/**/
 
+		return true;
+		/**/
 		$customers = $this->getCustomers($params);
 
 		\Cake\Log\Log::debug('Sportrick Customer  num ' . count($customers) . ' for suite_customerId ' . $customerId);
@@ -71,7 +74,7 @@ class SportrickCustomerConnector extends SportrickConnector
 			$custom_variable = [];
 			//$date_createdAt = date('Y-m-d H:i:s', strtotime($customer->metadata->createdAt));
 			//$data['date'] = $date_createdAt;
-			$data['contact_code'] = $this->notSetToEmptyString($customer->identificationNumber);
+			$data['contact_code'] = $this->notSetToEmptyString($customer->id);
 			$data['name'] = $this->notSetToEmptyString($customer->firstName);
 			$data['surname'] = $this->notSetToEmptyString($customer->lastName);
 			$data['gender'] = $this->notSetToEmptyString($gender);
@@ -107,7 +110,6 @@ class SportrickCustomerConnector extends SportrickConnector
 
 			$data['custom_variables'] = !empty($custom_variable) ? $custom_variable : null;
 
-
 			try {
 				$this->createCrmConnection($customerId);
 				$contactBean = new ActivityEcommerceAddUserBean();
@@ -125,8 +127,8 @@ class SportrickCustomerConnector extends SportrickConnector
 			}
 
 		}
-		\Cake\Log\Log::debug('Sportrick SportrickConnector END INSERT Customer num ' . count($customers) . " and updatedAt >" . $params['order_date']);
-		die;
+		\Cake\Log\Log::debug('Sportrick SportrickConnector END INSERT Customer num ' . count($customers) . " and updatedAt >" . $params['sportrickapi_lastdate_call']);
+
 		return true;
 	}
 
@@ -151,7 +153,8 @@ class SportrickCustomerConnector extends SportrickConnector
 	{
 		try {
 			$http = new WRClient();
-			$data['lastModifiedDateTimeFrom'] = $params['order_date'];
+			$data['lastModifiedDateTimeFrom'] = $params['sportrickapi_lastdate_call'];
+
 			$response = $http->post($this->sportrick_end_point . $this->sportrick_api_url_customer_search, json_encode($data), $this->sportrick_api_headers);
 			$res = json_decode($response->body);
 			return ($res);

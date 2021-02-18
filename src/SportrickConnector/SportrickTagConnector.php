@@ -40,7 +40,9 @@ class SportrickTagConnector extends SportrickConnector
 	public function read($customerId = null, $params = null)
 	{
 		\Cake\Log\Log::debug('Sportrick SportrickTagConnector call read by $params ' . print_r($params, true));
-
+		/**/
+		return true;
+		/**/
 		try {
 			$connection = ConnectionManager::get('crm');
 			$tag = $connection->transactional(function () use ($params) {

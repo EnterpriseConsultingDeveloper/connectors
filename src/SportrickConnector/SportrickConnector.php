@@ -34,6 +34,8 @@ class SportrickConnector extends Connector implements IConnector
 	protected $sportrick_source;
 	protected $sportrick_api_url_paymentDocuments;
 	protected $sportrick_custom_variables;
+	protected $suite_subscription_recurring_label;
+	protected $suite_subscription_one_time_label;
 
 
 	function __construct($params)
@@ -49,6 +51,8 @@ class SportrickConnector extends Connector implements IConnector
 		$this->sportrick_tag_category = $config['sportrick_tag_category'];
 		$this->sportrick_api_url_paymentDocuments = $config['sportrick_api_url_paymentDocuments'];
 		$this->sportrick_custom_variables = $config['sportrick_custom_variables'];
+		$this->suite_subscription_recurring_label = $config['suite_subscription_recurring_label'];
+		$this->suite_subscription_one_time_label = $config['suite_subscription_one_time_label'];
 		$this->sportrick_api_headers = [
 			'headers' => [
 				'Content-Type' => 'application/json',
@@ -228,32 +232,6 @@ class SportrickConnector extends Connector implements IConnector
 
 	}
 
-
-	public function getCountOrders($access_token, $date)
-	{
-		$configData = $this->configData();
-
-		//$dateCreated['dateCreated']['$gt'] = $date;
-		$dateCreated['dateCreated']['$gt'] = "2020-05-10T08:45:21.797Z";
-
-		$params['query'] = array('count' => array(
-			'filter' => json_encode($dateCreated)),
-		);
-		$headers =
-			[
-				'headers' => [
-					'Content-Type' => 'application/json',
-					'authorization' => $access_token
-				]
-			];
-
-		$http = new WRClient();
-		$response = $http->post($configData['wix_orders_query'], json_encode($params),
-			$headers
-		);
-		debug(json_decode($response->body));
-		die;
-	}
 
 
 }
