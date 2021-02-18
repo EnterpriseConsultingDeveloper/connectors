@@ -69,20 +69,16 @@ class ShopifyOrderConnector extends ShopifyConnector
         foreach ($orders as $order) {
             \Cake\Log\Log::debug('Shopify ShopifyOrderConnector import order_number ' . $order['order_number']);
             $data = [];
-            $cart_data = [];
-            $cart_data['actionId'] = 'closeCart';
-            $cart_data['cartNum'] = $this->notSetToEmptyString($order['checkout_id']);
-            $cart_data['cartIdExt'] = $this->notSetToEmptyString($order['checkout_id']);
-            $data['source'] = $cart_data['source'] = $cart_data['sourceId'] = $cart_data['site_name'] = $this->shopUrl;
-            $data['email'] = $cart_data['email'] = $this->notSetToEmptyString($order['email']);
+            $data['source'] = $this->shopUrl;
+            $data['email'] = $this->notSetToEmptyString($order['email']);
             $data['number'] = $this->notSetToEmptyString($order['order_number']);
-            $data['orderdate'] = $cart_data['cartDate'] = $order['created_at'];
+            $data['orderdate'] = $order['created_at'];
             $data['order_status'] = $this->notSetToEmptyString($order['financial_status']);
-            $data['total'] = $cart_data['cartTotal'] = $this->notSetToEmptyString($order['total_price']);
-            $data['currency'] = $cart_data['currency'] = $this->notSetToEmptyString($order['currency']);
-            $data['tax_total'] = $cart_data['cartTax'] = $this->notSetToEmptyString($order['total_tax']);
+            $data['total'] = $this->notSetToEmptyString($order['total_price']);
+            $data['currency'] = $this->notSetToEmptyString($order['currency']);
+            $data['tax_total'] = $this->notSetToEmptyString($order['total_tax']);
             $data['subtotal'] = $this->notSetToEmptyString($order['subtotal_price']);
-            $data['cart_discount'] = $cart_data['cartDiscount'] = $this->notSetToEmptyString($order['total_discounts']);
+            $data['cart_discount'] = $this->notSetToEmptyString($order['total_discounts']);
 
 //          $data['shipping_total'] = $this->notSetToEmptyString($content['shipping_total']);
             $data['shipping_firstname'] = $this->notSetToEmptyString($order['shipping_address']['shipping_firstname']);
@@ -97,9 +93,8 @@ class ShopifyOrderConnector extends ShopifyConnector
             $data['payment_method'] = $this->notSetToEmptyString($order['gateway']);
 //          $data['shipping_method'] = $this->notSetToEmptyString($content['shipping_method']);
             /*new*/
-            $data['description'] = $cart_data['description'] = $this->notSetToEmptyString($order['note']);
+            $data['description'] = $this->notSetToEmptyString($order['note']);
             $data['products'] = array();
-            $cart_data['products'] = array();
             $data['tags'] = array();
 
             foreach ($order['line_items'] as $id => $product) {
@@ -115,8 +110,6 @@ class ShopifyOrderConnector extends ShopifyConnector
                 $data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax_lines'][0]['price']);
             }
 
-            $cart_data['products'] = $data['products'];
-
             try {
                 \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call ActivityEcommerceAddUserBean by ' . $data['email'] . ' on ' . $params['shop_url']);
 
@@ -130,6 +123,23 @@ class ShopifyOrderConnector extends ShopifyConnector
                 ActionsManager::pushOrder($changeStatusBean);
 
                 if($this->checkCartExist($order['checkout_id'],$this->shopUrl)) {
+
+                    $cart_data = [];
+                    $cart_data['actionId'] = 'closeCart';
+                    $cart_data['cartDate'] = $order['created_at'];
+                    $cart_data['email'] = $this->notSetToEmptyString($order['email']);
+                    $cart_data['cartNum'] = $this->notSetToEmptyString($order['checkout_id']);
+                    $cart_data['cartIdExt'] = $this->notSetToEmptyString($order['checkout_id']);
+                    $cart_data['cartTotal'] = $this->notSetToEmptyString($order['total_price']);
+                    $cart_data['currency'] = $this->notSetToEmptyString($order['currency']);
+                    $cart_data['cartTax'] = $this->notSetToEmptyString($order['total_tax']);
+                    $cart_data['cartDiscount'] = $this->notSetToEmptyString($order['total_discounts']);
+                    $cart_data['description'] = $this->notSetToEmptyString($order['note']);
+                    $cart_data['source'] = $this->shopUrl;
+                    $cart_data['sourceId'] = $this->shopUrl;
+                    $cart_data['site_name'] = $this->shopUrl;
+                    $cart_data['products'] = $data['products'];
+
                     \Cake\Log\Log::debug('Shopify ShopifyCartConnector call ActivityEcommerceCartBean by ' . $data['email'] . ' on ' . $params['shop_url']);
 
                     $cartBean = new ActivityEcommerceCartBean();
