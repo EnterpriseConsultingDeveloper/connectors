@@ -91,7 +91,6 @@ class SportrickOrderConnector extends SportrickConnector
 				$data['products'][$id]['tax'] = $this->notSetToEmptyString($product->taxAmount);
 				// date solo se recurring
 				if (!empty($product->competenceStartDate && !empty($product->competenceEndDate))) {
-
 					$data['products'][$id]['type'] = $product->competenceStartDate == $product->competenceEndDate ? $this->suite_subscription_one_time_label : $this->suite_subscription_recurring_label;
 					$data['products'][$id]['period_start'] = $product->competenceStartDate == $product->competenceEndDate ? null : (new Date($product->competenceStartDate))->getTimestamp();
 					$data['products'][$id]['period_end'] = $product->competenceStartDate == $product->competenceEndDate ? null : (new Date($product->competenceEndDate))->getTimestamp();
@@ -151,9 +150,7 @@ class SportrickOrderConnector extends SportrickConnector
 				\Cake\Log\Log::debug('Sportrick SportrickConnector getDocument fromDate ' . $data['fromDate'] . ' toDate ' . $data['toDate'] . ' count result  ' . count($res));
 				$result = array_merge($result, $res);
 			}
-
 			\Cake\Log\Log::debug('Sportrick SportrickConnector getDocument FINAL count ' . count($result));
-
 			return ($result);
 		} catch (\Exception $e) {
 			debug($e);
@@ -161,6 +158,5 @@ class SportrickOrderConnector extends SportrickConnector
 			return null;
 		}
 	}
-
 
 }
