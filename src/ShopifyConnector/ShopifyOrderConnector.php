@@ -99,7 +99,7 @@ class ShopifyOrderConnector extends ShopifyConnector
 
             foreach ($order['line_items'] as $id => $product) {
 //            debug($product);
-                $data['products'][$id]['product_id'] = $product['id'];
+                $data['products'][$id]['product_id'] = $product['product_id'];
                 $data['products'][$id]['name'] = $product['title'];
                 $data['products'][$id]['qty'] = $product['quantity'];
                 $data['products'][$id]['price'] = $product['price'];

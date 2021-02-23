@@ -81,7 +81,7 @@ class ShopifyCartConnector extends ShopifyConnector
             foreach ($cart['line_items'] as $id => $product) {
                 $data['products'][$id]['product_id'] = $product['product_id'];
                 $data['products'][$id]['name'] = $product['title'];
-                $data['products'][$id]['quantity'] = $product['quantity'];
+                $data['products'][$id]['qty'] = $product['quantity'];
                 $data['products'][$id]['price'] = $product['price'];
                 $data['products'][$id]['category'] = '';
                 $data['products'][$id]['discount'] = $this->notSetToEmptyString($product['total_discount']);

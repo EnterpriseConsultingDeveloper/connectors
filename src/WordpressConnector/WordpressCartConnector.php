@@ -50,7 +50,7 @@ class WordpressCartConnector extends WordpressConnector
         $data = [];
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
         $data['sourceId'] = $data['source'];
-        $data['actionId'] = 'changeCart';
+        $data['actionId'] = ($content['cart_close']) ? 'closeCart' : 'changeCart';
         $data['email'] = $this->notSetToEmptyString($content['email']);
         $data['cartNum'] = $this->notSetToEmptyString($content['id']);
         $data['cartIdExt'] = $this->notSetToEmptyString($content['id']);
@@ -61,13 +61,13 @@ class WordpressCartConnector extends WordpressConnector
         $data['cartDiscount'] = $this->notSetToEmptyString($content['total_discounts']);
         $data['description'] = $this->notSetToEmptyString($content['note']);
         $data['site_name'] = $data['source'];
-        $data['cartClose'] = false;
+        $data['cartClose'] = $content['cart_close'];
         $data['products'] = array();
 
         foreach ($products as $id => $product) {
             $data['products'][$id]['product_id'] = $product['product_id'];
             $data['products'][$id]['name'] = $product['name'];
-            $data['products'][$id]['quantity'] = $product['qty'];
+            $data['products'][$id]['qty'] = $product['qty'];
             $data['products'][$id]['price'] = $product['price'];
             $data['products'][$id]['category'] = $product['category'];
             $data['products'][$id]['discount'] = $this->notSetToEmptyString($product['discount']);
@@ -82,7 +82,11 @@ class WordpressCartConnector extends WordpressConnector
             $contentBean = new ActivityEcommerceCartBean();
             $this->createCrmConnection($customerId);
             if(!$this->checkCartExist($content['id'],$data['source'])){
-                $data['actionId'] = 'openCart';
+                if($data['cartClose']){
+                    return false;
+                }else{
+                    $data['actionId'] = 'openCart';
+                }
             }
 
             $contentBean->setCustomer($customerId)
