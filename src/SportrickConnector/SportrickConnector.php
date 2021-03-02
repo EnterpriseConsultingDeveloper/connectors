@@ -26,9 +26,13 @@ class SportrickConnector extends Connector implements IConnector
 	protected $sportrick_end_point;
 	protected $sportrick_source_name;
 	protected $sportrick_api_url_branches;
+	protected $sportrick_api_url_customer_add;
 	protected $sportrick_api_url_customer_search;
 	protected $sportrick_api_url_tag;
+	protected $sportrick_api_url_entries;
 	protected $sportrick_tag_category;
+	protected $sportrick_payment_documents_attribute_filter;
+	protected $sportrick_payment_documents_parameter_call;
 	protected $sportrick_tag_prefix;
 	protected $sportrick_api_headers;
 	protected $sportrick_source;
@@ -45,8 +49,12 @@ class SportrickConnector extends Connector implements IConnector
 		$this->sportrick_source_name = $config['sportrick_source_name'];
 		$this->sportrick_end_point = $config['sportrick_end_point'];
 		$this->sportrick_api_url_branches = $config['sportrick_api_url_branches'];
+		$this->sportrick_api_url_customer_add = $config['sportrick_api_url_customer_add'];
 		$this->sportrick_api_url_customer_search = $config['sportrick_api_url_customer_search'];
 		$this->sportrick_api_url_tag = $config['sportrick_api_url_tag'];
+		$this->sportrick_api_url_entries = $config['sportrick_api_url_entries'];
+		$this->sportrick_payment_documents_attribute_filter = $config['sportrick_payment_documents_attribute_filter'];
+		$this->sportrick_payment_documents_parameter_call = $config['sportrick_payment_documents_parameter_call'];
 		$this->sportrick_tag_prefix = $config['sportrick_tag_prefix'];
 		$this->sportrick_tag_category = $config['sportrick_tag_category'];
 		$this->sportrick_api_url_paymentDocuments = $config['sportrick_api_url_paymentDocuments'];
@@ -91,7 +99,7 @@ class SportrickConnector extends Connector implements IConnector
 
 			return ($res);
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . 'customVariable/list' . ' error ' . $e->getMessage());
 			return null;
 			// Log error
 		}
@@ -114,7 +122,7 @@ class SportrickConnector extends Connector implements IConnector
 
 			return ($res);
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . 'customVariable/add' . ' error ' . $e->getMessage());
 			return null;
 			// Log error
 		}

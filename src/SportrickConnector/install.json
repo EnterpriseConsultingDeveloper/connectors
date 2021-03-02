@@ -23,6 +23,12 @@
 					"type": "product"
 				},
 				{
+					"name": "SportrickEntry",
+					"permitted_operations": "RPD",
+					"connection_string": "SportrickEntryConnector",
+					"type": "product"
+				},
+				{
 					"name": "SportrickOrder",
 					"permitted_operations": "RPD",
 					"connection_string": "SportrickOrderConnector",

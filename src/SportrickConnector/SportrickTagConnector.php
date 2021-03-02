@@ -41,7 +41,7 @@ class SportrickTagConnector extends SportrickConnector
 	{
 		\Cake\Log\Log::debug('Sportrick SportrickTagConnector call read by $params ' . print_r($params, true));
 		/**/
-		return true;
+		//return true;
 		/**/
 		try {
 			$connection = ConnectionManager::get('crm');

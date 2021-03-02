@@ -49,10 +49,17 @@ class SportrickOrderConnector extends SportrickConnector
 			return false;
 		}
 		$contactsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Crm.Contacts');
-		$documents = $this->getDocuments($params);
+		$documents = $this->getPaymentDocuments($params);
+		//	debug($documents);
 
 		foreach ($documents as $document) {
-
+			//filter document = credit note
+			foreach ($this->sportrick_payment_documents_attribute_filter as $id => $value) {
+				if ($document->$id == $value) {
+					continue;
+				}
+			}
+			//
 			$customer = $contactsTable->getContactsFromContactCode($document->customerId);
 			if (empty($customer)) {
 				continue;
@@ -130,27 +137,32 @@ class SportrickOrderConnector extends SportrickConnector
 	 * @return mixed|null
 	 */
 
-	public function getDocuments($params)
+	public function getPaymentDocuments($params)
 	{
 		try {
 			$result = array();
 			$http = new WRClient();
 			$time = new DateTime;
-			/*$data['forDigitalInvoicing'] = 'false';
-			$dateStart = new FrozenTime('2010-10-01 00:00:00');
-			$dateStep = new Time('2010-10-01 00:00:00');*/
+
+			/*$dateStart = new FrozenTime('2020-01-01 00:00:00');
+			$dateStep = new Time('2020-01-01 00:00:00');*/
 			$dateStart = new FrozenTime($params['sportrickapi_lastdate_call']);
 			$dateStep = new Time($params['sportrickapi_lastdate_call']);
 			$dataEnd = new FrozenTime(Time::now()->format('Y-m-d\TH:i:s.000\Z'));
 			while ($dateStep < $dataEnd) {
 				$data['fromDate'] = (new FrozenTime($dateStep))->format('Y-m-d\TH:i:s.000\Z');
 				$data['toDate'] = (new FrozenTime($dateStep->addMonths(1)))->format('Y-m-d\TH:i:s.000\Z');
+				//use filter
+				foreach ($this->sportrick_payment_documents_parameter_call as $id => $value) {
+					$data[$id] = $value;
+				}
 				$response = $http->get($this->sportrick_end_point . $this->sportrick_api_url_paymentDocuments, $data, $this->sportrick_api_headers);
 				$res = json_decode($response->body);
-				\Cake\Log\Log::debug('Sportrick SportrickConnector getDocument fromDate ' . $data['fromDate'] . ' toDate ' . $data['toDate'] . ' count result  ' . count($res));
+				\Cake\Log\Log::debug('Sportrick SportrickConnector getDocument fromDate ' . new FrozenTime($data['fromDate']) . ' toDate ' . new FrozenTime($data['toDate']) . ' count result  ' . count($res));
 				$result = array_merge($result, $res);
 			}
 			\Cake\Log\Log::debug('Sportrick SportrickConnector getDocument FINAL count ' . count($result));
+
 			return ($result);
 		} catch (\Exception $e) {
 			debug($e);

@@ -12,15 +12,16 @@ use App\Controller\MultiSchemaTrait;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
 use App\Lib\WhiteRabbit\WRClient;
+use Cake\Chronos\Date;
+use Cake\Datasource\ConnectionManager;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
 use App\Lib\CRM\CRMManager;
 use Cake\I18n\Time;
 use Cake\Collection\Collection;
-use Cake\Chronos\Date;
 
-class SportrickCustomerConnector extends SportrickConnector
+class SportrickEntryConnector extends SportrickConnector
 {
 
 	use MultiSchemaTrait;
@@ -34,8 +35,8 @@ class SportrickCustomerConnector extends SportrickConnector
 	 * @param $customerId
 	 * @param $params
 	 * @return bool
-	 * @add  14/02/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
-	 * @copyright (c) 2021, WhiteRabbit srl
+	 * @add  02/03/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @copyright (c) 2022, WhiteRabbit srl
 	 */
 	public function read($customerId = null, $params = null)
 	{
@@ -48,10 +49,11 @@ class SportrickCustomerConnector extends SportrickConnector
 		/**/
 		//return true;
 		/**/
-		$customers = $this->getCustomers($params);
+
+		$entries = $this->getEntries($params);
 		/*	debug(count($customers));
 			die;*/
-		if (empty($customers)) {
+		if (empty($entries)) {
 			\Cake\Log\Log::debug('Sportrick Customer NO customer for suite_customerId ' . $customerId);
 			return true;
 		}
@@ -150,75 +152,30 @@ class SportrickCustomerConnector extends SportrickConnector
 		return (!isset($myString)) ? '' : $myString;
 	}
 
-	/**
-	 * @param $api_key
-	 * @return mixed|null
-	 */
-	public function getCustomers($params)
-	{
-		try {
-			$http = new WRClient();
-			$data['lastModifiedDateTimeFrom'] = $params['sportrickapi_lastdate_call'];
-
-			$response = $http->post($this->sportrick_end_point . $this->sportrick_api_url_customer_search, json_encode($data), $this->sportrick_api_headers);
-			$res = json_decode($response->body);
-			return ($res);
-
-		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
-			return null;
-		}
-	}
-
 
 	/**
 	 * @param $api_key
 	 * @return mixed|null
 	 */
-	public function addCustomer($params)
+	public function getEntries($params)
 	{
 		try {
 			$http = new WRClient();
-			$data['lastModifiedDateTimeFrom'] = $params['sportrickapi_lastdate_call'];
-
-			$response = $http->post($this->sportrick_end_point . $this->sportrick_api_url_customer_search, json_encode($data), $this->sportrick_api_headers);
-			$res = json_decode($response->body);
-			return ($res);
-
-		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
-			return null;
-		}
-	}
-
-
-
-
-
-	public function write($content)
-	{
-		\Cake\Log\Log::debug('Sportrick SportrickCustomerConnector call write by $content ' . print_r($content, true));
-		debug($this->api_key);
-		debug($this->sportrick_end_point . $this->sportrick_api_url_customer_add);
-		debug($content);
-		try {
-			$http = new WRClient();
-			$response = $http->post($this->sportrick_end_point . $this->sportrick_api_url_customer_add, $content,
-				[
-					'headers' => ['WR-Token' => $this->api_key, 'Accept' => 'application/json']
-				]);
+			$date = new Date($params['sportrickapi_lastdate_call']);
+			$data['fromDate'] = $date->format('Y-m-d');
+			debug($data);
+			$response = $http->get($this->sportrick_end_point . $this->sportrick_api_url_entries, $data, $this->sportrick_api_headers);
 			$res = json_decode($response->body);
 
 			debug($res);
 			die;
 			return ($res);
+
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . 'customVariable/add' . ' error ' . $e->getMessage());
+			debug($e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
 			return null;
-			// Log error
 		}
-
 	}
-
 
 }
