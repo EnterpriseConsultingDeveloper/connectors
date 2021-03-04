@@ -39,7 +39,7 @@
 				{
 					"name": "api_key",
 					"type": "string",
-					"is_editable": "1"
+					"is_editable": "1",
 					"is_mandatory": "1",
 					"access_level": "admin"
 				},

@@ -49,13 +49,13 @@ class SportrickCustomerConnector extends SportrickConnector
 		//return true;
 		/**/
 		$customers = $this->getCustomers($params);
-		/*	debug(count($customers));
+		/*debug(count($customers));
 			die;*/
 		if (empty($customers)) {
-			\Cake\Log\Log::debug('Sportrick Customer NO customer for suite_customerId ' . $customerId);
+			\Cake\Log\Log::debug('Sportrick SportrickCustomerConnector Customer NO customer for suite_customerId ' . $customerId);
 			return true;
 		}
-		\Cake\Log\Log::debug('Sportrick Customer found num ' . count($customers) . ' for suite_customerId ' . $customerId);
+		\Cake\Log\Log::debug('Sportrick SportrickCustomerConnector Customer found num ' . count($customers) . ' for suite_customerId ' . $customerId);
 
 		foreach ($customers as $customer) {
 			if (empty($customer->email)) {
@@ -77,6 +77,9 @@ class SportrickCustomerConnector extends SportrickConnector
 
 			$data = [];
 			$custom_variable = [];
+
+			//aspettiamo che ci passano anche la data di creazione da usarea anche come data gdpr
+			
 			//$date_createdAt = date('Y-m-d H:i:s', strtotime($customer->metadata->createdAt));
 			//$data['date'] = $date_createdAt;
 			$data['contact_code'] = $this->notSetToEmptyString($customer->id);
@@ -127,13 +130,11 @@ class SportrickCustomerConnector extends SportrickConnector
 				ActionsManager::pushActivity($contactBean);
 
 			} catch (\Exception $e) {
-				die;
-				return false;
+				\Cake\Log\Log::error('Sportrick SportrickConnector NO ActivityEcommerceAddUserBean for $data ' . print_r($data, true) . '. Error ' . $e->getMessage() . ' for suite_customerId' . $customerId);
 			}
 
 		}
-		\Cake\Log\Log::debug('Sportrick SportrickConnector END INSERT Customer num ' . count($customers) . " and updatedAt >" . $params['sportrickapi_lastdate_call']);
-
+		\Cake\Log\Log::debug('Sportrick SportrickConnector END INSERT Customer num ' . count($customers) . ' and updatedAt >= ' . $params['sportrickapi_lastdate_call'] . ' for suite_customerId' . $customerId);
 		return true;
 	}
 
@@ -165,7 +166,7 @@ class SportrickCustomerConnector extends SportrickConnector
 			return ($res);
 
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_customer_search . ' error ' . $e->getMessage());
 			return null;
 		}
 	}
@@ -186,29 +187,22 @@ class SportrickCustomerConnector extends SportrickConnector
 			return ($res);
 
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_customer_search . ' error ' . $e->getMessage());
 			return null;
 		}
 	}
 
 
-
-
-
-	public function write($content)
+	public function write($customer)
 	{
-		\Cake\Log\Log::debug('Sportrick SportrickCustomerConnector call write by $content ' . print_r($content, true));
-		debug($this->api_key);
-		debug($this->sportrick_end_point . $this->sportrick_api_url_customer_add);
-		debug($content);
+		\Cake\Log\Log::debug('Sportrick SportrickCustomerConnector call write by $content ' . print_r($customer, true));
 		try {
 			$http = new WRClient();
-			$response = $http->post($this->sportrick_end_point . $this->sportrick_api_url_customer_add, $content,
-				[
-					'headers' => ['WR-Token' => $this->api_key, 'Accept' => 'application/json']
-				]);
+			$response = $http->post($this->sportrick_end_point . $this->sportrick_api_url_customer_add, $customer, $this->sportrick_api_headers);
+
 			$res = json_decode($response->body);
 
+			//debug($response);
 			debug($res);
 			die;
 			return ($res);

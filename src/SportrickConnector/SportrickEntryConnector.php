@@ -11,9 +11,11 @@ namespace WR\Connector\SportrickConnector;
 use App\Controller\MultiSchemaTrait;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
+use App\Lib\ActionsManager\Activities\ActivitySiteActionBean;
 use App\Lib\WhiteRabbit\WRClient;
 use Cake\Chronos\Date;
 use Cake\Datasource\ConnectionManager;
+use koolreport\inputs\Select;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
 use Cake\ORM\TableRegistry;
@@ -40,10 +42,10 @@ class SportrickEntryConnector extends SportrickConnector
 	 */
 	public function read($customerId = null, $params = null)
 	{
-		\Cake\Log\Log::debug('Sportrick SportrickCustomerConnector call read by $params ' . print_r($params, true));
+		\Cake\Log\Log::debug('Sportrick SportrickEntryConnector call read by $params ' . print_r($params, true));
 		$viewlocationTable = TableRegistry::getTableLocator()->get('Crm.ViewLocation');
 		if (empty($params['api_key'])) {
-			\Cake\Log\Log::error('Sportrick SportrickCustomerConnector error empty api_key');
+			\Cake\Log\Log::error('Sportrick SportrickEntryConnector error empty api_key');
 			return false;
 		}
 		/**/
@@ -53,88 +55,70 @@ class SportrickEntryConnector extends SportrickConnector
 		$entries = $this->getEntries($params);
 		/*	debug(count($customers));
 			die;*/
+
+
 		if (empty($entries)) {
-			\Cake\Log\Log::debug('Sportrick Customer NO customer for suite_customerId ' . $customerId);
+			\Cake\Log\Log::debug('Sportrick SportrickEntryConnector NO Entries for suite_customerId ' . $customerId);
 			return true;
 		}
-		\Cake\Log\Log::debug('Sportrick Customer found num ' . count($customers) . ' for suite_customerId ' . $customerId);
+		\Cake\Log\Log::debug('Sportrick Entries found num ' . count($entries) . ' for suite_customerId ' . $customerId);
 
-		foreach ($customers as $customer) {
-			if (empty($customer->email)) {
+		$contactsTable = TableRegistry::getTableLocator()->get('Crm.Contacts');
+		$branches = $this->connect();
+		$branches_list = [];
+
+		foreach ($branches as $branch) {
+			$branches_list[$branch->id] = $branch->name;
+		}
+
+		foreach ($entries as $entry) {
+			$contact = $contactsTable->getContactsFromContactCode($entry->customerId);
+			if (empty($contact)) {
+				\Cake\Log\Log::debug('Sportrick SportrickEntryConnector contact not found  ' . $entry->customerId) . ' for suite_customerId ' . $customerId;
 				continue;
 			}
 
-			if (!empty($customer->addressCountry)) {
-				$viewlocation = $viewlocationTable->getCountryFromProvince($customer->addressStateProv);
-				if (!empty($viewlocation)) {
-					$nation = $viewlocation->su_country;
-				}
+			switch ($entry->direction) {
+				case 'CheckIn':
+					$typeAction = strtolower('CheckIn');
+					break;
+				case 'CheckOut':
+					$typeAction = strtolower('CheckOut');
+					break;
 			}
 
-			if ($customer->gender == "M") {
-				$gender = "male";
-			} elseif ($customer->gender = "F") {
-				$gender = "female";
-			}
-
-			$data = [];
-			$custom_variable = [];
-			//$date_createdAt = date('Y-m-d H:i:s', strtotime($customer->metadata->createdAt));
-			//$data['date'] = $date_createdAt;
-			$data['contact_code'] = $this->notSetToEmptyString($customer->id);
-			$data['name'] = $this->notSetToEmptyString($customer->firstName);
-			$data['surname'] = $this->notSetToEmptyString($customer->lastName);
-			$data['gender'] = $this->notSetToEmptyString($gender);
-			$data['email'] = $this->notSetToEmptyString($customer->email);
-			$data['site_name'] = $this->notSetToEmptyString($this->sportrick_source_name);
-			$data['telephone1'] = $this->notSetToEmptyString($customer->phoneNumber);
-			$data['address'] = $this->notSetToEmptyString($customer->addressStreet);
-			$data['city'] = $this->notSetToEmptyString($customer->addressCity);
-			$data['nation'] = $this->notSetToEmptyString($nation);
-			$data['postalcode'] = $this->notSetToEmptyString($customer->addressZip);
-			$data['province'] = $this->notSetToEmptyString($customer->addressStateProv);
-			$data['fiscalcode'] = $this->notSetToEmptyString($customer->taxCode);
-			$data['birthdaydate'] = Time::createFromFormat('Y-m-d', $customer->dateOfBirth)->toAtomString();
-			$data['gdpr']['gdpr_marketing']['value'] = !empty($customer->marketingConsent) ? $customer->marketingConsent : false;
-			$data['gdpr']['gdpr_marketing']['date'] = Time::now()->toAtomString();
-			\Cake\Log\Log::debug('Sportrick SportrickConnector call ActivityEcommerceAddUserBean for customer ' . $data['email'] . ' for suite_customerId' . $customerId);
-			//debug($this->sportrick_custom_variables);
-			//debug($customer->defaultBranch->id);
-			//debug($customer->defaultBranch->name);
-			//		debug($customer);
-
-			$index = 0;
-			foreach ($this->sportrick_custom_variables as $id => $sportrick_custom_variable) {
-				$customer_array = json_decode(json_encode($customer), true);
-				$app = explode("_", $id);
-				foreach ($app as $val) {
-					$customer_array = $customer_array[$val];
-				}
-				$custom_variable[$index]['name'] = strtolower($sportrick_custom_variable);
-				$custom_variable[$index]['value'] = $customer_array;
-				$index++;
-			}
-
-			$data['custom_variables'] = !empty($custom_variable) ? $custom_variable : null;
+			/*debug($contact->id);
+			debug($contact->email_1);*/
 
 			try {
-				$this->createCrmConnection($customerId);
-				$contactBean = new ActivityEcommerceAddUserBean();
-				$contactBean->setCustomer($customerId)
-					->setSource($this->sportrick_source_name)
-					->setToken($this->sportrick_source_name)
-					->setDataRaw($data);
-				$contactBean->setTypeIdentities('email');
+				$data = (array)$entry;
+				$data['source'] = $this->sportrick_source_name;
+				$data['email1'] = $contact->email_1;
+				$data['date'] = date("Y-m-d\TH:i:s.000\Z", strtotime($entry->datetime));
 
-				ActionsManager::pushActivity($contactBean);
+				$branchName = !empty($branches_list[$entry->branchId]) ? $branches_list[$entry->branchId] : '';
+				$data['actionDetails'] = $entry->direction . ' on branchId ' . $entry->branchId . ' - branch name ' . $branchName;
+				$data['properties'] = $entry;
+
+				$this->createCrmConnection($customerId);
+
+				$a = new ActivitySiteActionBean();
+				$a->setCustomer($customerId);
+				$a->setSource($this->sportrick_source_name);
+				//$a->setToken($data['note']); //serve a far funzionare le automazioni
+				$a->setActionId($typeAction);
+				$a->setDataRaw($data);
+				$a->setTypeIdentities('email');
+
+				ActionsManager::pushActivity($a);
 
 			} catch (\Exception $e) {
-				die;
-				return false;
+				\Cake\Log\Log::error('Sportrick SportrickEntryConnector NO ActivitySiteActionBean for $data ' . print_r($data, true) . '. Error ' . $e->getMessage() . ' for suite_customerId' . $customerId);
 			}
 
 		}
-		\Cake\Log\Log::debug('Sportrick SportrickConnector END INSERT Customer num ' . count($customers) . " and updatedAt >" . $params['sportrickapi_lastdate_call']);
+
+		\Cake\Log\Log::debug('Sportrick SportrickEntryConnector END INSERT Entries num ' . count($entries) . ' and updatedAt >= ' . $params['sportrickapi_lastdate_call'] . ' for suite_customerId' . $customerId);
 
 		return true;
 	}
@@ -163,17 +147,13 @@ class SportrickEntryConnector extends SportrickConnector
 			$http = new WRClient();
 			$date = new Date($params['sportrickapi_lastdate_call']);
 			$data['fromDate'] = $date->format('Y-m-d');
-			debug($data);
 			$response = $http->get($this->sportrick_end_point . $this->sportrick_api_url_entries, $data, $this->sportrick_api_headers);
 			$res = json_decode($response->body);
-
-			debug($res);
-			die;
 			return ($res);
 
 		} catch (\Exception $e) {
 			debug($e->getMessage());
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_entries . ' error ' . $e->getMessage());
 			return null;
 		}
 	}

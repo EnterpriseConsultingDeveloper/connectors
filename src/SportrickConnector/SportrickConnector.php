@@ -23,6 +23,7 @@ class SportrickConnector extends Connector implements IConnector
 {
 
 	protected $api_key;
+	protected $sportrick_start_import_date;
 	protected $sportrick_end_point;
 	protected $sportrick_source_name;
 	protected $sportrick_api_url_branches;
@@ -47,6 +48,7 @@ class SportrickConnector extends Connector implements IConnector
 		$config = json_decode(file_get_contents('appdata.cfg', true), true);
 		$this->api_key = $params['api_key'];
 		$this->sportrick_source_name = $config['sportrick_source_name'];
+		$this->sportrick_start_import_date = $config['sportrick_start_import_date'];
 		$this->sportrick_end_point = $config['sportrick_end_point'];
 		$this->sportrick_api_url_branches = $config['sportrick_api_url_branches'];
 		$this->sportrick_api_url_customer_add = $config['sportrick_api_url_customer_add'];

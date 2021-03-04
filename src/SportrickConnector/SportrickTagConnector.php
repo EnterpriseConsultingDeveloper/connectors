@@ -121,10 +121,11 @@ class SportrickTagConnector extends SportrickConnector
 			});
 
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickTagConnector error try ' . print_r($e->getMessage(), true));
-			return false;
+			\Cake\Log\Log::error('Sportrick SportrickTagConnector. Error ' . $e->getMessage() . ' for suite_customerId' . $customerId);
+
 		}
-		return $tag;
+		\Cake\Log\Log::debug('Sportrick SportrickTagConnector END INSERT updatedAt >=' . $params['sportrickapi_lastdate_call'] . ' for suite_customerId' . $customerId);
+		return true;
 	}
 
 
@@ -154,7 +155,7 @@ class SportrickTagConnector extends SportrickConnector
 			return ($res);
 		} catch (\Exception $e) {
 			debug($e);
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_tag . ' error ' . $e->getMessage());
 			return null;
 		}
 	}
@@ -175,7 +176,7 @@ class SportrickTagConnector extends SportrickConnector
 			\Cake\Log\Log::debug('Sportrick SportrickTagConnector response getTagCustomers count ' . count($res));
 			return ($res);
 		} catch (\Exception $e) {
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_customer_search . ' error ' . $e->getMessage());
 			return null;
 		}
 	}

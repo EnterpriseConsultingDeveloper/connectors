@@ -48,6 +48,7 @@ class SportrickOrderConnector extends SportrickConnector
 			\Cake\Log\Log::error('Sportrick SportrickOrderConnector error empty api_key');
 			return false;
 		}
+
 		$contactsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Crm.Contacts');
 		$documents = $this->getPaymentDocuments($params);
 		//	debug($documents);
@@ -103,8 +104,7 @@ class SportrickOrderConnector extends SportrickConnector
 					$data['products'][$id]['period_end'] = $product->competenceStartDate == $product->competenceEndDate ? null : (new Date($product->competenceEndDate))->getTimestamp();
 					$data['products'][$id]['auto_renew'] = false;
 				} else {
-					debug($document);
-					die;
+
 				}
 			}
 			try {
@@ -116,13 +116,11 @@ class SportrickOrderConnector extends SportrickConnector
 					->setDataRaw($data);
 				$changeStatusBean->setTypeIdentities('email');
 				ActionsManager::pushOrder($changeStatusBean);
-
-
 			} catch (\Exception $e) {
-				return false;
+				\Cake\Log\Log::error('Sportrick SportrickOrderConnector NO ActivityEcommerceChangeStatusBean for $data ' . print_r($data, true) . '. Error ' . $e->getMessage() . ' for suite_customerId' . $customerId);
 			}
 		}
-
+		\Cake\Log\Log::debug('Sportrick SportrickOrderConnector END INSERT Entries num ' . count($documents) . ' and updatedAt >= ' . $params['sportrickapi_lastdate_call'] . ' for suite_customerId' . $customerId);
 		return true;
 	}
 
@@ -166,7 +164,7 @@ class SportrickOrderConnector extends SportrickConnector
 			return ($result);
 		} catch (\Exception $e) {
 			debug($e);
-			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_branches . ' error ' . $e->getMessage());
+			\Cake\Log\Log::error('Sportrick SportrickConnector connect for ' . $this->sportrick_end_point . $this->sportrick_api_url_paymentDocuments . ' error ' . $e->getMessage());
 			return null;
 		}
 	}
