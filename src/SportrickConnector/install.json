@@ -4,7 +4,7 @@
 	"icon": "fa-user",
 	"install": "internal",
 	"type": "social",
-	"img": "https://s3-eu-west-1.amazonaws.com/whiterabbitsuite.com/img/sportrick-logo.svg",
+	"img": "https://s3-eu-west-1.amazonaws.com/whiterabbitsuite.com/img/sportrick.png",
 	"channels": [
 		{
 			"name": "Sportrick",
