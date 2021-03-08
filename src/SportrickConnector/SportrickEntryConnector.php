@@ -2,7 +2,7 @@
 /**
  * Created by Fabio Mugnano.
  * User: user
- * Date: 21/05/2020
+ * Date: 22/02/2021
  * Time: 15:31
  */
 
@@ -33,12 +33,14 @@ class SportrickEntryConnector extends SportrickConnector
 		parent::__construct($params);
 	}
 
-	/**
+
+
+	/** Read Strem Entry
 	 * @param $customerId
 	 * @param $params
 	 * @return bool
 	 * @add  02/03/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
-	 * @copyright (c) 2022, WhiteRabbit srl
+	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 	public function read($customerId = null, $params = null)
 	{
@@ -53,9 +55,6 @@ class SportrickEntryConnector extends SportrickConnector
 		/**/
 
 		$entries = $this->getEntries($params);
-		/*	debug(count($customers));
-			die;*/
-
 
 		if (empty($entries)) {
 			\Cake\Log\Log::debug('Sportrick SportrickEntryConnector NO Entries for suite_customerId ' . $customerId);
@@ -137,9 +136,11 @@ class SportrickEntryConnector extends SportrickConnector
 	}
 
 
-	/**
-	 * @param $api_key
+	/** Get Sportrick Entries
+	 * @param $params
 	 * @return mixed|null
+	 * @add  02/03/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 	public function getEntries($params)
 	{

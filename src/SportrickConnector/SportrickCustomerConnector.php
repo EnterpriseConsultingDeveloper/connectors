@@ -2,7 +2,7 @@
 /**
  * Created by Fabio Mugnano.
  * User: user
- * Date: 21/05/2020
+ * Date: 18/02/2021
  * Time: 15:31
  */
 
@@ -30,7 +30,7 @@ class SportrickCustomerConnector extends SportrickConnector
 		parent::__construct($params);
 	}
 
-	/**
+	/** Read Stream Customer Sportrick
 	 * @param $customerId
 	 * @param $params
 	 * @return bool
@@ -151,9 +151,12 @@ class SportrickCustomerConnector extends SportrickConnector
 		return (!isset($myString)) ? '' : $myString;
 	}
 
-	/**
-	 * @param $api_key
-	 * @return mixed|null
+
+	/** get Customer Sportrick
+	 * @param $params
+	 * @return array
+	 * @add  14/02/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 	public function getCustomers($params)
 	{
@@ -172,8 +175,8 @@ class SportrickCustomerConnector extends SportrickConnector
 	}
 
 
-	/**
-	 * @param $api_key
+	/** Add Customer beta
+	 * @param $params
 	 * @return mixed|null
 	 */
 	public function addCustomer($params)

@@ -2,7 +2,7 @@
 /**
  * Created by Fabio Mugnano.
  * User: user
- * Date: 21/05/2020
+ * Date: 16/02/2021
  * Time: 15:31
  */
 
@@ -30,12 +30,12 @@ class SportrickTagConnector extends SportrickConnector
 		parent::__construct($params);
 	}
 
-	/**
+	/** Read Stream Tag
 	 * @param $customerId
 	 * @param $params
 	 * @return bool
-	 * @add  20/05/2020  Fabio Mugnano <mugnano@enterprise-consulting.it>
-	 * @copyright (c) 2020, WhiteRabbit srl
+	 * @add  01/03/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 	public function read($customerId = null, $params = null)
 	{
@@ -142,6 +142,11 @@ class SportrickTagConnector extends SportrickConnector
 	}
 
 
+	/** Get Sportrick tag
+	 * @return mixed|null
+	 * @add  01/03/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @copyright (c) 2021, WhiteRabbit srl
+	 */
 	public function getTags()
 	{
 		try {
@@ -160,10 +165,11 @@ class SportrickTagConnector extends SportrickConnector
 		}
 	}
 
-
-	/**
-	 * @param $api_key
+	/** Get Sportrick tag by customer
+	 * @param $sportrick_tag_id
 	 * @return mixed|null
+	 * @add  01/03/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 	public function getTagCustomers($sportrick_tag_id)
 	{

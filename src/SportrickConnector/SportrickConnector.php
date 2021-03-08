@@ -2,7 +2,7 @@
 /**
  * Created by Fabio Mugnano.
  * User: user
- * Date: 21/05/2020
+ * Date: 18/02/2021
  * Time: 15:31
  */
 
@@ -71,15 +71,21 @@ class SportrickConnector extends Connector implements IConnector
 		];
 	}
 
-	/**
+	/** Connect Sportrick
 	 * @param null $api_key
-	 * @return mixed|string|null
+	 * @return mixed|array|null
+	 * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @add: 13/02/2021
+	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 	public function connect($api_key = null)
 	{
 		try {
 			$http = new WRClient();
 			$response = $http->get($this->sportrick_end_point . $this->sportrick_api_url_branches, array(), $this->sportrick_api_headers);
+			if ($response->code != 200) {
+				return false;
+			}
 			$res = json_decode($response->body);
 			return ($res);
 		} catch (\Exception $e) {
@@ -88,6 +94,14 @@ class SportrickConnector extends Connector implements IConnector
 		}
 	}
 
+
+	/** List Suite Custom Variables
+	 * @param $params
+	 * @return mixed|array|null
+	 * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @add: 18/02/2021
+	 * @copyright (c) 2021, WhiteRabbit srl
+	 */
 
 	public function customVariablesList($params)
 	{
@@ -107,7 +121,13 @@ class SportrickConnector extends Connector implements IConnector
 		}
 	}
 
-
+/** Add Custom Variables
+	 * @param $params
+	 * @return mixed|array|null
+	 * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @add: 18/02/2021
+	 * @copyright (c) 2021, WhiteRabbit srl
+	 */
 	public function customVariablesAdd($params)
 	{
 		try {
@@ -116,7 +136,7 @@ class SportrickConnector extends Connector implements IConnector
 			$data['note'] = $params['note'];
 
 			$http = new WRClient();
-			$response = $http->post($params['domain'] . "rest/customVariable/add",$data,
+			$response = $http->post($params['domain'] . "rest/customVariable/add", $data,
 				[
 					'headers' => ['WR-Token' => $params['token'], 'Accept' => 'application/json']
 				]);
@@ -241,7 +261,6 @@ class SportrickConnector extends Connector implements IConnector
 	{
 
 	}
-
 
 
 }
