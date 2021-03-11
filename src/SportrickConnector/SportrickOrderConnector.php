@@ -2,7 +2,7 @@
 /**
  * Created by Fabio Mugnano.
  * User: user
- * Date: 16/02/2021
+ * Date: 22/02/2021
  * Time: 15:31
  */
 
@@ -134,7 +134,7 @@ class SportrickOrderConnector extends SportrickConnector
 	/** get Sportrick PaymentDocuments
 	 * @param $params
 	 * @return bool
-	 * @add  28/02/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @add  27/02/2021  Fabio Mugnano <mugnano@enterprise-consulting.it>
 	 * @copyright (c) 2021, WhiteRabbit srl
 	 */
 

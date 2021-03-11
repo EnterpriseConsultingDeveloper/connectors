@@ -9,6 +9,9 @@
 namespace WR\Connector\SportrickConnector;
 
 use App\Lib\WhiteRabbit\WRClient;
+use Cake\Datasource\ConnectionManager;
+use Cake\I18n\Time;
+use Cake\ORM\TableRegistry;
 use WR\Connector\Connector;
 use WR\Connector\ConnectorBean;
 use WR\Connector\ConnectorManager;
@@ -41,6 +44,7 @@ class SportrickConnector extends Connector implements IConnector
 	protected $sportrick_custom_variables;
 	protected $suite_subscription_recurring_label;
 	protected $suite_subscription_one_time_label;
+	protected $suite_form_branch;
 
 
 	function __construct($params)
@@ -63,6 +67,7 @@ class SportrickConnector extends Connector implements IConnector
 		$this->sportrick_custom_variables = $config['sportrick_custom_variables'];
 		$this->suite_subscription_recurring_label = $config['suite_subscription_recurring_label'];
 		$this->suite_subscription_one_time_label = $config['suite_subscription_one_time_label'];
+		$this->suite_form_branch = $config['suite_form_branch'];
 		$this->sportrick_api_headers = [
 			'headers' => [
 				'Content-Type' => 'application/json',
@@ -121,7 +126,7 @@ class SportrickConnector extends Connector implements IConnector
 		}
 	}
 
-/** Add Custom Variables
+	/** Add Custom Variables
 	 * @param $params
 	 * @return mixed|array|null
 	 * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
@@ -148,6 +153,86 @@ class SportrickConnector extends Connector implements IConnector
 			return null;
 			// Log error
 		}
+	}
+
+
+	/** Add Form Branch
+	 * @param $params
+	 * @return mixed|array|null
+	 * @author  Fabio Mugnano <mugnano@enterprise-consulting.it>
+	 * @add: 11/03/2021
+	 * @copyright (c) 2021, WhiteRabbit srl
+	 */
+	public function formSuiteAdd($params)
+	{
+
+		try {
+			$connection = ConnectionManager::get('crm');
+			$response = $connection->transactional(function () use ($params) {
+				$mtFormTable = TableRegistry::getTableLocator()->get('MarketingTools.MtForms');
+				$mtFormFieldTable = TableRegistry::getTableLocator()->get('MarketingTools.MtFormFields');
+				$connectorsTable = TableRegistry::getTableLocator()->get('Connectors');
+				$branches = $this->connect();
+				$select_template = [];
+				$select_intro = null;
+
+				foreach ($branches as $id => $branch) {
+					if ($id == 0) {
+						$selected = "selected='true'";
+					} else {
+						$selected = null;
+					}
+					$select_template[$id]['label'] = $branch->name;
+					$select_template[$id]['value'] = $branch->id;
+					$select_intro .= "<option value='$branch->id' $selected id='select-branch-0'> $branch->name</option>";
+				}
+
+				$form_template = json_encode($this->suite_form_branch['form_template']);
+				$form_intro = $this->suite_form_branch['form_intro'];
+				$form_template = str_replace('"' . $this->suite_form_branch['form_template_select_placeholder'] . '"', json_encode($select_template), $form_template);
+				$form_intro = str_replace($this->suite_form_branch['form_intro_select_placeholder'], $select_intro, $form_intro);
+
+				$mtForm = $mtFormTable->newEntity();
+
+				$data['customer_id'] = $params['customer_id'];
+				$data['release'] = 0;
+				$data['key_access'] = $mtFormTable->generateKeyAccess();
+				$data['is_template'] = 1;
+				$data['form_name'] = $this->suite_form_branch['form_name'];
+				$data['form_template'] = $form_template;
+				$data['form_intro'] = $form_intro;
+				$data['is_template'] = 1;
+				$mtForm = $mtFormTable->patchEntity($mtForm, $data);
+				$save = $mtFormTable->save($mtForm);
+				if ($save) {
+					foreach ($this->suite_form_branch['form_template'] as $id => $input) {
+						$mtFormField = $mtFormFieldTable->newEntity();
+						$dataField = array();
+						$dataField['form_id'] = $save->id;
+						$dataField['field_type'] = $input['type'];
+						$dataField['field_name'] = $input['name'] ?? ' ';
+						$dataField['field_label'] = $input['label'];
+						$dataField['attributes'] = json_encode($dataField);
+						$dataField['created'] = Time::now();
+						$dataField['modified'] = Time::now();
+						$mtFormField = $mtFormFieldTable->patchEntity($mtFormField, $dataField);
+						if (!$mtFormFieldTable->save($mtFormField)) {
+							\Cake\Log\Log::error('Sportrick SportrickConnector formSuiteAdd branch error save $mtFormField ' . print_r($mtFormField->getErrors(), true));
+							return false;
+						}
+					}
+					return true;
+				} else {
+					\Cake\Log\Log::error('Sportrick SportrickConnector formSuiteAdd branch error save $mtForm');
+					return false;
+				}
+			});
+		} catch (\Exception $e) {
+			\Cake\Log\Log::error('Sportrick SportrickConnector formSuiteAdd branch try ' . print_r($e->getMessage(), true));
+			return false;
+		}
+		\Cake\Log\Log::debug('Sportrick SportrickConnector formSuiteAdd save $response ' . print_r($response, true));
+		return $response;
 	}
 
 
