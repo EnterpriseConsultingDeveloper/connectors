@@ -139,6 +139,48 @@ class PrestashopEcommerceConnector extends PrestashopConnector
 						$changeStatusBean->setTypeIdentities('email');
             ActionsManager::pushOrder($changeStatusBean);
 
+            if(!empty($content['id_cart']) && $this->checkCartExist($content['id_cart'],$data['source'])) {
+
+                $cart_data = [];
+                $cart_data['actionId'] = 'closeCart';
+                $cart_data['cartDate'] = $data['orderdate'];
+                $cart_data['email'] = $this->notSetToEmptyString($data['email']);
+                $cart_data['cartNum'] = $this->notSetToEmptyString($content['id_cart']);
+                $cart_data['cartIdExt'] = $this->notSetToEmptyString($content['id_cart']);
+                $cart_data['cartTotal'] = $this->notSetToEmptyString($data['total']);
+                $cart_data['currency'] = $this->notSetToEmptyString($data['currency']);
+                $cart_data['cartTax'] = $this->notSetToEmptyString($data['total_tax']);
+                $cart_data['cartDiscount'] = $this->notSetToEmptyString($data['cart_discount']);
+                $cart_data['description'] = $this->notSetToEmptyString($data['note']);
+                $cart_data['source'] = $data['source'];
+                $cart_data['sourceId'] = $data['source'];
+                $cart_data['site_name'] = $data['source'];
+                $cart_data['products'] = $data['products'];
+
+                \Cake\Log\Log::debug('Prestashop write call ActivityEcommerceCartBean by ' . $data['email'] . ' on ' . $data['source']);
+
+                $cartBean = new ActivityEcommerceCartBean();
+                $cartBean->setCustomer($content['customer_id'])
+                    ->setSource($data['source'])
+                    ->setToken($data['source'])// identificatore univoco della fonte del dato
+                    ->setDataRaw($cart_data)
+                    ->setActionId($cart_data['actionId']);
+                $cartBean->setTypeIdentities('email');
+
+                $cartBean->setSiteName($cart_data['site_name']);
+                $cartBean->setEmail($cart_data['email']);
+                $cartBean->setCartdate($cart_data['cartDate']);
+                $cartBean->setCurrency($cart_data['currency']);
+                $cartBean->setCartDiscount($cart_data['cartDiscount']);
+                $cartBean->setTaxTotal($cart_data['cartTax']);
+                //$cartBean->setDescription($cart_data['description']);
+                $cartBean->setNumber($cart_data['cartNum']);
+                $cartBean->setTotal($cart_data['cartTotal']);
+                $cartBean->setCurrency($cart_data['currency']);
+                $cartBean->setProducts($cart_data['products']);
+                $cartBean->setClosed(true);
+                ActionsManager::pushCart($cartBean);
+            }
 
         } catch (\PDOException $e) {
             return false;
@@ -161,6 +203,7 @@ class PrestashopEcommerceConnector extends PrestashopConnector
     {
         $data = [];
         $data['source'] = UtilitiesComponent::setSource($this->notSetToEmptyString($content['sourceId']));
+        $data['actionId'] = 'changeCart';
         $data['cartIdExt'] = $this->notSetToEmptyString($content['cartIdExt']);
         $data['currency'] = $this->notSetToEmptyString($content['currency']);
         $data['sourceId'] = $this->notSetToEmptyString($content['sourceId']);
@@ -176,21 +219,25 @@ class PrestashopEcommerceConnector extends PrestashopConnector
         try {
             $cartBean = new ActivityEcommerceCartBean();
             $this->createCrmConnection($content['customer_id']);
+            if(!$this->checkCartExist($data['cartIdExt'],$data['source'])){
+                $data['actionId'] = 'openCart';
+            }
             $cartBean->setCustomer($content['customer_id'])
                 ->setSource($data['source'])
                 ->setToken($data['source'])// identificatore univoco della fonte del dato
-                ->setDataRaw($data);
+                ->setDataRaw($data)
+                ->setActionId($data['actionId']);
 						$cartBean->setTypeIdentities('email');
 
             $cartBean->setSiteName($data['site_name']);
             $cartBean->setEmail($data['email']);
             $cartBean->setCartdate($data['cartDate']);
-            // $cartBean->setCurrency($data['currency'])
             // $cartBean->setDescription($data['description'])
             $cartBean->setNumber($data['cartNum']);
             $cartBean->setTotal($data['cartTotal']);
             $cartBean->setCurrency($data['currency']);
             $cartBean->setProducts($data['productActivity']);
+            $cartBean->setClosed(false);
             ActionsManager::pushCart($cartBean);
 
         } catch (\PDOException $e) {

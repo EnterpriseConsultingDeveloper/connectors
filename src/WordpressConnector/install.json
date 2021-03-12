@@ -27,6 +27,12 @@
           "type": "ecommerce"
         },
         {
+          "name":"Cart",
+          "permitted_operations":"RPDU",
+          "connection_string":"WordpressCartConnector",
+          "type": "ecommerce"
+        },
+        {
           "name":"Newsletter",
           "permitted_operations":"RPDU",
           "connection_string":"WordpressNewsletterConnector",

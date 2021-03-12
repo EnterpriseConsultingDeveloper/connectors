@@ -80,7 +80,7 @@ class WixCustomerConnector extends WixConnector
             $data = [];
             $date_createdAt = date('Y-m-d H:i:s', strtotime($customer->metadata->createdAt));
             $data['date'] = $date_createdAt;
-            $data['externalid'] = $this->notSetToEmptyString($customer->id);
+            $data['contact_code'] = $this->notSetToEmptyString($customer->id);
             $data['name'] = $this->notSetToEmptyString($customer->firstName);
             $data['surname'] = $this->notSetToEmptyString($customer->lastName);
             $data['email'] = $this->notSetToEmptyString($customer->emails[0]->email);
