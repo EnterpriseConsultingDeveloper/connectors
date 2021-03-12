@@ -19,6 +19,12 @@
           "permitted_operations":"RPD",
           "connection_string":"ShopifyOrderConnector",
           "type": "product"
+        },
+        {
+          "name":"ShopifyCart",
+          "permitted_operations":"RPD",
+          "connection_string":"ShopifyCartConnector",
+          "type": "product"
         }
       ],
       "settings":[

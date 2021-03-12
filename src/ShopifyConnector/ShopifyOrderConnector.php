@@ -13,6 +13,7 @@ use App\Controller\MultiSchemaTrait;
 use App\Lib\ActionsManager\ActionsManager;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceAddUserBean;
 use App\Lib\ActionsManager\Activities\ActivityEcommerceChangeStatusBean;
+use App\Lib\ActionsManager\Activities\ActivityEcommerceCartBean;
 use Cake\I18n\Time;
 use WR\Connector\Connector;
 use WR\Connector\IConnector;
@@ -98,7 +99,7 @@ class ShopifyOrderConnector extends ShopifyConnector
 
             foreach ($order['line_items'] as $id => $product) {
 //            debug($product);
-                $data['products'][$id]['product_id'] = $product['id'];
+                $data['products'][$id]['product_id'] = $product['product_id'];
                 $data['products'][$id]['name'] = $product['title'];
                 $data['products'][$id]['qty'] = $product['quantity'];
                 $data['products'][$id]['price'] = $product['price'];
@@ -108,6 +109,7 @@ class ShopifyOrderConnector extends ShopifyConnector
                 $data['products'][$id]['description'] = $this->notSetToEmptyString($product['name']);
                 $data['products'][$id]['tax'] = $this->notSetToEmptyString($product['tax_lines'][0]['price']);
             }
+
             try {
                 \Cake\Log\Log::debug('Shopify ShopifyOrderConnector call ActivityEcommerceAddUserBean by ' . $data['email'] . ' on ' . $params['shop_url']);
 
@@ -119,6 +121,50 @@ class ShopifyOrderConnector extends ShopifyConnector
                     ->setDataRaw($data);
 								$changeStatusBean->setTypeIdentities('email');
                 ActionsManager::pushOrder($changeStatusBean);
+
+                if($this->checkCartExist($order['checkout_id'],$this->shopUrl)) {
+
+                    $cart_data = [];
+                    $cart_data['actionId'] = 'closeCart';
+                    $cart_data['cartDate'] = $order['created_at'];
+                    $cart_data['email'] = $this->notSetToEmptyString($order['email']);
+                    $cart_data['cartNum'] = $this->notSetToEmptyString($order['checkout_id']);
+                    $cart_data['cartIdExt'] = $this->notSetToEmptyString($order['checkout_id']);
+                    $cart_data['cartTotal'] = $this->notSetToEmptyString($order['total_price']);
+                    $cart_data['currency'] = $this->notSetToEmptyString($order['currency']);
+                    $cart_data['cartTax'] = $this->notSetToEmptyString($order['total_tax']);
+                    $cart_data['cartDiscount'] = $this->notSetToEmptyString($order['total_discounts']);
+                    $cart_data['description'] = $this->notSetToEmptyString($order['note']);
+                    $cart_data['source'] = $this->shopUrl;
+                    $cart_data['sourceId'] = $this->shopUrl;
+                    $cart_data['site_name'] = $this->shopUrl;
+                    $cart_data['products'] = $data['products'];
+
+                    \Cake\Log\Log::debug('Shopify ShopifyCartConnector call ActivityEcommerceCartBean by ' . $data['email'] . ' on ' . $params['shop_url']);
+
+                    $cartBean = new ActivityEcommerceCartBean();
+                    $cartBean->setCustomer($customerId)
+                        ->setSource($this->shopUrl)
+                        ->setToken($this->shopUrl)// identificatore univoco della fonte del dato
+                        ->setDataRaw($cart_data)
+                        ->setActionId($cart_data['actionId']);
+                    $cartBean->setTypeIdentities('email');
+
+                    $cartBean->setSiteName($cart_data['site_name']);
+                    $cartBean->setEmail($cart_data['email']);
+                    $cartBean->setCartdate($cart_data['cartDate']);
+                    $cartBean->setCurrency($cart_data['currency']);
+                    $cartBean->setCartDiscount($cart_data['cartDiscount']);
+                    $cartBean->setTaxTotal($cart_data['cartTax']);
+                    $cartBean->setDescription($cart_data['description']);
+                    $cartBean->setNumber($cart_data['cartNum']);
+                    $cartBean->setTotal($cart_data['cartTotal']);
+                    $cartBean->setCurrency($cart_data['currency']);
+                    $cartBean->setProducts($cart_data['products']);
+                    $cartBean->setClosed(true);
+                    ActionsManager::pushCart($cartBean);
+                }
+
             } catch (\Exception $e) {
                 // Log error
             }
